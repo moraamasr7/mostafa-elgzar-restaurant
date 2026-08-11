@@ -6,15 +6,27 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import FloatingActions from "@/components/FloatingActions";
 
 export const metadata: Metadata = {
-  title: "مطعم مصطفى الجزار | أصل الأكل الحرش",
-  description: "مطعم مصطفى الجزار - أصل الأكل الحرش في المطرية. نقدم أشهى الأكلات البلدي المصرية: كبدة، كفتة، سجق، ممبار، كلاوي، طواجن، لحمة بلدي محمرة باللية.",
-  keywords: "مطعم مصطفى الجزار, أكل حرش, كبدة, كفتة, سجق, ممبار, كلاوي, المطرية, القاهرة, مطعم بلدي",
+  title: "مصطفى الجزار - Mostafa Elgzar",
+  description: "مطعم مصطفى الجزار - أشهى المأكولات والمشويات بأسعار مميزة. تصفح المنيو الخاص بنا الآن.",
+  keywords: "مطعم مصطفى الجزار, أصل الأكل الحرش, كبدة, كفتة, سجق, ممبار, كلاوي, المطرية, القاهرة, مطعم بلدي, مشويات",
   authors: [{ name: "Mostafa Elgzar Restaurant" }],
+  icons: {
+    icon: "/images/logo.png",
+    apple: "/images/logo.png",
+  },
   openGraph: {
-    title: "مطعم مصطفى الجزار | أصل الأكل الحرش",
-    description: "أشهى الأكلات البلدي المصرية في المطرية - كبدة، كفتة، سجق، ممبار، كلاوي",
+    title: "مصطفى الجزار - Mostafa Elgzar",
+    description: "مطعم مصطفى الجزار - أشهى المأكولات والمشويات بأسعار مميزة. تصفح المنيو الخاص بنا الآن.",
     type: "website",
     locale: "ar_EG",
+    images: [
+      {
+        url: "/images/logo.png",
+        width: 800,
+        height: 800,
+        alt: "Mostafa Elgzar Logo",
+      },
+    ],
   },
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Grid3X3, Sandwich, Soup, Beef, UtensilsCrossed, Pizza, ChefHat, Wheat, Salad } from "lucide-react";
+import { Grid3X3, Sandwich, Soup, Beef, UtensilsCrossed, Pizza, ChefHat, Wheat, Salad, CupSoda } from "lucide-react";
 import { categories } from "@/data/menu";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -14,6 +14,7 @@ const iconMap: Record<string, React.ElementType> = {
   ChefHat,
   Wheat,
   Salad,
+  CupSoda,
 };
 
 interface CategoryFilterProps {

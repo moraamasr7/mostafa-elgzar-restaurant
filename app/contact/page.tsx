@@ -12,8 +12,7 @@ const contactMethods = [
     description: "اتصل بنا مباشرة على أي من الأرقام التالية",
     items: [
       { label: "الرئيسي", value: "01122 339 739", href: "tel:01122339739" },
-      { label: "بديل 1", value: "01153 455 452", href: "tel:01153455452" },
-      { label: "بديل 2", value: "01156 768 608", href: "tel:01156768608" },
+      { label: "بديل 1", value: "01020 058 231", href: "tel:01020058231" },
     ],
     color: "primary",
   },
@@ -22,7 +21,7 @@ const contactMethods = [
     title: "العنوان",
     description: "زورنا في المطرية",
     items: [
-      { label: "", value: "5 شارع عمر المختار، متفرع من شارع الحرية، الرشاح، المطرية، القاهرة", href: "https://maps.google.com/?q=5+Omar+El+Mokhtar+St+Matareya+Cairo" },
+      { label: "", value: "5 شارع عمر المختار، متفرع من شارع الحرية، الرشاح، المطرية، القاهرة", href: "https://maps.app.goo.gl/D5ENYuQWe8EdeyjS6" },
     ],
     color: "gold",
   },
@@ -31,8 +30,7 @@ const contactMethods = [
     title: "مواعيد العمل",
     description: "مفتوح يومياً",
     items: [
-      { label: "اليوم", value: "12:00 ظهراً - 12:00 منتصف الليل", href: "" },
-      { label: "الجمعة", value: "2:00 ظهراً - 12:00 منتصف الليل", href: "" },
+      { label: "ساعات العمل", value: "نعمل يومياً من [4 العصر] إلى [4 ليلآ]", href: "" },
     ],
     color: "primary",
   },
@@ -174,7 +172,7 @@ export default function ContactPage() {
               <h3 className="text-xl font-bold text-stone-900 dark:text-white mb-2">موقعنا على الخريطة</h3>
               <p className="text-stone-600 dark:text-gray-450 text-sm mb-4">5 شارع عمر المختار، المطرية، القاهرة</p>
               <a
-                href="https://maps.google.com/?q=5+Omar+El+Mokhtar+St+Matareya+Cairo"
+                href="https://maps.app.goo.gl/D5ENYuQWe8EdeyjS6"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary inline-flex items-center gap-2"

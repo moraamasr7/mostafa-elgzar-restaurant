@@ -30,15 +30,15 @@
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-primary-600 to-primary-700 text-white px-6 py-3 rounded-xl font-semibold 
+    @apply bg-gradient-to-r from-primary-600 to-primary-700 text-white px-6 py-3.5 rounded-xl font-semibold 
            hover:from-primary-500 hover:to-primary-600 transition-all duration-300 shadow-lg shadow-primary-900/30
-           hover:shadow-primary-900/50;
+           hover:shadow-primary-900/50 whitespace-nowrap inline-flex items-center justify-center select-none;
   }
 
   .btn-gold {
-    @apply bg-gradient-to-r from-gold-500 to-gold-600 text-white px-6 py-3 rounded-xl font-semibold 
+    @apply bg-gradient-to-r from-gold-500 to-gold-600 text-white px-6 py-3.5 rounded-xl font-semibold 
            hover:from-gold-400 hover:to-gold-500 transition-all duration-300 shadow-lg shadow-gold-900/30
-           hover:shadow-gold-900/50;
+           hover:shadow-gold-900/50 whitespace-nowrap inline-flex items-center justify-center select-none;
   }
 
   .section-title {

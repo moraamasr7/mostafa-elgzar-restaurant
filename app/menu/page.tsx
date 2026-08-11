@@ -66,16 +66,25 @@ export default function MenuPage() {
               تفضل الطلب للمنزل؟ 🚀
             </h4>
             <p className="text-stone-600 dark:text-gray-400 text-xs sm:text-sm">
-              قريباً خدمة الطلب المباشر أونلاين! يمكنك الطلب حالياً بالاتصال الهاتفي أو عبر واتساب.
+              قريباً خدمة الطلب المباشر أونلاين! يمكنك الطلب حالياً عبر الاتصال الهاتفي
             </p>
           </div>
-          <a
-            href="tel:01122339739"
-            className="bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-primary-500/20 flex items-center gap-2 shrink-0"
-          >
-            <Phone className="w-4 h-4" />
-            <span>اطلب تلفونياً الآن</span>
-          </a>
+          <div className="flex flex-wrap gap-2 shrink-0 justify-center">
+            <a
+              href="tel:01122339739"
+              className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shadow-md shadow-primary-500/20 flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <Phone className="w-3.5 h-3.5" />
+              <span>01122339739</span>
+            </a>
+            <a
+              href="tel:01020058231"
+              className="bg-stone-200 hover:bg-stone-300 dark:bg-white/10 dark:hover:bg-white/20 text-stone-850 dark:text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <Phone className="w-3.5 h-3.5" />
+              <span>01020058231</span>
+            </a>
+          </div>
         </motion.div>
 
         {/* Sticky Category Filter */}

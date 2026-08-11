@@ -36,7 +36,7 @@ export default function FloatingActions() {
             <span className="whitespace-nowrap">اتصل بنا</span>
           </a>
           <a
-            href="https://maps.google.com/?q=5+Omar+El+Mokhtar+St+Matareya+Cairo"
+            href="https://maps.app.goo.gl/D5ENYuQWe8EdeyjS6"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 bg-stone-100 hover:bg-stone-200 dark:bg-white/5 dark:hover:bg-white/10 text-stone-800 dark:text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border border-stone-200 dark:border-white/10 flex-1 justify-center"

@@ -39,14 +39,16 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-gold-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-              <span className="text-white font-bold text-lg">م</span>
-            </div>
+            <img
+              src="/images/logo.png"
+              alt="مصطفى الجزار - Mostafa Elgzar"
+              className="w-12 h-12 object-contain rounded-xl shadow-md group-hover:scale-105 transition-transform"
+            />
             <div className="hidden sm:block">
-              <h1 className="text-xl font-bold text-stone-900 dark:text-white leading-tight">
-                مصطفى <span className="text-primary-500">الجزار</span>
+              <h1 className="text-lg font-bold text-stone-900 dark:text-white leading-none">
+                مصطفى الجزار
               </h1>
-              <p className="text-xs text-gold-600 dark:text-gold-400">أصل الأكل الحرش</p>
+              <p className="text-[10px] text-gold-600 dark:text-gold-400 font-semibold mt-1">أصل الأكل الحرش</p>
             </div>
           </Link>
 
@@ -71,7 +73,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-600 dark:text-gray-300 hover:text-stone-900 dark:hover:text-white transition-all duration-300"
+              className="p-2.5 rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-600 dark:text-gray-300 hover:text-stone-900 dark:hover:text-white transition-all duration-300 whitespace-nowrap shrink-0 inline-flex items-center justify-center"
               aria-label="Toggle Theme"
             >
               {theme === "dark" ? (
@@ -82,7 +84,7 @@ export default function Navbar() {
             </button>
             <a
               href="tel:01122339739"
-              className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 shadow-lg shadow-primary-900/30"
+              className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg shadow-primary-900/30 whitespace-nowrap shrink-0 inline-flex justify-center select-none"
             >
               <Phone className="w-4 h-4" />
               <span>اطلب الآن</span>
@@ -93,7 +95,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2 md:hidden">
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 text-stone-600 dark:text-gray-300 hover:text-stone-900 dark:hover:text-white transition-all"
+              className="p-2.5 rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 text-stone-600 dark:text-gray-300 hover:text-stone-900 dark:hover:text-white transition-all whitespace-nowrap shrink-0 inline-flex items-center justify-center"
               aria-label="Toggle Theme"
             >
               {theme === "dark" ? (
@@ -104,7 +106,7 @@ export default function Navbar() {
             </button>
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors"
+              className="p-2 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors whitespace-nowrap shrink-0 inline-flex items-center justify-center"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -135,7 +137,7 @@ export default function Navbar() {
           ))}
           <a
             href="tel:01122339739"
-            className="flex items-center justify-center gap-2 bg-primary-600 text-white px-4 py-3 rounded-xl text-sm font-medium mt-4"
+            className="flex items-center justify-center gap-2 bg-primary-600 text-white px-4 py-3 rounded-xl text-sm font-semibold mt-4 whitespace-nowrap"
           >
             <Phone className="w-4 h-4" />
             <span>01122339739 - اطلب الآن</span>

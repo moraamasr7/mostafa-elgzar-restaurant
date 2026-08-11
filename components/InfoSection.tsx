@@ -100,11 +100,8 @@ export default function InfoSection() {
                       <a href="tel:01122339739" className="block text-stone-600 dark:text-gray-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
                         01122 339 739
                       </a>
-                      <a href="tel:01153455452" className="block text-stone-600 dark:text-gray-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-                        01153 455 452
-                      </a>
-                      <a href="tel:01156768608" className="block text-stone-600 dark:text-gray-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-                        01156 768 608
+                      <a href="tel:01020058231" className="block text-stone-600 dark:text-gray-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                        01020 058 231
                       </a>
                     </div>
                   </div>
@@ -116,8 +113,8 @@ export default function InfoSection() {
                   </div>
                   <div>
                     <h4 className="text-stone-900 dark:text-white font-semibold mb-1">مواعيد العمل</h4>
-                    <p className="text-stone-600 dark:text-gray-400 text-sm">
-                      يومياً من 12 ظهراً - 12 منتصف الليل
+                    <p className="text-stone-600 dark:text-gray-400 text-sm font-medium">
+                      نعمل يومياً من [4 العصر] إلى [4 ليلآ]
                     </p>
                   </div>
                 </div>

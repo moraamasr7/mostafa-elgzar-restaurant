@@ -36,7 +36,7 @@ export default function MenuCard({ item, index }: MenuCardProps) {
             </div>
           )}
           <div className="relative z-10 w-12 h-12 bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-primary-600/80 transition-colors">
-            <span className="text-stone-850 dark:text-white font-bold text-lg group-hover:text-white">
+            <span className="text-stone-800 dark:text-white font-bold text-lg group-hover:text-white">
               {item.name.charAt(0)}
             </span>
           </div>
@@ -76,7 +76,7 @@ export default function MenuCard({ item, index }: MenuCardProps) {
       <div className="mt-4">
         <a
           href="tel:01122339739"
-          className="w-full flex items-center justify-center gap-2 bg-stone-150 dark:bg-white/5 hover:bg-primary-600/10 dark:hover:bg-primary-600/20 border border-stone-200 dark:border-white/10 hover:border-primary-500/30 text-stone-750 dark:text-gray-300 hover:text-primary-600 dark:hover:text-white py-2.5 rounded-xl text-sm font-medium transition-all duration-300"
+          className="w-full flex items-center justify-center gap-2 bg-stone-100 dark:bg-white/5 hover:bg-primary-600/10 dark:hover:bg-primary-600/20 border border-stone-200 dark:border-white/10 hover:border-primary-500/30 text-stone-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-white py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap inline-flex"
         >
           <Phone className="w-4 h-4" />
           <span>اطلب الآن</span>

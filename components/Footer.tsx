@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Phone, MapPin, Clock, ExternalLink } from "lucide-react";
+import { Phone, MapPin, Clock, ExternalLink, Facebook } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -11,29 +11,38 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary-600 to-gold-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-xl">م</span>
-              </div>
+              <img
+                src="/images/logo.png"
+                alt="مصطفى الجزار - Mostafa Elgzar"
+                className="w-12 h-12 object-contain rounded-xl shadow-lg"
+              />
               <div>
                 <h3 className="text-xl font-bold text-stone-900 dark:text-white">
-                  مصطفى <span className="text-primary-500">الجزار</span>
+                  مصطفى الجزار
                 </h3>
                 <p className="text-sm text-gold-600 dark:text-gold-400 font-semibold">أصل الأكل الحرش</p>
               </div>
             </div>
             <p className="text-stone-600 dark:text-gray-400 text-sm leading-relaxed">
-              مطعم مصطفى الجزار يقدم أشهى الأكلات البلدي المصرية الأصيلة منذ سنوات. 
-              نفتخر بتقديم أجود أنواع اللحوم والأحشاء البلدي الطازجة.
+              مطعم مصطفى الجزار يقدم أشهى المأكولات والمشويات بأسعار مميزة. تصفح المنيو الخاص بنا الآن.
             </p>
             <div className="flex items-center gap-3">
+              <a
+                href="https://www.facebook.com/mostafa.elgazar.res"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white rounded-xl flex items-center justify-center text-stone-700 dark:text-white transition-colors shadow-sm dark:shadow-none"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
               <a
                 href="https://www.tiktok.com/@m.elgzar"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white rounded-xl flex items-center justify-center text-stone-700 dark:text-white transition-colors shadow-sm dark:shadow-none"
+                className="w-10 h-10 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 hover:bg-primary-650 dark:hover:bg-primary-650 hover:text-white rounded-xl flex items-center justify-center text-stone-700 dark:text-white transition-colors shadow-sm dark:shadow-none"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.88-2.89 2.89 2.89 0 0 1 2.88-2.89c.3 0 .6.05.88.13v-3.5a6.36 6.36 0 0 0-.88-.06A6.34 6.34 0 0 0 3.25 15.8a6.34 6.34 0 0 0 6.33 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V9.91a8.16 8.16 0 0 0 4.78 1.54V7.91a4.83 4.83 0 0 1-1.1-.22z"/>
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.88-2.89 2.89 2.89 0 0 1 2.88-2.89c.3 0 .6.05.88.13v-3.5a6.36 6.36 0 0 0-.88-.06A6.34 6.34 0 0 0 3.25 15.8a6.34 6.34 0 0 0 6.33 6.34 6.34 6.34 0 0 0 6.33-6.34V9.91a8.16 8.16 0 0 0 4.78 1.54V7.91a4.83 4.83 0 0 1-1.1-.22z"/>
                 </svg>
               </a>
               <a
@@ -52,22 +61,22 @@ export default function Footer() {
             <h4 className="text-lg font-bold text-stone-900 dark:text-white">روابط سريعة</h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
+                <Link href="/" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
                   الصفحة الرئيسية
                 </Link>
               </li>
               <li>
-                <Link href="/menu" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
+                <Link href="/menu" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
                   المنيو الكامل
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
+                <Link href="/about" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
                   عن المطعم
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
+                <Link href="/contact" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
                   تواصل معنا
                 </Link>
               </li>
@@ -80,26 +89,25 @@ export default function Footer() {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary-500 mt-0.5 shrink-0" />
-                <span className="text-stone-600 dark:text-gray-400 text-sm">
+                <a
+                  href="https://maps.app.goo.gl/D5ENYuQWe8EdeyjS6"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-stone-600 dark:text-gray-400 text-sm hover:underline hover:text-primary-650 dark:hover:text-primary-400 transition-colors"
+                >
                   5 شارع عمر المختار، متفرع من شارع الحرية، الرشاح، المطرية، القاهرة
-                </span>
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary-500 shrink-0" />
-                <a href="tel:01122339739" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
+                <a href="tel:01122339739" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm font-semibold">
                   01122339739
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary-500 shrink-0" />
-                <a href="tel:01153455452" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
-                  01153455452
-                </a>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-primary-500 shrink-0" />
-                <a href="tel:01156768608" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
-                  01156768608
+                <a href="tel:01020058231" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm font-semibold">
+                  01020058231
                 </a>
               </li>
             </ul>

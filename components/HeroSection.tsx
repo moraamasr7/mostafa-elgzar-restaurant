@@ -29,10 +29,10 @@ export default function HeroSection() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="inline-flex items-center gap-2 bg-primary-600/10 border border-primary-500/20 dark:bg-primary-600/20 dark:border-primary-500/30 rounded-full px-4 py-2"
+            className="inline-flex items-center gap-2 bg-primary-600/10 border border-primary-500/20 dark:bg-primary-600/20 dark:border-primary-500/30 rounded-full px-4 py-2 animate-pulse"
           >
-            <Flame className="w-4 h-4 text-primary-650 dark:text-primary-400" />
-            <span className="text-primary-700 dark:text-primary-300 text-sm font-medium">أصل الأكل الحرش</span>
+            <Flame className="w-4 h-4 text-primary-605 dark:text-primary-400" />
+            <span className="text-primary-700 dark:text-primary-300 text-sm font-medium">مصطفى الجزار - Mostafa Elgzar</span>
           </motion.div>
 
           {/* Main Title */}
@@ -42,8 +42,8 @@ export default function HeroSection() {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight"
           >
-            <span className="text-stone-900 dark:text-white">مطعم</span>{" "}
-            <span className="text-gradient">مصطفى الجزار</span>
+            <span className="text-stone-900 dark:text-white">أصل الأكل</span>{" "}
+            <span className="text-gradient">الحرش</span>
           </motion.h1>
 
           {/* Subtitle */}
@@ -53,11 +53,7 @@ export default function HeroSection() {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="text-xl md:text-2xl text-stone-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed"
           >
-            أشهى الأكلات البلدي المصرية الأصيلة
-            <br />
-            <span className="text-gold-650 dark:text-gold-450 font-semibold mt-2 block">
-              كبدة · كفتة · سجق · ممبار · كلاوي · طواجن
-            </span>
+            تصفح قائمة طعامنا المميزة واكتشف أجمد الأكلات المطبوخة يومياً بعناية.
           </motion.p>
 
           {/* Stats Badges */}
@@ -69,7 +65,7 @@ export default function HeroSection() {
           >
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
               <Star className="w-5 h-5 text-gold-550 fill-gold-550 dark:text-gold-400 dark:fill-gold-400" />
-              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">أكثر من 30 صنف بلدي</span>
+              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">أفضل المشويات والأكلات</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
               <MapPin className="w-5 h-5 text-primary-600 dark:text-primary-400" />
@@ -77,7 +73,7 @@ export default function HeroSection() {
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
               <Clock className="w-5 h-5 text-gold-550 dark:text-gold-400" />
-              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">خدمة سريعة</span>
+              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">من 4 عصراً إلى 4 فجراً</span>
             </div>
           </motion.div>
 
@@ -90,33 +86,42 @@ export default function HeroSection() {
           >
             <Link
               href="/menu"
-              className="btn-primary text-lg px-8 py-4 flex items-center gap-2 shadow-lg shadow-primary-500/20 w-full sm:w-auto justify-center"
+              className="btn-primary text-lg px-8 py-4 flex items-center gap-2 shadow-lg shadow-primary-500/20 w-full sm:w-auto justify-center whitespace-nowrap inline-flex"
             >
-              <span>شوف المنيو</span>
+              <span>المنيــو</span>
               <ChevronDown className="w-5 h-5 animate-bounce" />
             </Link>
             <a
-              href="tel:01122339739"
-              className="btn-gold text-lg px-8 py-4 flex items-center gap-2 shadow-lg shadow-gold-500/20 w-full sm:w-auto justify-center"
+              href="https://maps.app.goo.gl/D5ENYuQWe8EdeyjS6"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-gold text-lg px-8 py-4 flex items-center gap-2 shadow-lg shadow-gold-500/20 w-full sm:w-auto justify-center whitespace-nowrap inline-flex"
             >
-              <Phone className="w-5 h-5" />
-              <span>اطلب الآن</span>
+              <MapPin className="w-5 h-5 text-white" />
+              <span>موقعنا</span>
             </a>
           </motion.div>
 
-          {/* Phone Number Display */}
+          {/* Phone Numbers Display */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.9, duration: 0.8 }}
-            className="pt-4"
+            className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8"
           >
             <a
               href="tel:01122339739"
-              className="inline-flex items-center gap-2 text-2xl md:text-3xl font-bold text-stone-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              className="inline-flex items-center gap-2 text-xl md:text-2xl font-bold text-stone-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
             >
-              <Phone className="w-6 h-6 text-primary-500" />
+              <Phone className="w-5 h-5 text-primary-500" />
               <span>01122 339 739</span>
+            </a>
+            <a
+              href="tel:01020058231"
+              className="inline-flex items-center gap-2 text-xl md:text-2xl font-bold text-stone-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+            >
+              <Phone className="w-5 h-5 text-primary-500" />
+              <span>01020 058 231</span>
             </a>
           </motion.div>
         </motion.div>
