@@ -41,7 +41,7 @@ export default function InfoSection() {
                 ليه تختار <span className="text-gradient">مصطفى الجزار؟</span>
               </h2>
               <p className="text-stone-600 dark:text-gray-400 text-lg leading-relaxed">
-                احنا مش مجرد مطعم، احنا تجربة أصيلة للأكل البلدي المصري. 
+                احنا مش مجرد مطعم، احنا تجربة أصيلة للأكل البلدي المصري.
                 كل صنف بنقدمه بيحمل في طياته تاريخ وسنين من الخبرة.
               </p>
             </div>
@@ -85,7 +85,7 @@ export default function InfoSection() {
                   <div>
                     <h4 className="text-stone-900 dark:text-white font-semibold mb-1">العنوان</h4>
                     <p className="text-stone-600 dark:text-gray-400 text-sm leading-relaxed">
-                      5 شارع عمر المختار، متفرع من شارع الحرية، الرشاح، المطرية، القاهرة
+                      شارع عمر المختار، متفرع من شارع الحرية بجوار كنيسة الرشاح، المطرية، القاهرة
                     </p>
                   </div>
                 </div>
@@ -130,7 +130,7 @@ export default function InfoSection() {
                   <span>اتصل بنا الآن</span>
                 </a>
                 <a
-                  href="https://www.talabat.com/ar/egypt/restaurant/781448/mostafa-algazaar-restaurant-matareya"
+                  href="https://www.talabat.com/ar/egypt/restaurant/781448/mostafa-algazaar-restaurant-matareya?aid=7827"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-gold w-full flex items-center justify-center gap-2 text-center"

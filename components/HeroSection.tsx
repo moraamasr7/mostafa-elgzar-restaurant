@@ -11,10 +11,10 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-stone-50 dark:bg-dark-950 transition-colors duration-300">
         {/* Real Hero Image Background */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.4] dark:opacity-[0.45] transition-opacity duration-300"
+          className="absolute inset-0 bg-cover bg-center opacity-[0.4] dark:opacity-[0.75] transition-opacity duration-300"
           style={{ backgroundImage: "url('/images/hero.png')" }}
         />
-        <div className="absolute inset-0 bg-white/70 dark:bg-black/75 transition-colors duration-300" />
+        <div className="absolute inset-0 bg-white/70 dark:bg-black/50 transition-colors duration-300" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-stone-50/20 to-stone-50 dark:via-dark-950/20 dark:to-dark-950" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(220,38,38,0.05),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_50%,rgba(220,38,38,0.12),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(245,158,11,0.04),transparent_50%)] dark:bg-[radial-gradient(circle_at_70%_80%,rgba(245,158,11,0.06),transparent_50%)]" />
@@ -72,7 +72,7 @@ export default function HeroSection() {
           >
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
               <Star className="w-5 h-5 text-gold-550 fill-gold-550 dark:text-gold-400 dark:fill-gold-400" />
-              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">أفضل المشويات والأكلات</span>
+              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">أفضل الأكلات الحرشة</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
               <MapPin className="w-5 h-5 text-primary-600 dark:text-primary-400" />
@@ -122,15 +122,15 @@ export default function HeroSection() {
               dir="ltr"
             >
               <Phone className="w-5 h-5 text-primary-500" />
-              <span>01122 339 739</span>
+              <span>011 223 39 739</span>
             </a>
             <a
               href="tel:01020058231"
-              className="inline-flex items-center gap-2 text-xl md:text-2xl font-bold text-stone-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              className="inline-flex items-center gap-2 text-xl md:text-2xl font-bold text-stone-100 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               dir="ltr"
             >
               <Phone className="w-5 h-5 text-primary-500" />
-              <span>01020 058 231</span>
+              <span>010 200 58 231</span>
             </a>
           </motion.div>
         </motion.div>
@@ -146,9 +146,9 @@ export default function HeroSection() {
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
-          className="w-6 h-10 border-2 border-stone-300 dark:border-white/20 rounded-full flex items-start justify-center p-2"
+          className="w-6 h-10 border-2 border-stone-300 dark:border-white/20 rounded-full flex flex-col items-center justify-center p-2"
         >
-          <div className="w-1.5 h-1.5 bg-primary-650 dark:bg-primary-500 rounded-full" />
+          <ChevronDown className="w-4 h-4 text-primary-650 dark:text-primary-500" />
         </motion.div>
       </motion.div>
     </section>

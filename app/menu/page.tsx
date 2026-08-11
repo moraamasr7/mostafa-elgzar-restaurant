@@ -37,7 +37,7 @@ export default function MenuPage() {
             <span className="text-primary-700 dark:text-primary-300 text-sm font-medium">المنيو الكامل</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-stone-900 dark:text-white mb-4">
-            استكشف <span className="text-gradient">أكلنــا</span>
+            استكشف <span className="text-gradient">المنيــو</span>
           </h1>
           <p className="text-stone-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
             أكثر من 30 صنف من الأكلات البلدي الأصيلة، اختار اللي نفسك فيه واطلبه الآن
