@@ -39,7 +39,7 @@ const contactMethods = [
 const deliveryPlatforms = [
   {
     name: "طلبات (Talabat)",
-    url: "https://www.talabat.com/ar/egypt/restaurant/781448/mostafa-algazaar-restaurant-matareya",
+    url: "https://www.talabat.com/ar/egypt/restaurant/781448/mostafa-algazaar-restaurant-matareya?aid=7828",
     description: "اطلب ونوصل لباب بيتك",
   },
   {
@@ -80,12 +80,10 @@ export default function ContactPage() {
               className="glass-card p-8 flex flex-col justify-between"
             >
               <div>
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${
-                  method.color === "primary" ? "bg-primary-600/10 dark:bg-primary-600/20" : "bg-gold-500/10 dark:bg-gold-500/20"
-                }`}>
-                  <method.icon className={`w-7 h-7 ${
-                    method.color === "primary" ? "text-primary-650 dark:text-primary-400" : "text-gold-650 dark:text-gold-400"
-                  }`} />
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${method.color === "primary" ? "bg-primary-600/10 dark:bg-primary-600/20" : "bg-gold-500/10 dark:bg-gold-500/20"
+                  }`}>
+                  <method.icon className={`w-7 h-7 ${method.color === "primary" ? "text-primary-650 dark:text-primary-400" : "text-gold-650 dark:text-gold-400"
+                    }`} />
                 </div>
                 <h3 className="text-xl font-bold text-stone-900 dark:text-white mb-2">{method.title}</h3>
                 <p className="text-stone-500 dark:text-gray-400 text-sm mb-6">{method.description}</p>
@@ -99,9 +97,8 @@ export default function ContactPage() {
                         href={item.href}
                         target={item.href.startsWith("http") ? "_blank" : undefined}
                         rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                        className={`font-semibold text-sm hover:underline break-all text-right ${
-                          method.color === "primary" ? "text-primary-650 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300" : "text-gold-650 dark:text-gold-400 hover:text-gold-700 dark:hover:text-gold-300"
-                        }`}
+                        className={`font-semibold text-sm hover:underline break-all text-right ${method.color === "primary" ? "text-primary-650 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300" : "text-gold-650 dark:text-gold-400 hover:text-gold-700 dark:hover:text-gold-300"
+                          }`}
                       >
                         {item.value}
                       </a>
@@ -125,9 +122,9 @@ export default function ContactPage() {
         >
           <div className="inline-flex items-center gap-2 bg-gold-500/10 border border-gold-500/20 rounded-full px-4 py-2 mb-4">
             <Truck className="w-4 h-4 text-gold-600 dark:text-gold-450" />
-            <span className="text-gold-800 dark:text-gold-300 text-sm font-medium">اطلب أونلاين</span>
+            <span className="text-gold-800 dark:text-gold-300 text-sm font-medium">أطلب أونلاين (قريبآ)</span>
           </div>
-          <h2 className="text-3xl font-bold text-stone-900 dark:text-white mb-4">اطلب من التطبيقات</h2>
+          <h2 className="text-3xl font-bold text-stone-900 dark:text-white mb-4">اطلب من Talabat & Elmenus</h2>
           <p className="text-stone-500 dark:text-gray-400">نوصل لباب بيتك بسرعة وأمان</p>
         </motion.div>
 

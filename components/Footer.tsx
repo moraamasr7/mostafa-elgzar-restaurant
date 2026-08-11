@@ -42,11 +42,11 @@ export default function Footer() {
                 className="w-10 h-10 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 hover:bg-primary-650 dark:hover:bg-primary-650 hover:text-white rounded-xl flex items-center justify-center text-stone-700 dark:text-white transition-colors shadow-sm dark:shadow-none"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.88-2.89 2.89 2.89 0 0 1 2.88-2.89c.3 0 .6.05.88.13v-3.5a6.36 6.36 0 0 0-.88-.06A6.34 6.34 0 0 0 3.25 15.8a6.34 6.34 0 0 0 6.33 6.34 6.34 6.34 0 0 0 6.33-6.34V9.91a8.16 8.16 0 0 0 4.78 1.54V7.91a4.83 4.83 0 0 1-1.1-.22z"/>
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.88-2.89 2.89 2.89 0 0 1 2.88-2.89c.3 0 .6.05.88.13v-3.5a6.36 6.36 0 0 0-.88-.06A6.34 6.34 0 0 0 3.25 15.8a6.34 6.34 0 0 0 6.33 6.34 6.34 6.34 0 0 0 6.33-6.34V9.91a8.16 8.16 0 0 0 4.78 1.54V7.91a4.83 4.83 0 0 1-1.1-.22z" />
                 </svg>
               </a>
               <a
-                href="https://www.talabat.com/ar/egypt/restaurant/781448/mostafa-algazaar-restaurant-matareya"
+                href="https://menu-mostafa-elgazar.vercel.app/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 hover:bg-gold-600 dark:hover:bg-gold-600 hover:text-white rounded-xl flex items-center justify-center text-stone-700 dark:text-white transition-colors shadow-sm dark:shadow-none"
@@ -125,7 +125,7 @@ export default function Footer() {
             © 2026 مطعم مصطفى الجزار. جميع الحقوق محفوظة.
           </p>
           <p className="text-stone-400 dark:text-gray-600 text-xs">
-            صنع بحب في مصر 🇪🇬
+            Developer By (AmrTec✔🇪🇬)
           </p>
         </div>
       </div>
