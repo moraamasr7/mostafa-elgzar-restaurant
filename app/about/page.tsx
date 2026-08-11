@@ -6,10 +6,11 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 const stats = [
-  { icon: Users, value: "+1000", label: "عميل سعيد" },
+  { icon: Users, value: "+500", label: "عميل لدينا" },
   { icon: Star, value: "30+", label: "صنف في المنيو" },
   { icon: Heart, value: "100%", label: "لحوم بلدي" },
   { icon: TrendingUp, value: "5+", label: "سنين خبرة" },
+
 ];
 
 const values = [
@@ -21,7 +22,7 @@ const values = [
   {
     icon: Award,
     title: "أصالة مصرية",
-    description: "كل صنف في منيونا يحمل طعم الأصالة المصرية الأصيلة اللي مالهاش مثيل",
+    description: "كل صنف في المنيو يحمل طعم الأصالة المصرية الأصيلة اللي مالهاش مثيل",
   },
   {
     icon: Users,
@@ -61,16 +62,16 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold text-stone-900 dark:text-white">قصتنا</h2>
             <div className="space-y-4 text-stone-600 dark:text-gray-400 leading-relaxed">
               <p>
-                مطعم مصطفى الجزار مش مجرد مطعم، هو تجربة أصيلة للأكل البلدي المصري. 
+                مطعم مصطفى الجزار مش مجرد مطعم، هو تجربة أصيلة للأكل البلدي المصري.
                 بدأنا رحلتنا من قلب المطرية عشان نوصل لكل بيت مصرى أشهى الأكلات البلدي.
               </p>
               <p>
-                بنفتخر إننا بنستخدم أجود أنواع اللحوم والأحشاء البلدي الطازجة، 
+                بنفتخر إننا بنستخدم أجود أنواع اللحوم والأحشاء البلدي الطازجة،
                 وكل صنف بنقدمه بيحمل في طياته تاريخ وسنين من الخبرة في الطبخ المصري الأصيل.
               </p>
               <p>
-                من الكبدة والكفتة للسجق والممبار، ومن الطواجن الفخارية للحمة البلدي المحمرة باللية، 
-                كل صنف في منيونا هو قطعة من التراث المصري.
+                من الكبدة والكفتة للسجق والممبار، ومن الطواجن الفخارية للحمة البلدي المحمرة باللية،
+                كل صنف في المنيو هو قطعة من التراث المصري.
               </p>
             </div>
             <div className="flex items-center gap-2 text-gold-600 dark:text-gold-450 font-medium">
