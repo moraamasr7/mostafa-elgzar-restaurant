@@ -22,10 +22,10 @@ export default function MenuCard({ item, index }: MenuCardProps) {
         {/* Image Area */}
         <div className="relative h-40 mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-primary-900/10 to-stone-100 dark:to-dark-800 flex items-center justify-center">
           <div
-            className="absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-500"
+            className="absolute inset-0 opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-500"
             style={{
-              backgroundImage: `url('https://images.unsplash.com/photo-1544025162-d76694265947?w=400&h=300&fit=crop')`,
-              backgroundSize: "cover",
+              backgroundImage: `url('${item.image || "/images/logo.png"}')`,
+              backgroundSize: item.image ? "cover" : "contain",
               backgroundPosition: "center",
             }}
           />

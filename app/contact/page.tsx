@@ -163,7 +163,7 @@ export default function ContactPage() {
           className="glass-card p-2 mb-16"
         >
           <div className="relative h-80 rounded-xl overflow-hidden bg-stone-200 dark:bg-dark-800 flex items-center justify-center transition-colors duration-300">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?w=1200&h=600&fit=crop')] bg-cover bg-center opacity-30 dark:opacity-20" />
+            <div className="absolute inset-0 bg-[url('/images/storefront.jpg')] bg-cover bg-center opacity-40 dark:opacity-30" />
             <div className="relative z-10 text-center px-4">
               <MapPin className="w-12 h-12 text-primary-500 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-stone-900 dark:text-white mb-2">موقعنا على الخريطة</h3>

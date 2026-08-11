@@ -85,9 +85,14 @@ export default function AboutPage() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="glass-card p-8"
+            className="relative glass-card p-8 overflow-hidden"
           >
-            <div className="grid grid-cols-2 gap-6">
+            {/* Background Story Image */}
+            <div
+              className="absolute inset-0 bg-cover bg-center opacity-[0.05] dark:opacity-[0.12] transition-opacity"
+              style={{ backgroundImage: "url('/images/about-story.jpg')" }}
+            />
+            <div className="relative z-10 grid grid-cols-2 gap-6">
               {stats.map((stat, index) => (
                 <motion.div
                   key={stat.label}

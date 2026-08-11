@@ -35,6 +35,7 @@ export const menuItems: MenuItem[] = [
     description: "كبدة، كفتة، سجق، ممبار، كلاوي - مزيج لا يقاوم من النكهات البلدية",
     category: "sandwiches",
     popular: true,
+    image: "/images/sandwiches-mix.jpg",
     ingredients: ["كبدة بلدي", "كفتة", "سجق", "ممبار مقرمش", "كلاوي", "بهارات"],
   },
   {
@@ -108,6 +109,7 @@ export const menuItems: MenuItem[] = [
     description: "لحمة، طحال، كبدة، كفتة، سجق، ممبار، كلاوي - التشكيلة الكاملة",
     category: "sandwiches",
     popular: true,
+    image: "/images/sandwiches-mix.jpg",
     ingredients: ["لحم بلدي", "طحال", "كبدة", "كفتة مشوية", "سجق", "ممبار", "كلاوي"],
   },
   // الطلبات
@@ -272,6 +274,7 @@ export const menuItems: MenuItem[] = [
     description: "تشكيلة من كفتة، سجق، ممبار، كبدة محمرة بالسمن مع أرز بلدي وسلطة وشوربة كوارع",
     category: "family",
     popular: true,
+    image: "/images/sawaney-gzar.jpg",
     ingredients: ["كفتة بلدي", "سجق بلدي", "ممبار محمر", "كبدة بلدي", "أرز مصري"],
   },
   // الطواجن
@@ -331,6 +334,7 @@ export const menuItems: MenuItem[] = [
     price: 290,
     description: "تشكيلة بلدية فاخرة تجمع الطحال المحمر، لحمة الراس الطرية، والممبار المقرمش",
     category: "sawaney",
+    image: "/images/sawaney-gzar.jpg",
     ingredients: ["طحال بلدي", "لحمة راس", "ممبار مقرمش", "سمن بلدي", "ثوم وفلفل"],
   },
   {
@@ -340,6 +344,7 @@ export const menuItems: MenuItem[] = [
     description: "لحمة، طحال، كبدة، كفتة، سجق، ممبار، كلاوي - صينية كاملة محمرة بالسمن واللية",
     category: "sawaney",
     popular: true,
+    image: "/images/sawaney-gzar1.jpg",
     ingredients: ["لحم بلدي محمر", "طحال", "كبدة", "كفتة", "سجق", "ممبار", "كلاوي", "لية وسمن بلدي"],
   },
   {
@@ -349,6 +354,7 @@ export const menuItems: MenuItem[] = [
     description: "مشكل لحوم بلدي، كوارع بلدي مخلية، ممبار محمر، ورق عنب، كفتة وسجق بالسمن البلدي واللية",
     category: "sawaney",
     popular: true,
+    image: "/images/sawaney-gzar1.jpg",
     ingredients: ["كوارع مخلية", "ورق عنب", "كفتة وسجق", "ممبار محمر", "لية وسمن بلدي"],
   },
   // الأرز
