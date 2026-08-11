@@ -71,6 +71,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/qrcode" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm font-medium">
+                  تحميل QR Code المنيو 📱
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
                   عن المطعم
                 </Link>

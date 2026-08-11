@@ -65,7 +65,7 @@ export default function HeroSection() {
           >
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
               <Star className="w-5 h-5 text-gold-550 fill-gold-550 dark:text-gold-400 dark:fill-gold-400" />
-              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">أفضل المشويات والأكلات</span>
+              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">أفضل الأكلات (جودة وطعم)</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
               <MapPin className="w-5 h-5 text-primary-600 dark:text-primary-400" />
