@@ -11,12 +11,13 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-stone-50 dark:bg-dark-950 transition-colors duration-300">
         {/* Real Hero Image Background */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.08] dark:opacity-20 mix-blend-luminosity dark:mix-blend-normal"
+          className="absolute inset-0 bg-cover bg-center opacity-[0.4] dark:opacity-[0.45] transition-opacity duration-300"
           style={{ backgroundImage: "url('/images/hero.png')" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-stone-50/40 via-stone-50 to-stone-50 dark:from-dark-950/40 dark:via-dark-950 dark:to-dark-950" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(220,38,38,0.04),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_50%,rgba(220,38,38,0.15),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(245,158,11,0.03),transparent_50%)] dark:bg-[radial-gradient(circle_at_70%_80%,rgba(245,158,11,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-white/70 dark:bg-black/75 transition-colors duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-stone-50/20 to-stone-50 dark:via-dark-950/20 dark:to-dark-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(220,38,38,0.05),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_50%,rgba(220,38,38,0.12),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(245,158,11,0.04),transparent_50%)] dark:bg-[radial-gradient(circle_at_70%_80%,rgba(245,158,11,0.06),transparent_50%)]" />
         <div className="absolute inset-0 opacity-20 dark:opacity-10" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ea580c' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }} />
@@ -57,7 +58,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-xl md:text-2xl text-stone-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed"
+            className="text-xl md:text-2xl text-stone-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed font-semibold"
           >
             تصفح قائمة طعامنا المميزة واكتشف أجمد الأكلات المطبوخة يومياً بعناية.
           </motion.p>
@@ -71,7 +72,7 @@ export default function HeroSection() {
           >
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
               <Star className="w-5 h-5 text-gold-550 fill-gold-550 dark:text-gold-400 dark:fill-gold-400" />
-              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">أفضل الأكلات (جودة وطعم)</span>
+              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">أفضل المشويات والأكلات</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
               <MapPin className="w-5 h-5 text-primary-600 dark:text-primary-400" />
@@ -118,6 +119,7 @@ export default function HeroSection() {
             <a
               href="tel:01122339739"
               className="inline-flex items-center gap-2 text-xl md:text-2xl font-bold text-stone-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              dir="ltr"
             >
               <Phone className="w-5 h-5 text-primary-500" />
               <span>01122 339 739</span>
@@ -125,6 +127,7 @@ export default function HeroSection() {
             <a
               href="tel:01020058231"
               className="inline-flex items-center gap-2 text-xl md:text-2xl font-bold text-stone-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              dir="ltr"
             >
               <Phone className="w-5 h-5 text-primary-500" />
               <span>01020 058 231</span>

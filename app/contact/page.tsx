@@ -99,6 +99,7 @@ export default function ContactPage() {
                         rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
                         className={`font-semibold text-sm hover:underline break-all text-right ${method.color === "primary" ? "text-primary-650 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300" : "text-gold-650 dark:text-gold-400 hover:text-gold-700 dark:hover:text-gold-300"
                           }`}
+                        dir={item.href.startsWith("tel") ? "ltr" : undefined}
                       >
                         {item.value}
                       </a>

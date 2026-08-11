@@ -97,10 +97,10 @@ export default function InfoSection() {
                   <div>
                     <h4 className="text-stone-900 dark:text-white font-semibold mb-1">أرقام التليفون</h4>
                     <div className="space-y-1">
-                      <a href="tel:01122339739" className="block text-stone-600 dark:text-gray-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                      <a href="tel:01122339739" className="block text-stone-600 dark:text-gray-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-right" dir="ltr">
                         01122 339 739
                       </a>
-                      <a href="tel:01020058231" className="block text-stone-600 dark:text-gray-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                      <a href="tel:01020058231" className="block text-stone-600 dark:text-gray-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-right" dir="ltr">
                         01020 058 231
                       </a>
                     </div>
