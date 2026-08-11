@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { QrCode, Printer, Download, Globe, ArrowRight, RefreshCw } from "lucide-react";
+import { QrCode, Printer, Download, Globe, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function QRCodePage() {
   const [siteUrl, setSiteUrl] = useState("https://mostafa-elgzar-restaurant.vercel.app");
-  const [qrStyle, setQrStyle] = useState<"royal" | "print">("royal");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -17,7 +16,8 @@ export default function QRCodePage() {
     }
   }, []);
 
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&color=000000&bgcolor=ffffff&qzone=2&data=${encodeURIComponent(siteUrl)}`;
+  // Request QR code with High Error Correction (ecc=H) to allow central logo overlay without scan failure
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&ecc=H&color=000000&bgcolor=ffffff&qzone=2&data=${encodeURIComponent(siteUrl)}`;
 
   const handlePrint = () => {
     if (typeof window !== "undefined") {
@@ -36,7 +36,7 @@ export default function QRCodePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 print:px-0">
         
         {/* Navigation & Controls Header (Hidden during Print) */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 print:hidden">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 print:hidden">
           <Link
             href="/"
             className="flex items-center gap-2 text-primary-650 dark:text-primary-400 hover:text-primary-700 font-semibold transition-colors"
@@ -44,39 +44,17 @@ export default function QRCodePage() {
             <ArrowRight className="w-5 h-5" />
             <span>الرجوع للرئيسية</span>
           </Link>
-          
-          <div className="flex items-center gap-2 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 p-1.5 rounded-2xl shadow-sm">
-            <button
-              onClick={() => setQrStyle("royal")}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                qrStyle === "royal"
-                  ? "bg-primary-600 text-white shadow-md shadow-primary-500/10"
-                  : "text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
-              }`}
-            >
-              الستايل الملكي الداكن
-            </button>
-            <button
-              onClick={() => setQrStyle("print")}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                qrStyle === "print"
-                  ? "bg-primary-600 text-white shadow-md shadow-primary-500/10"
-                  : "text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
-              }`}
-            >
-              ستايل الطباعة (موفر للحبر)
-            </button>
-          </div>
+          <span className="text-sm text-stone-500 dark:text-gray-400 font-medium">تصميم بطاقة الطاولة للمطعم</span>
         </div>
 
         {/* Input Settings Panel (Hidden during Print) */}
         <div className="glass-card p-6 mb-8 print:hidden space-y-4">
           <h2 className="text-xl font-bold text-stone-900 dark:text-white flex items-center gap-2">
             <QrCode className="w-5 h-5 text-primary-500" />
-            <span>تخصيص الرابط الإلكتروني الـ QR Code</span>
+            <span>رابط الـ QR Code النشط</span>
           </h2>
           <p className="text-sm text-stone-500 dark:text-gray-400">
-            بشكل افتراضي، تم ربط الـ QR Code بموقعك الحالي تلقائياً. يمكنك تغيير الرابط يدوياً أدناه إذا أردت توجيهه لصفحة أخرى (مثل واتساب أو إنستجرام).
+            تتعرف الصفحة تلقائياً على رابط موقعك وتولّد كود المسح له. يمكنك تغيير الرابط بالأسفل يدوياً للتوجيه لأي رابط تريده.
           </p>
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -105,62 +83,76 @@ export default function QRCodePage() {
         <div className="flex justify-center print:block">
           <div
             id="qr-print-card"
-            className={`w-full max-w-sm rounded-3xl p-8 text-center transition-all duration-300 ${
-              qrStyle === "royal"
-                ? "bg-dark-950 border-4 border-gold-500 shadow-2xl text-white relative"
-                : "bg-white border-4 border-stone-950 text-stone-950"
-            }`}
-            style={{ minHeight: "520px" }}
+            className="w-full max-w-sm rounded-3xl p-8 text-center transition-all duration-300 bg-black border-4 border-stone-900 shadow-2xl text-white relative print:border-stone-950"
+            style={{ minHeight: "560px" }}
           >
-            {/* Background Pattern for Royal Style (Hidden during Print) */}
-            {qrStyle === "royal" && (
-              <div className="absolute inset-0 opacity-10 pointer-events-none rounded-3xl bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.15),transparent_70%)]" style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M24 22v-2h-2v2h-2v2h2v2h2v-2h2v-2h-2zm0-18V2h-2v2h-2v2h2v2h2V6h2V4h-2zM4 22v-2H2v2H0v2h2v2h2v-2h2v-2H4zm0-18V2H2v2H0v2h2v2h2V6h2V4H4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-              }} />
-            )}
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none rounded-3xl bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.2),transparent_70%)]" style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M24 22v-2h-2v2h-2v2h2v2h2v-2h2v-2h-2zm0-18V2h-2v2h-2v2h2v2h2V6h2V4h-2zM4 22v-2H2v2H0v2h2v2h2v-2h2v-2H4zm0-18V2H2v2H0v2h2v2h2V6h2V4H4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+            }} />
 
-            {/* Logo */}
-            <div className="flex flex-col items-center gap-2 mb-6">
+            {/* Restaurant Logo & Header */}
+            <div className="flex flex-col items-center gap-2 mb-8 relative z-10">
               <img
                 src="/images/logo.png"
                 alt="Logo"
-                className="w-16 h-16 object-contain rounded-2xl shadow-lg border border-stone-200/20"
+                className="w-16 h-16 object-contain rounded-2xl shadow-lg border border-stone-800"
               />
-              <h3 className="text-2xl font-bold font-cairo">
+              <h3 className="text-2xl font-bold font-cairo tracking-wide text-white">
                 مطعم مصطفى الجزار
               </h3>
-              <p className={`text-xs font-semibold ${qrStyle === "royal" ? "text-gold-400" : "text-stone-600"}`}>
+              <div className="h-0.5 w-16 bg-primary-600 mt-1 rounded-full"></div>
+              <p className="text-xs font-semibold text-gold-400 mt-1">
                 أصل الأكل الحرش
               </p>
             </div>
 
-            {/* QR Code Frame */}
-            <div className="flex justify-center mb-6">
-              <div className={`p-4 rounded-2xl shadow-inner ${
-                qrStyle === "royal" ? "bg-white" : "bg-stone-50 border border-stone-200"
-              }`}>
-                <img
-                  src={qrImageUrl}
-                  alt="QR Code"
-                  className="w-56 h-56 object-contain select-none"
-                />
+            {/* QR Code Container with Red/Black Scan Frame */}
+            <div className="flex justify-center mb-6 relative z-10">
+              <div className="relative p-6 bg-stone-950 rounded-3xl border border-stone-800 shadow-xl">
+                
+                {/* Red Scanner Corners */}
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary-600 rounded-tl-2xl"></div>
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary-600 rounded-tr-2xl"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary-600 rounded-bl-2xl"></div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary-600 rounded-br-2xl"></div>
+                
+                {/* QR Code Image and Overlay Central Logo */}
+                <div className="relative p-2 bg-white rounded-2xl shadow-lg">
+                  <img
+                    src={qrImageUrl}
+                    alt="QR Code"
+                    className="w-48 h-48 object-contain select-none"
+                  />
+                  {/* Central Logo Overlay */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-xl p-1 flex items-center justify-center shadow-md border border-stone-200">
+                    <img
+                      src="/images/logo.png"
+                      alt="Center Logo"
+                      className="w-10 h-10 object-contain rounded-lg"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pill "Scan Me" Label */}
+            <div className="mb-4 relative z-10">
+              <div className="inline-flex items-center gap-2 bg-primary-600 text-white px-5 py-2 rounded-full text-xs font-extrabold shadow-lg shadow-primary-600/30 animate-pulse border border-primary-500">
+                <QrCode className="w-3.5 h-3.5" />
+                <span>امسح المنيو</span>
               </div>
             </div>
 
             {/* Instructions */}
-            <div className="space-y-2">
-              <h4 className="text-lg font-bold">
-                امسح الـ QR Code 📱
-              </h4>
-              <p className={`text-xs leading-relaxed max-w-xs mx-auto ${
-                qrStyle === "royal" ? "text-stone-300" : "text-stone-600"
-              }`}>
-                لتصفح المنيو الكامل والطلب المباشر من هاتفك المحمول داخل الصالة أو للمنزل
+            <div className="space-y-2 relative z-10">
+              <p className="text-xs leading-relaxed max-w-xs mx-auto text-stone-300 font-medium">
+                تصفح قائمة المشويات والأطباق بالكامل واطلب طعامك مباشرة من تليفونك
               </p>
             </div>
 
-            {/* Subtext info */}
-            <div className="mt-6 pt-4 border-t border-dashed border-stone-200/20 dark:border-stone-900/10 flex items-center justify-between text-[10px] text-stone-500">
+            {/* Subtext Info */}
+            <div className="mt-8 pt-4 border-t border-dashed border-stone-800 flex items-center justify-between text-[10px] text-stone-400 relative z-10">
               <span>01122339739</span>
               <span>المطرية - القاهرة</span>
               <span>01020058231</span>
@@ -207,6 +199,10 @@ export default function QRCodePage() {
               box-shadow: none !important;
               margin: 0 auto !important;
               page-break-inside: avoid;
+              background-color: black !important;
+              color: white !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
           }
         `}</style>
