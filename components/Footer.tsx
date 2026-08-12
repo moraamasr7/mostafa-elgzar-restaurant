@@ -24,7 +24,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-stone-600 dark:text-gray-400 text-sm leading-relaxed">
-              مطعم مصطفى الجزار يقدم أشهى المأكولات والمشويات بأسعار مميزة. تصفح المنيو الخاص بنا الآن.
+              مطعم مصطفى الجزار يقدم أشهى المأكولات الحرشة وفواكة اللحوم بأسعار مميزة. تصفح المنيو الخاص بنا الآن.
             </p>
             <div className="flex items-center gap-3">
               <a
@@ -70,11 +70,11 @@ export default function Footer() {
                   المنيو الكامل
                 </Link>
               </li>
-              <li>
+              {/*<li>
                 <Link href="/qrcode" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm font-medium">
                   تحميل QR Code المنيو 📱
                 </Link>
-              </li>
+              </li>*/}
               <li>
                 <Link href="/about" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
                   عن المطعم
