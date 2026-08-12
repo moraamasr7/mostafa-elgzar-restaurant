@@ -69,19 +69,8 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* CTA & Theme Buttons */}
+          {/* CTA Button */}
           <div className="hidden md:flex items-center gap-3">
-            <button
-              onClick={toggleTheme}
-              className="p-2.5 rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-600 dark:text-gray-300 hover:text-stone-900 dark:hover:text-white transition-all duration-300 whitespace-nowrap shrink-0 inline-flex items-center justify-center"
-              aria-label="Toggle Theme"
-            >
-              {theme === "dark" ? (
-                <Sun className="w-5 h-5 text-gold-400" />
-              ) : (
-                <Moon className="w-5 h-5 text-primary-600" />
-              )}
-            </button>
             <a
               href="tel:01122339739"
               className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg shadow-primary-900/30 whitespace-nowrap shrink-0 inline-flex justify-center select-none"
@@ -91,19 +80,8 @@ export default function Navbar() {
             </a>
           </div>
 
-          {/* Mobile Theme & Menu Button */}
+          {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 md:hidden">
-            <button
-              onClick={toggleTheme}
-              className="p-2.5 rounded-xl border border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 text-stone-600 dark:text-gray-300 hover:text-stone-900 dark:hover:text-white transition-all whitespace-nowrap shrink-0 inline-flex items-center justify-center"
-              aria-label="Toggle Theme"
-            >
-              {theme === "dark" ? (
-                <Sun className="w-5 h-5 text-gold-400" />
-              ) : (
-                <Moon className="w-5 h-5 text-primary-600" />
-              )}
-            </button>
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors whitespace-nowrap shrink-0 inline-flex items-center justify-center"
