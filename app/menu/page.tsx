@@ -2,18 +2,60 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, ArrowRight, Phone, Sparkles, ZoomIn, Download } from "lucide-react";
+import { BookOpen, ArrowRight, Phone, Sparkles, ZoomIn, Download, X, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { menuItems } from "@/data/menu";
 import MenuCard from "@/components/MenuCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
 
+const paperImages = ["/images/menu1.jpg", "/images/menu2.jpg"];
+
 export default function MenuPage() {
   const [menuType, setMenuType] = useState<"paper" | "interactive">("paper");
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [swipeDirection, setSwipeDirection] = useState<"left" | "right">("left");
+
+  // Touch tracking for swipe gestures
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchCurrentX, setTouchCurrentX] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchCurrentX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX === null || touchCurrentX === null) return;
+    const differenceX = touchStartX - touchCurrentX;
+    const minSwipeDistance = 50; // minimum distance in px to trigger swipe
+
+    if (differenceX > minSwipeDistance) {
+      // Swiped Left (Next Page)
+      setSwipeDirection("left");
+      setLightboxIndex((prev) => (prev === null ? null : prev === 0 ? 1 : 0));
+    } else if (differenceX < -minSwipeDistance) {
+      // Swiped Right (Previous Page)
+      setSwipeDirection("right");
+      setLightboxIndex((prev) => (prev === null ? null : prev === 0 ? 1 : 0));
+    }
+
+    setTouchStartX(null);
+    setTouchCurrentX(null);
+  };
+
+  const navigateLightbox = (direction: "next" | "prev") => {
+    setSwipeDirection(direction === "next" ? "left" : "right");
+    setLightboxIndex((prev) => {
+      if (prev === null) return null;
+      return prev === 0 ? 1 : 0;
+    });
+  };
 
   const filteredItems = useMemo(() => {
     return menuItems.filter((item) => {
@@ -92,7 +134,7 @@ export default function MenuPage() {
                 {/* Page 1 Card */}
                 <div
                   className="glass-card p-4 flex flex-col items-center gap-4 group cursor-zoom-in"
-                  onClick={() => setLightboxImage("/images/menu1.jpg")}
+                  onClick={() => setLightboxIndex(0)}
                 >
                   <div className="relative w-full rounded-2xl overflow-hidden border border-stone-200 dark:border-white/5 bg-stone-950 shadow-md">
                     <img
@@ -122,7 +164,7 @@ export default function MenuPage() {
                 {/* Page 2 Card */}
                 <div
                   className="glass-card p-4 flex flex-col items-center gap-4 group cursor-zoom-in"
-                  onClick={() => setLightboxImage("/images/menu2.jpg")}
+                  onClick={() => setLightboxIndex(1)}
                 >
                   <div className="relative w-full rounded-2xl overflow-hidden border border-stone-200 dark:border-white/5 bg-stone-950 shadow-md">
                     <img
@@ -236,46 +278,97 @@ export default function MenuPage() {
         </AnimatePresence>
       </div>
 
-      {/* Lightbox for zooming Scanned Paper Menu pages */}
+      {/* Lightbox for zooming Scanned Paper Menu pages with Swipe and Navigation controls */}
       <AnimatePresence>
-        {lightboxImage && (
+        {lightboxIndex !== null && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out"
-            onClick={() => setLightboxImage(null)}
+            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4 select-none touch-none"
+            onClick={() => setLightboxIndex(null)}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
-            <button
-              onClick={() => setLightboxImage(null)}
-              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full shadow-lg transition-all focus:outline-none z-55"
-              aria-label="إغلاق"
+            {/* Top Control Bar */}
+            <div className="absolute top-4 inset-x-4 flex items-center justify-between z-50 print:hidden">
+              {/* Close Button - Large and highly clickable on mobile */}
+              <button
+                onClick={() => setLightboxIndex(null)}
+                className="bg-stone-900/80 hover:bg-stone-850 text-white w-12 h-12 rounded-full shadow-lg transition-all flex items-center justify-center border border-white/10 hover:scale-105 active:scale-95 z-50"
+                aria-label="إغلاق"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* Page Indicator */}
+              <span className="bg-stone-900/85 border border-white/10 px-4 py-2 rounded-full text-sm font-bold text-gray-300">
+                صفحة {lightboxIndex + 1} من {paperImages.length}
+              </span>
+
+              {/* Download Button */}
+              <a
+                href={paperImages[lightboxIndex]}
+                download={`menu_page_${lightboxIndex + 1}.jpg`}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-primary-600 hover:bg-primary-500 text-white w-12 h-12 rounded-full shadow-lg transition-all flex items-center justify-center hover:scale-105 active:scale-95"
+                title="تحميل بجودة عالية"
+              >
+                <Download className="w-5 h-5" />
+              </a>
+            </div>
+
+            {/* Swipe Guide Text for Mobile (Hidden on desktop) */}
+            <p className="absolute bottom-6 text-[11px] text-stone-500 text-center animate-pulse pointer-events-none md:hidden z-10">
+              اسحب لليمين أو اليسار للتنقل بين الصفحات
+            </p>
+
+            {/* Main Interactive Image Viewport */}
+            <div 
+              className="relative max-w-4xl max-h-[75vh] w-full h-full flex items-center justify-center cursor-zoom-out"
+              onClick={() => setLightboxIndex(null)}
             >
-              ✕
-            </button>
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative max-w-4xl max-h-[85vh] w-full h-full flex items-center justify-center"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img
-                src={lightboxImage}
-                alt="منيو مكبّر"
-                className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/10 select-none"
-              />
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
-                <a
-                  href={lightboxImage}
-                  download={lightboxImage.includes("menu1") ? "menu_page_1.jpg" : "menu_page_2.jpg"}
-                  className="bg-primary-600 hover:bg-primary-500 text-white px-6 py-2.5 rounded-full shadow-xl transition-all flex items-center gap-2 font-bold text-sm"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>تحميل بجودة عالية</span>
-                </a>
-              </div>
-            </motion.div>
+              {/* Desktop Nav Arrows - Left and Right */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigateLightbox("prev");
+                }}
+                className="absolute right-0 md:-right-16 top-1/2 -translate-y-1/2 bg-stone-900/80 hover:bg-stone-800 text-white w-12 h-12 rounded-full shadow-lg transition-all flex items-center justify-center border border-white/10 z-50 hover:scale-105 hover:border-primary-500/50"
+                aria-label="الصفحة السابقة"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigateLightbox("next");
+                }}
+                className="absolute left-0 md:-left-16 top-1/2 -translate-y-1/2 bg-stone-900/80 hover:bg-stone-800 text-white w-12 h-12 rounded-full shadow-lg transition-all flex items-center justify-center border border-white/10 z-50 hover:scale-105 hover:border-primary-500/50"
+                aria-label="الصفحة التالية"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+
+              {/* Animating Image wrapper based on Swipe Direction */}
+              <motion.div
+                key={lightboxIndex}
+                initial={{ opacity: 0, x: swipeDirection === "left" ? 80 : -80 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: swipeDirection === "left" ? -80 : 80 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="relative max-w-full max-h-full flex items-center justify-center touch-pan-y"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <img
+                  src={paperImages[lightboxIndex]}
+                  alt={`منيو مكبّر صفحة ${lightboxIndex + 1}`}
+                  className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-white/10 select-none pointer-events-none"
+                />
+              </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
