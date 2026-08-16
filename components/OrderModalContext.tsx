@@ -51,13 +51,8 @@ export function OrderModalProvider({ children }: { children: React.ReactNode }) 
     });
     closeOrderModal();
 
-    // If targetUrl is a tel: link, open it; otherwise navigate to ordering web app
     if (typeof window !== "undefined") {
-      if (targetUrl.startsWith("tel:")) {
-        window.location.href = targetUrl;
-      } else {
-        window.open(targetUrl, "_blank", "noopener,noreferrer");
-      }
+      window.location.href = targetUrl;
     }
   };
 
