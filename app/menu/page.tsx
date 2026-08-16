@@ -69,7 +69,7 @@ export default function MenuPage() {
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-dark-950 pt-24 pb-16 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -85,7 +85,7 @@ export default function MenuPage() {
             منيو <span className="text-gradient">الجزار</span> الكامل
           </h1>
           <p className="text-stone-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
-            اختر ما يناسبك لتصفحه؛ المنيو الورقي الأصلي المصور، أو المنيو الرقمي التفاعلي والمفصل.
+            اختر ما يناسبك لتصفحه؛ المنيو الورقي الأصلي المصور، أو المنيو التفاعلي للطلب للمنزل.
           </p>
         </motion.div>
 
@@ -94,25 +94,23 @@ export default function MenuPage() {
           <div className="flex items-center gap-2 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 p-1.5 rounded-2xl shadow-sm">
             <button
               onClick={() => setMenuType("paper")}
-              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-                menuType === "paper"
-                  ? "bg-primary-600 text-white shadow-md shadow-primary-500/10"
-                  : "text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
-              }`}
+              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap ${menuType === "paper"
+                ? "bg-primary-600 text-white shadow-md shadow-primary-500/10"
+                : "text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
+                }`}
             >
               <BookOpen className="w-4 h-4" />
-              <span>المنيو الورقي (مصور)</span>
+              <span>المنيو الورقي</span>
             </button>
             <button
               onClick={() => setMenuType("interactive")}
-              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-                menuType === "interactive"
-                  ? "bg-primary-600 text-white shadow-md shadow-primary-500/10"
-                  : "text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
-              }`}
+              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap ${menuType === "interactive"
+                ? "bg-primary-600 text-white shadow-md shadow-primary-500/10"
+                : "text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
+                }`}
             >
               <Sparkles className="w-4 h-4" />
-              <span>المنيو التفاعلي (رقمي)</span>
+              <span>المنيو الإلكتروني</span>
             </button>
           </div>
         </div>
@@ -130,7 +128,7 @@ export default function MenuPage() {
               className="space-y-8"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                
+
                 {/* Page 1 Card */}
                 <div
                   className="glass-card p-4 flex flex-col items-center gap-4 group cursor-zoom-in"
@@ -144,7 +142,7 @@ export default function MenuPage() {
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-sm">
                       <ZoomIn className="w-5 h-5 text-primary-500" />
-                      <span>اضغط لتكبير الصفحة الأولى</span>
+                      <span>اضغط لتكبير  </span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between w-full px-2">
@@ -174,7 +172,7 @@ export default function MenuPage() {
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-sm">
                       <ZoomIn className="w-5 h-5 text-primary-500" />
-                      <span>اضغط لتكبير الصفحة الثانية</span>
+                      <span>اضغط لتكبير</span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between w-full px-2">
@@ -214,7 +212,7 @@ export default function MenuPage() {
                     تفضل الطلب للمنزل؟ 🚀
                   </h4>
                   <p className="text-stone-600 dark:text-gray-400 text-xs sm:text-sm">
-                    قريباً خدمة الطلب المباشر أونلاين! يمكنك الطلب حالياً عبر الاتصال الهاتفي
+                    قريباً خدمة توصيل للمنزل أونلاين! يمكنك الطلب حالياً عبر الاتصال الهاتفي
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 shrink-0 justify-center">
@@ -325,7 +323,7 @@ export default function MenuPage() {
             </p>
 
             {/* Main Interactive Image Viewport */}
-            <div 
+            <div
               className="relative max-w-4xl max-h-[75vh] w-full h-full flex items-center justify-center cursor-zoom-out"
               onClick={() => setLightboxIndex(null)}
             >
