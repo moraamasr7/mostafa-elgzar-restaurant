@@ -1,11 +1,14 @@
 "use client";
 
-import { Phone, MapPin } from "lucide-react";
+import { MapPin, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+import { siteConfig } from "@/lib/config";
+import { useOrderModal } from "@/components/OrderModalContext";
 
 export default function FloatingActions() {
   const [isVisible, setIsVisible] = useState(false);
+  const { openOrderModal } = useOrderModal();
 
   useEffect(() => {
     // Show after scrolling 200px or immediately on pages
@@ -28,15 +31,16 @@ export default function FloatingActions() {
           transition={{ duration: 0.3 }}
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-white/90 dark:bg-dark-950/90 backdrop-blur-md px-4 py-3 rounded-2xl border border-stone-200 dark:border-white/10 shadow-xl w-[90%] max-w-sm justify-between md:hidden"
         >
-          <a
-            href="tel:01122339739"
-            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary-500/20 flex-1 justify-center"
+          <button
+            type="button"
+            onClick={() => openOrderModal()}
+            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary-500/20 flex-1 justify-center cursor-pointer"
           >
-            <Phone className="w-4 h-4 shrink-0" />
-            <span className="whitespace-nowrap">اتصل بنا</span>
-          </a>
+            <ShoppingBag className="w-4 h-4 shrink-0" />
+            <span className="whitespace-nowrap">اطلب الآن</span>
+          </button>
           <a
-            href="https://maps.app.goo.gl/D5ENYuQWe8EdeyjS6"
+            href={siteConfig.locationMapUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 bg-stone-100 hover:bg-stone-200 dark:bg-white/5 dark:hover:bg-white/10 text-stone-800 dark:text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border border-stone-200 dark:border-white/10 flex-1 justify-center"

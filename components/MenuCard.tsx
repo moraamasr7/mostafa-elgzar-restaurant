@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Flame, Phone } from "lucide-react";
-import { MenuItem } from "@/data/menu";
+import { Flame, ShoppingBag } from "lucide-react";
+import { MenuItem } from "@/types/menu";
+import { useOrderModal } from "@/components/OrderModalContext";
 
 interface MenuCardProps {
   item: MenuItem;
@@ -10,6 +11,8 @@ interface MenuCardProps {
 }
 
 export default function MenuCard({ item, index }: MenuCardProps) {
+  const { openOrderModal } = useOrderModal();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -74,13 +77,14 @@ export default function MenuCard({ item, index }: MenuCardProps) {
 
       {/* Order Button */}
       <div className="mt-4">
-        <a
-          href="tel:01122339739"
-          className="w-full flex items-center justify-center gap-2 bg-stone-100 dark:bg-white/5 hover:bg-primary-600/10 dark:hover:bg-primary-600/20 border border-stone-200 dark:border-white/10 hover:border-primary-500/30 text-stone-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-white py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap inline-flex"
+        <button
+          type="button"
+          onClick={() => openOrderModal(item.id)}
+          className="w-full flex items-center justify-center gap-2 bg-stone-100 dark:bg-white/5 hover:bg-primary-600/10 dark:hover:bg-primary-600/20 border border-stone-200 dark:border-white/10 hover:border-primary-500/30 text-stone-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-white py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap inline-flex cursor-pointer"
         >
-          <Phone className="w-4 h-4" />
+          <ShoppingBag className="w-4 h-4" />
           <span>اطلب الآن</span>
-        </a>
+        </button>
       </div>
     </motion.div>
   );

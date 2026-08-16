@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Phone, MapPin, Clock, ExternalLink, Facebook } from "lucide-react";
+import { Phone, MapPin, ExternalLink, Facebook } from "lucide-react";
+import { siteConfig } from "@/lib/config";
 
 export default function Footer() {
   return (
@@ -13,18 +14,18 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <img
                 src="/images/logo.png"
-                alt="مصطفى الجزار - Mostafa Elgzar"
+                alt={`${siteConfig.name} - Mostafa Elgzar`}
                 className="w-12 h-12 object-contain rounded-xl shadow-lg"
               />
               <div>
                 <h3 className="text-xl font-bold text-stone-900 dark:text-white">
-                  مصطفى الجزار
+                  {siteConfig.name}
                 </h3>
-                <p className="text-sm text-gold-600 dark:text-gold-400 font-semibold">أصل الأكل الحرش</p>
+                <p className="text-sm text-gold-600 dark:text-gold-400 font-semibold">{siteConfig.subtitle}</p>
               </div>
             </div>
             <p className="text-stone-600 dark:text-gray-400 text-sm leading-relaxed">
-              مطعم مصطفى الجزار يقدم أشهى المأكولات الحرشة وفواكة اللحوم بأسعار مميزة. تصفح المنيو الخاص بنا الآن.
+              {siteConfig.name} يقدم أشهى المأكولات الحرشة وفواكة اللحوم بأسعار مميزة. تصفح المنيو الخاص بنا الآن.
             </p>
             <div className="flex items-center gap-3">
               <a
@@ -45,14 +46,6 @@ export default function Footer() {
                   <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.88-2.89 2.89 2.89 0 0 1 2.88-2.89c.3 0 .6.05.88.13v-3.5a6.36 6.36 0 0 0-.88-.06A6.34 6.34 0 0 0 3.25 15.8a6.34 6.34 0 0 0 6.33 6.34 6.34 6.34 0 0 0 6.33-6.34V9.91a8.16 8.16 0 0 0 4.78 1.54V7.91a4.83 4.83 0 0 1-1.1-.22z" />
                 </svg>
               </a>
-              <a
-                href="https://menu-mostafa-elgazar.vercel.app/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 hover:bg-gold-600 dark:hover:bg-gold-600 hover:text-white rounded-xl flex items-center justify-center text-stone-700 dark:text-white transition-colors shadow-sm dark:shadow-none"
-              >
-                <ExternalLink className="w-5 h-5" />
-              </a>
             </div>
           </div>
 
@@ -70,11 +63,6 @@ export default function Footer() {
                   المنيو الكامل
                 </Link>
               </li>
-              {/*<li>
-                <Link href="/qrcode" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm font-medium">
-                  تحميل QR Code المنيو 📱
-                </Link>
-              </li>*/}
               <li>
                 <Link href="/about" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
                   عن المطعم
@@ -95,24 +83,24 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary-500 mt-0.5 shrink-0" />
                 <a
-                  href="https://maps.app.goo.gl/D5ENYuQWe8EdeyjS6"
+                  href={siteConfig.locationMapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-stone-600 dark:text-gray-400 text-sm hover:underline hover:text-primary-650 dark:hover:text-primary-400 transition-colors"
                 >
-                  5 شارع عمر المختار، متفرع من شارع الحرية، الرشاح، المطرية، القاهرة
+                  {siteConfig.location}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary-500 shrink-0" />
-                <a href="tel:01122339739" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm font-semibold">
-                  01122339739
+                <a href={siteConfig.telUrl} className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm font-semibold">
+                  {siteConfig.phone}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary-500 shrink-0" />
-                <a href="tel:01020058231" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm font-semibold">
-                  01020058231
+                <a href={siteConfig.telUrlSecondary} className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm font-semibold">
+                  {siteConfig.phoneSecondary}
                 </a>
               </li>
             </ul>

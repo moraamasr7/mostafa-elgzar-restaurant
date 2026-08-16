@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /menu
+Allow: /about
+Allow: /contact
+Allow: /qrcode
+
+Sitemap: https://mostafaelgzar.com/sitemap.xml

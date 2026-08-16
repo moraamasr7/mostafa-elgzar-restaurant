@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Phone, Sun, Moon } from "lucide-react";
+import { Menu, X, Phone, Sun, Moon, ShoppingBag } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import { siteConfig } from "@/lib/config";
+import { useOrderModal } from "@/components/OrderModalContext";
 
 const navLinks = [
   { href: "/", label: "الرئيسية" },
@@ -18,6 +20,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
+  const { openOrderModal } = useOrderModal();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,14 +44,14 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-3 group">
             <img
               src="/images/logo.png"
-              alt="مصطفى الجزار - Mostafa Elgzar"
+              alt={`${siteConfig.name} - Mostafa Elgzar`}
               className="w-12 h-12 object-contain rounded-xl shadow-md group-hover:scale-105 transition-transform"
             />
             <div className="hidden sm:block">
               <h1 className="text-lg font-bold text-stone-900 dark:text-white leading-none">
-                مصطفى الجزار
+                {siteConfig.name}
               </h1>
-              <p className="text-[10px] text-gold-600 dark:text-gold-400 font-semibold mt-1">أصل الأكل الحرش</p>
+              <p className="text-[10px] text-gold-600 dark:text-gold-400 font-semibold mt-1">{siteConfig.subtitle}</p>
             </div>
           </Link>
 
@@ -71,13 +74,14 @@ export default function Navbar() {
 
           {/* CTA Button */}
           <div className="hidden md:flex items-center gap-3">
-            <a
-              href="tel:01122339739"
-              className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg shadow-primary-900/30 whitespace-nowrap shrink-0 inline-flex justify-center select-none"
+            <button
+              type="button"
+              onClick={() => openOrderModal()}
+              className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg shadow-primary-900/30 whitespace-nowrap shrink-0 inline-flex justify-center select-none cursor-pointer"
             >
-              <Phone className="w-4 h-4" />
+              <ShoppingBag className="w-4 h-4" />
               <span>اطلب الآن</span>
-            </a>
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -113,13 +117,17 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <a
-            href="tel:01122339739"
-            className="flex items-center justify-center gap-2 bg-primary-600 text-white px-4 py-3 rounded-xl text-sm font-semibold mt-4 whitespace-nowrap"
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+              openOrderModal();
+            }}
+            className="w-full flex items-center justify-center gap-2 bg-primary-600 text-white px-4 py-3 rounded-xl text-sm font-semibold mt-4 whitespace-nowrap cursor-pointer"
           >
-            <Phone className="w-4 h-4" />
-            <span>01122339739 - اطلب الآن</span>
-          </a>
+            <ShoppingBag className="w-4 h-4" />
+            <span>اطلب الآن (استلام / توصيل)</span>
+          </button>
         </div>
       </div>
     </nav>

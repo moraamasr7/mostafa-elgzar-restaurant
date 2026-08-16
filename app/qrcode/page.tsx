@@ -4,15 +4,19 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { QrCode, Printer, Download, Globe, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { getCanonicalUrl, siteConfig } from "@/lib/config";
 
 export default function QRCodePage() {
-  const [siteUrl, setSiteUrl] = useState("https://mostafa-elgzar-restaurant.vercel.app");
+  const defaultMenuUrl = getCanonicalUrl("/menu");
+  const [siteUrl, setSiteUrl] = useState(defaultMenuUrl);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // Automatically detect the current domain
-      setSiteUrl(window.location.origin);
+      // If running on a live domain (not localhost), sync to active origin /menu
+      if (!window.location.hostname.includes("localhost") && !window.location.hostname.includes("127.0.0.1")) {
+        setSiteUrl(`${window.location.origin}/menu`);
+      }
     }
   }, []);
 

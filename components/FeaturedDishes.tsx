@@ -1,14 +1,38 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Flame, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { menuItems } from "@/data/menu";
+import { MenuItem } from "@/types/menu";
+import { fetchFeaturedDishes } from "@/lib/menu";
 import MenuCard from "@/components/MenuCard";
 
-const featuredItems = menuItems.filter((item) => item.popular);
+interface FeaturedDishesProps {
+  items?: MenuItem[];
+}
 
-export default function FeaturedDishes() {
+export default function FeaturedDishes({ items: initialItems }: FeaturedDishesProps) {
+  const [dishes, setDishes] = useState<MenuItem[]>(initialItems || []);
+
+  useEffect(() => {
+    if (!initialItems || initialItems.length === 0) {
+      let isMounted = true;
+      const loadFeatured = async () => {
+        const result = await fetchFeaturedDishes();
+        if (isMounted) {
+          setDishes(result.items);
+        }
+      };
+      loadFeatured();
+      return () => {
+        isMounted = false;
+      };
+    }
+  }, [initialItems]);
+
+  const displayItems = (dishes.length > 0 ? dishes : []).slice(0, 3);
+
   return (
     <section className="py-24 bg-stone-100/50 dark:bg-dark-950/40 relative overflow-hidden transition-colors duration-300">
       {/* Background accent */}
@@ -35,7 +59,7 @@ export default function FeaturedDishes() {
 
         {/* Featured Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredItems.slice(0, 3).map((item, index) => (
+          {displayItems.map((item, index) => (
             <MenuCard key={item.id} item={item} index={index} />
           ))}
         </div>

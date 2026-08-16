@@ -1,7 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MapPin, Phone, Clock, Truck, Award, ChefHat } from "lucide-react";
+import { MapPin, Phone, Clock, Truck, Award, ChefHat, ShoppingBag } from "lucide-react";
+import { siteConfig } from "@/lib/config";
+import { useOrderModal } from "@/components/OrderModalContext";
 
 const features = [
   {
@@ -12,7 +14,7 @@ const features = [
   {
     icon: Truck,
     title: "خدمة توصيل",
-    description: "نوصل لباب بيتك عبر تطبيق طلبات (Talabat) بسرعة وأمان",
+    description: "نوصل لباب بيتك عبر طلب أونلاين أو تطبيق طلبات (Talabat) بسرعة وأمان",
   },
   {
     icon: Award,
@@ -22,6 +24,8 @@ const features = [
 ];
 
 export default function InfoSection() {
+  const { openOrderModal } = useOrderModal();
+
   return (
     <section className="py-24 bg-stone-50 dark:bg-dark-900/30 relative transition-colors duration-300">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(220,38,38,0.03),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(220,38,38,0.05),transparent_70%)]" />
@@ -38,7 +42,7 @@ export default function InfoSection() {
           >
             <div className="space-y-4 mb-8">
               <h2 className="text-4xl md:text-5xl font-bold text-stone-900 dark:text-white">
-                ليه تختار <span className="text-gradient">مصطفى الجزار؟</span>
+                ليه تختار <span className="text-gradient">{siteConfig.name}؟</span>
               </h2>
               <p className="text-stone-600 dark:text-gray-400 text-lg leading-relaxed">
                 احنا مش مجرد مطعم، احنا تجربة أصيلة للأكل البلدي المصري.
@@ -85,7 +89,7 @@ export default function InfoSection() {
                   <div>
                     <h4 className="text-stone-900 dark:text-white font-semibold mb-1">العنوان</h4>
                     <p className="text-stone-600 dark:text-gray-400 text-sm leading-relaxed">
-                      شارع عمر المختار، متفرع من شارع الحرية بجوار كنيسة الرشاح، المطرية، القاهرة
+                      {siteConfig.location}
                     </p>
                   </div>
                 </div>
@@ -97,11 +101,11 @@ export default function InfoSection() {
                   <div>
                     <h4 className="text-stone-900 dark:text-white font-semibold mb-1">أرقام التليفون</h4>
                     <div className="space-y-1">
-                      <a href="tel:01122339739" className="block text-stone-600 dark:text-gray-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-right" dir="ltr">
-                        01122 339 739
+                      <a href={siteConfig.telUrl} className="block text-stone-600 dark:text-gray-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-right" dir="ltr">
+                        {siteConfig.phone}
                       </a>
-                      <a href="tel:01020058231" className="block text-stone-600 dark:text-gray-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-right" dir="ltr">
-                        01020 058 231
+                      <a href={siteConfig.telUrlSecondary} className="block text-stone-600 dark:text-gray-400 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-right" dir="ltr">
+                        {siteConfig.phoneSecondary}
                       </a>
                     </div>
                   </div>
@@ -114,7 +118,7 @@ export default function InfoSection() {
                   <div>
                     <h4 className="text-stone-900 dark:text-white font-semibold mb-1">مواعيد العمل</h4>
                     <p className="text-stone-600 dark:text-gray-400 text-sm font-medium">
-                      نعمل يومياً من [4 العصر] إلى [4 ليلآ]
+                      نعمل يومياً {siteConfig.workingHours}
                     </p>
                   </div>
                 </div>
@@ -122,15 +126,16 @@ export default function InfoSection() {
 
               {/* Order Buttons */}
               <div className="pt-4 space-y-3">
-                <a
-                  href="tel:01122339739"
-                  className="btn-primary w-full flex items-center justify-center gap-2 text-center"
+                <button
+                  type="button"
+                  onClick={() => openOrderModal()}
+                  className="btn-primary w-full flex items-center justify-center gap-2 text-center cursor-pointer"
                 >
-                  <Phone className="w-5 h-5" />
-                  <span>اتصل بنا الآن</span>
-                </a>
+                  <ShoppingBag className="w-5 h-5" />
+                  <span>طلب أونلاين (استلام / توصيل)</span>
+                </button>
                 <a
-                  href="https://www.talabat.com/ar/egypt/restaurant/781448/mostafa-algazaar-restaurant-matareya?aid=7827"
+                  href={siteConfig.talabatUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-gold w-full flex items-center justify-center gap-2 text-center"

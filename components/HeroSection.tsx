@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Phone, MapPin, Clock, Flame, Star, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { siteConfig } from "@/lib/config";
 
 export default function HeroSection() {
   return (
@@ -80,7 +81,7 @@ export default function HeroSection() {
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
               <Clock className="w-5 h-5 text-gold-550 dark:text-gold-400" />
-              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">من 4 عصراً إلى 4 فجراً</span>
+              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">{siteConfig.workingHours}</span>
             </div>
           </motion.div>
 
@@ -99,7 +100,7 @@ export default function HeroSection() {
               <ChevronDown className="w-5 h-5 animate-bounce" />
             </Link>
             <a
-              href="https://maps.app.goo.gl/D5ENYuQWe8EdeyjS6"
+              href={siteConfig.locationMapUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-gold text-lg px-8 py-4 flex items-center gap-2 shadow-lg shadow-gold-500/20 w-full sm:w-auto justify-center whitespace-nowrap inline-flex"
@@ -117,20 +118,20 @@ export default function HeroSection() {
             className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8"
           >
             <a
-              href="tel:01122339739"
+              href={siteConfig.telUrl}
               className="inline-flex items-center gap-2 text-xl md:text-2xl font-bold text-stone-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               dir="ltr"
             >
               <Phone className="w-5 h-5 text-primary-500" />
-              <span>011 223 39 739</span>
+              <span>{siteConfig.phone}</span>
             </a>
             <a
-              href="tel:01020058231"
-              className="inline-flex items-center gap-2 text-xl md:text-2xl font-bold text-stone-100 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              href={siteConfig.telUrlSecondary}
+              className="inline-flex items-center gap-2 text-xl md:text-2xl font-bold text-stone-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               dir="ltr"
             >
               <Phone className="w-5 h-5 text-primary-500" />
-              <span>010 200 58 231</span>
+              <span>{siteConfig.phoneSecondary}</span>
             </a>
           </motion.div>
         </motion.div>

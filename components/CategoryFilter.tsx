@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import { Grid3X3, Sandwich, Soup, Beef, UtensilsCrossed, Pizza, ChefHat, Wheat, Salad, CupSoda } from "lucide-react";
-import { categories } from "@/data/menu";
+import { MenuCategory } from "@/types/menu";
+import { categories as defaultCategories } from "@/data/menu";
 
 const iconMap: Record<string, React.ElementType> = {
   Grid3X3,
@@ -20,9 +21,14 @@ const iconMap: Record<string, React.ElementType> = {
 interface CategoryFilterProps {
   activeCategory: string;
   onCategoryChange: (categoryId: string) => void;
+  categories?: MenuCategory[];
 }
 
-export default function CategoryFilter({ activeCategory, onCategoryChange }: CategoryFilterProps) {
+export default function CategoryFilter({
+  activeCategory,
+  onCategoryChange,
+  categories = defaultCategories,
+}: CategoryFilterProps) {
   return (
     <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none justify-start md:justify-center w-full max-w-full -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
       {categories.map((category) => {

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Phone, MapPin, Clock, Truck, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { siteConfig } from "@/lib/config";
 
 const contactMethods = [
   {
@@ -30,7 +31,7 @@ const contactMethods = [
     title: "مواعيد العمل",
     description: "مفتوح يومياً",
     items: [
-      { label: "ساعات العمل", value: "نعمل يومياً من [4 العصر] إلى [4 ليلآ]", href: "" },
+      { label: "ساعات العمل", value: `نعمل يومياً ${siteConfig.workingHours}`, href: "" },
     ],
     color: "primary",
   },

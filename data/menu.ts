@@ -1,19 +1,7 @@
-export interface MenuItem {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  category: string;
-  image?: string;
-  popular?: boolean;
-  ingredients?: string[];
-}
+import { MenuItem, MenuCategory } from "@/types/menu";
 
-export interface MenuCategory {
-  id: string;
-  name: string;
-  icon: string;
-}
+export type { MenuItem, MenuCategory };
+
 
 export const categories: MenuCategory[] = [
   { id: "all", name: "الكل", icon: "Grid3X3" },
