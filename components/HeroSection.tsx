@@ -12,7 +12,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-stone-50 dark:bg-dark-950 transition-colors duration-300">
         {/* Real Hero Image Background */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.4] dark:opacity-[0.75] transition-opacity duration-300"
+          className="absolute inset-0 bg-cover bg-center opacity-[0.9] dark:opacity-[0.80] transition-opacity duration-300"
           style={{ backgroundImage: "url('/images/hero.png')" }}
         />
         <div className="absolute inset-0 bg-white/70 dark:bg-black/50 transition-colors duration-300" />
