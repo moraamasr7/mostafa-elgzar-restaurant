@@ -6,6 +6,9 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { OrderModalProvider } from "@/components/OrderModalContext";
 import FloatingActions from "@/components/FloatingActions";
 import { siteConfig } from "@/lib/config";
+import { CartProvider } from "@/features/cart/context/CartContext";
+import CartBar from "@/features/cart/components/CartBar";
+import CartModal from "@/features/cart/components/CartModal";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.siteUrl),
@@ -146,12 +149,16 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-stone-50 text-stone-900 dark:bg-dark-950 dark:text-white transition-colors duration-300">
         <ThemeProvider>
-          <OrderModalProvider>
-            <Navbar />
-            <main>{children}</main>
-            <Footer />
-            <FloatingActions />
-          </OrderModalProvider>
+          <CartProvider>
+            <OrderModalProvider>
+              <Navbar />
+              <main>{children}</main>
+              <Footer />
+              <FloatingActions />
+              <CartBar />
+              <CartModal />
+            </OrderModalProvider>
+          </CartProvider>
         </ThemeProvider>
       </body>
     </html>

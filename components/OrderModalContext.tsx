@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Bike, X, Phone, ArrowLeft, Store } from "lucide-react";
 import { getOrderingActionUrl, siteConfig, PublicOrderType } from "@/lib/config";
@@ -20,6 +21,7 @@ const OrderModalContext = createContext<OrderModalContextType>({
 export const useOrderModal = () => useContext(OrderModalContext);
 
 export function OrderModalProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | undefined>(undefined);
 
@@ -50,10 +52,7 @@ export function OrderModalProvider({ children }: { children: React.ReactNode }) 
       itemId: selectedItemId,
     });
     closeOrderModal();
-
-    if (typeof window !== "undefined") {
-      window.location.href = targetUrl;
-    }
+    router.push(targetUrl);
   };
 
   return (

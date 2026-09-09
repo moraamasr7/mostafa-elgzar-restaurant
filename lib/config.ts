@@ -49,26 +49,18 @@ export interface OrderingActionParams {
 
 /**
  * Returns the effective URL for ordering actions.
- * If NEXT_PUBLIC_ORDERING_APP_URL is configured, builds a link to the operational ordering system.
- * Otherwise, falls back gracefully to direct phone contact.
+ * Directs seamlessly to the internal platform menu and ordering system (/menu).
  */
 export function getOrderingActionUrl(params?: OrderingActionParams): string {
-  if (siteConfig.orderingAppUrl) {
-    try {
-      const url = new URL(siteConfig.orderingAppUrl);
-      if (params?.type) {
-        // Normalize 'pickup' to 'takeaway' for strict backend compatibility
-        const normalizedType = params.type === "pickup" ? "takeaway" : params.type;
-        url.searchParams.set("type", normalizedType);
-      }
-      if (params?.itemId) {
-        url.searchParams.set("item", params.itemId);
-      }
-      return url.toString();
-    } catch {
-      // Fallback if URL parsing fails
-      return siteConfig.orderingAppUrl;
-    }
+  const search = new URLSearchParams();
+  if (params?.type) {
+    // Normalize 'pickup' to 'takeaway' for strict backend compatibility
+    const normalizedType = params.type === "pickup" ? "takeaway" : params.type;
+    search.set("type", normalizedType);
   }
-  return siteConfig.telUrl;
+  if (params?.itemId) {
+    search.set("item", params.itemId);
+  }
+  const query = search.toString();
+  return query ? `/menu?${query}` : `/menu`;
 }
