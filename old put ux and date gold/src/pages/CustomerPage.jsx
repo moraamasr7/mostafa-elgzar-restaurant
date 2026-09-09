@@ -1,0 +1,739 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+    ArrowLeft,
+    ArrowRight,
+    MapPin,
+    AlertCircle,
+    Compass,
+    Map,
+    Phone,
+    User,
+    CheckCircle2,
+    Lock
+} from 'lucide-react';
+import useCart from '../hooks/useCart';
+import { FIXED_AREAS, RESTAURANT_LOCATION, MAX_DELIVERY_DISTANCE } from '../core/constants';
+import ProgressSteps from '../features/checkout/ProgressSteps';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+
+const CustomerPage = () => {
+    /**
+     * 🔴 الصفحة المسؤولة عن جمع بيانات العميل (الاسم، الهاتف، والعنوان)
+     * بتستخدم الـ GPS أو الخريطة لتحديد المكان بدقة لضمان سرعة التوصيل
+     */
+    const navigate = useNavigate();
+    const {
+        orderType, customerData, setCustomerData,
+        paymentMethod, setPaymentMethod,
+        location, setLocation,
+        locationMethod, setLocationMethod,
+        selectedAreaId, setSelectedAreaId,
+        deliveryFee, distanceKm
+    } = useCart();
+
+    const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
+    const [isLocating, setIsLocating] = useState(false);
+    const [gpsError, setGpsError] = useState(null);
+
+    const [savedCustomers, setSavedCustomers] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+
+    useEffect(() => {
+        const saved = JSON.parse(localStorage.getItem('saved_customers') || '[]');
+        setSavedCustomers(saved);
+    }, []);
+
+    const handleSelectCustomer = (entry) => {
+        setCustomerData(prev => ({
+            ...prev,
+            name: entry.name,
+            phone1: entry.phone1,
+            phone2: entry.phone2,
+            address: entry.address
+        }));
+        
+        const match = entry.address?.match(/شارع (.*?) - مبنى (.*?) - شقة (.*)/);
+        if (match) setAddressDetails({ street: match[1], building: match[2], apartment: match[3] });
+        
+        setShowSuggestions(false);
+    };
+
+    const handleDeleteCustomer = (phone1) => {
+        const updated = savedCustomers.filter(c => c.phone1 !== phone1);
+        setSavedCustomers(updated);
+        localStorage.setItem('saved_customers', JSON.stringify(updated));
+        if (updated.length === 0) setShowSuggestions(false);
+    };
+
+    // Map Refs
+    const mapRef = useRef(null);
+    const mapInstance = useRef(null);
+    const markerInstance = useRef(null);
+    const pendingGPSLocation = useRef(null); // موقع GPS ينتظر وضعه على الخريطة
+
+    // Address local state
+    const [addressDetails, setAddressDetails] = useState({
+        street: '',
+        building: '',
+        apartment: ''
+    });
+
+    // Initialize address from context if available
+    useEffect(() => {
+        if (customerData.address) {
+            // Attempt simple parse: "شارع X - مبنى Y - شقة Z"
+            const match = customerData.address.match(/شارع (.*?) - مبنى (.*?) - شقة (.*)/);
+            if (match) {
+                setAddressDetails({
+                    street: match[1],
+                    building: match[2],
+                    apartment: match[3]
+                });
+            }
+        }
+    }, []);
+
+    const handleLocationFetch = () => {
+        if (!navigator.geolocation) {
+            setGpsError("المتصفح لا يدعم تحديد الموقع");
+            return;
+        }
+
+        setIsLocating(true);
+        setGpsError(null);
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                setLocation({ lat: latitude, lon: longitude });
+                setIsLocating(false);
+            },
+            (error) => {
+                console.error("GPS Error:", error);
+                let msg = "فشل تحديد الموقع. يرجى تفعيل الـ GPS.";
+                if (error.code === 1) msg = "تم رفض الوصول للمكان. يرجى السماح للمتصفح بالوصول.";
+                setGpsError(msg);
+                setIsLocating(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
+
+    // Sync address to context
+    useEffect(() => {
+        const { street, building, apartment } = addressDetails;
+        if (street || building || apartment) {
+            const formatted = `شارع ${street} - مبنى ${building} - شقة ${apartment}`;
+            setCustomerData(prev => ({ ...prev, address: formatted }));
+        }
+    }, [addressDetails, setCustomerData]);
+
+    const validators = {
+        name: (value) => {
+            if (!value) return "الاسم مطلوب";
+            if (value.trim().length < 2) return "الاسم يجب أن لا يقل عن حرفين";
+            if (!/^[\u0600-\u06FFa-zA-Z\s]+$/.test(value)) return "يمنع استخدام الأرقام أو الرموز في الاسم";
+            return "";
+        },
+        phone: (value) => {
+            if (!value) return "رقم الهاتف مطلوب";
+            if (!/^(010|011|012|015)/.test(value)) return "يجب أن يبدأ الرقم بـ 010, 011, 012, أو 015";
+            if (!/^\d{11}$/.test(value)) return "رقم الهاتف يجب أن يتكون من 11 رقمًا";
+            return "";
+        },
+        street: (value) => {
+            if (!value) return "اسم الشارع مطلوب";
+            if (value.length < 3) return "اسم الشارع يجب أن لا يقل عن 10 أحرف";
+            return "";
+        },
+        building: (value) => {
+            if (!value) return "بيانات المبنى مطلوبة";
+            const isNumber = /^\d+$/.test(value);
+            if (isNumber && value.length > 4) return "رقم المبنى يجب أن لا يزيد عن 5 أرقام";
+            if (!isNumber && value.length > 4) return "اسم المبنى يجب أن لا يزيد عن 10 أحرف";
+            return "";
+        },
+        apartment: (value) => {
+            if (!value) return "بيانات الشقة مطلوبة";
+            const isNumber = /^\d+$/.test(value);
+            if (isNumber && value.length > 5) return "رقم الشقة يجب أن لا يزيد عن 5 أرقام";
+            if (!isNumber && value.length > 10) return "اسم الشقة يجب أن لا يزيد عن 10 أحرف";
+            return "";
+        }
+    };
+
+    const validateField = (field, value, isRequired = true) => {
+        if (!isRequired && !value) return ""; // Optional empty is ok
+
+        let error = "";
+        if (field === 'name') error = validators.name(value);
+        if (field === 'phone1') error = validators.phone(value);
+        if (field === 'phone2') error = validators.phone(value); // Mandatory per request
+        if (field === 'street') error = validators.street(value);
+        if (field === 'building') error = validators.building(value);
+        if (field === 'apartment') error = validators.apartment(value);
+
+        return error;
+    };
+
+    const handleBlur = (field) => {
+        setTouched(prev => ({ ...prev, [field]: true }));
+        const value = field in addressDetails ? addressDetails[field] : customerData[field];
+        const error = validateField(field, value);
+        setErrors(prev => ({ ...prev, [field]: error }));
+    };
+
+    const handleChange = (field, value) => {
+        if (field in addressDetails) {
+            setAddressDetails(prev => ({ ...prev, [field]: value }));
+        } else {
+            setCustomerData(prev => ({ ...prev, [field]: value }));
+        }
+
+        // Live validation
+        const error = validateField(field, value);
+        setErrors(prev => ({ ...prev, [field]: error }));
+    };
+
+    const isFormValid = () => {
+        // Check personal info
+        const nameValid = !validateField('name', customerData.name);
+        const phone1Valid = !validateField('phone1', customerData.phone1);
+        const phone2Valid = !validateField('phone2', customerData.phone2);
+
+        if (!nameValid || !phone1Valid || !phone2Valid) return false;
+
+        // Check delivery info if applicable
+        if (orderType === 'delivery') {
+            const hasLocation = (locationMethod === 'fixed' && selectedAreaId) ||
+                ((locationMethod === 'gps' || locationMethod === 'map') && location && deliveryFee > 0);
+
+            if (!hasLocation) return false;
+
+            const streetValid = !validateField('street', addressDetails.street);
+            const buildingValid = !validateField('building', addressDetails.building);
+            const apartmentValid = !validateField('apartment', addressDetails.apartment);
+
+            if (!streetValid || !buildingValid || !apartmentValid) return false;
+        }
+
+        return true;
+    };
+
+    // Helper for Input Class
+    const getInputClass = (field) => {
+        const hasError = touched[field] && errors[field];
+        const base = "w-full px-4 py-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-white placeholder-slate-600 outline-none transition-all text-[15px] sm:text-base leading-normal";
+        if (hasError) return `${base} bg-red-500/5 border-red-500/50 focus:border-red-500`;
+        return `${base} bg-dark-800/50 border-white/5 focus:border-primary`;
+    };
+
+    // Map Initialization (Leaflet)
+    useEffect(() => {
+        if (locationMethod === 'map' && mapRef.current && window.L) {
+            if (mapInstance.current) {
+                mapInstance.current.remove();
+                mapInstance.current = null;
+            }
+
+            const timer = setTimeout(() => {
+                if (!mapRef.current || !window.L) return;
+
+                const center = location ? [location.lat, location.lon] : [RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lon];
+                const zoom = location ? 15 : 12;
+
+                try {
+                    mapInstance.current = window.L.map(mapRef.current, { attributionControl: false }).setView(center, zoom);
+
+                    const MATARIA_CENTER = [30.126131, 31.298350];
+                    const MAX_KM = 15;
+                    const KM_TO_DEG = 0.009;
+                    const offset = MAX_KM * KM_TO_DEG;
+                    const southWest = window.L.latLng(MATARIA_CENTER[0] - offset, MATARIA_CENTER[1] - offset);
+                    const northEast = window.L.latLng(MATARIA_CENTER[0] + offset, MATARIA_CENTER[1] + offset);
+                    const bounds = window.L.latLngBounds(southWest, northEast);
+                    mapInstance.current.setMaxBounds(bounds);
+                    mapInstance.current.setMinZoom(11);
+                    mapInstance.current.setMaxZoom(18);
+
+                    // Satellite base layer
+                    window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                        attribution: '',
+                        maxZoom: 19
+                    }).addTo(mapInstance.current);
+
+                    // Hybrid labels overlay — renders street names without wrapping
+                    window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {
+                        attribution: '',
+                        maxZoom: 19,
+                        opacity: 0.85,
+                        pane: 'overlayPane'
+                    }).addTo(mapInstance.current);
+
+                    window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+                        attribution: '',
+                        maxZoom: 19,
+                        opacity: 0.9,
+                        pane: 'overlayPane'
+                    }).addTo(mapInstance.current);
+
+                    mapInstance.current.invalidateSize();
+
+                    // Restaurant Marker
+                    window.L.marker([RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lon], {
+                        icon: window.L.divIcon({
+                            className: 'restaurant-marker',
+                            html: '<div style="background: #ef4444; border: 2px solid white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);">🏠</div>',
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                        })
+                    }).addTo(mapInstance.current).bindPopup('مطعم أبو خاطر');
+
+                    // Delivery Range Circle
+                    window.L.circle([RESTAURANT_LOCATION.lat, RESTAURANT_LOCATION.lon], {
+                        color: '#f97316',
+                        fillColor: '#f97316',
+                        fillOpacity: 0.08,
+                        radius: MAX_DELIVERY_DISTANCE * 1000
+                    }).addTo(mapInstance.current);
+
+                    if (location) {
+                        markerInstance.current = window.L.marker([location.lat, location.lon]).addTo(mapInstance.current);
+                    }
+
+                    mapInstance.current.on('click', (e) => {
+                        const { lat, lng } = e.latlng;
+                        if (markerInstance.current) {
+                            markerInstance.current.setLatLng(e.latlng);
+                        } else {
+                            markerInstance.current = window.L.marker(e.latlng).addTo(mapInstance.current);
+                        }
+                        setLocation({ lat, lon: lng });
+                    });
+
+                    setTimeout(() => {
+                        mapInstance.current?.invalidateSize();
+
+                        // إذا كان هناك موقع GPS معلق، اطر إليه وضع الدبوس
+                        if (pendingGPSLocation.current && mapInstance.current) {
+                            const { lat, lon } = pendingGPSLocation.current;
+                            const latlng = window.L.latLng(lat, lon);
+                            mapInstance.current.flyTo(latlng, 17);
+                            if (markerInstance.current) {
+                                markerInstance.current.setLatLng(latlng);
+                            } else {
+                                markerInstance.current = window.L.marker(latlng).addTo(mapInstance.current);
+                            }
+                            pendingGPSLocation.current = null;
+                        }
+                    }, 350);
+
+                } catch (e) {
+                    console.error("Map Init Error:", e);
+                }
+            }, 150);
+
+            return () => {
+                clearTimeout(timer);
+                if (mapInstance.current) {
+                    mapInstance.current.remove();
+                    mapInstance.current = null;
+                    markerInstance.current = null;
+                }
+            };
+        }
+    }, [locationMethod]);
+
+    // زر "أين انا!" داخل الخريطة
+    const handleLocateMeOnMap = () => {
+        if (!navigator.geolocation) {
+            alert("المتصفح لا يدعم تحديد الموقع");
+            return;
+        }
+        setIsLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                setLocation({ lat: latitude, lon: longitude });
+                setIsLocating(false);
+
+                if (mapInstance.current) {
+                    const newLatLng = window.L.latLng(latitude, longitude);
+                    mapInstance.current.flyTo(newLatLng, 17);
+                    if (markerInstance.current) {
+                        markerInstance.current.setLatLng(newLatLng);
+                    } else {
+                        markerInstance.current = window.L.marker(newLatLng).addTo(mapInstance.current);
+                    }
+                }
+            },
+            (error) => {
+                console.error("GPS Error:", error);
+                alert("فشل تحديد الموقع. يرجى تفعيل الـ GPS والسماح للمتصفح بالوصول.");
+                setIsLocating(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
+
+    // زر "أين انا!" في قسم GPS — يحدد الموقع ثم ينتقل للخريطة ويضع الدبوس
+    const handleLocateAndSwitchToMap = () => {
+        if (!navigator.geolocation) {
+            setGpsError("المتصفح لا يدعم تحديد الموقع");
+            return;
+        }
+        setIsLocating(true);
+        setGpsError(null);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                // احفظ الموقع في الـ ref ليُستخدم فور تهيئة الخريطة
+                pendingGPSLocation.current = { lat: latitude, lon: longitude };
+                setLocation({ lat: latitude, lon: longitude });
+                setIsLocating(false);
+                // الانتقال لتبويب الخريطة سيُشغّل useEffect الذي يضع الدبوس
+                setLocationMethod('map');
+            },
+            (error) => {
+                console.error("GPS Error:", error);
+                let msg = "فشل تحديد الموقع. يرجى تفعيل الـ GPS.";
+                if (error.code === 1) msg = "تم رفض الوصول للمكان. يرجى السماح للمتصفح بالوصول.";
+                setGpsError(msg);
+                setIsLocating(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
+
+    const handleNext = () => {
+        if (isFormValid()) {
+            const saved = JSON.parse(localStorage.getItem('saved_customers') || '[]');
+            const newEntry = {
+                name: customerData.name,
+                phone1: customerData.phone1,
+                phone2: customerData.phone2,
+                address: customerData.address
+            };
+            const filtered = saved.filter(c => c.phone1 !== newEntry.phone1);
+            const updated = [newEntry, ...filtered].slice(0, 5);
+            localStorage.setItem('saved_customers', JSON.stringify(updated));
+
+            navigate('/payment');
+        } else {
+            alert('يرجى إكمال جميع البيانات المطلوبة');
+        }
+    };
+
+    return (
+        <div className="min-h-[100dvh] bg-dark-950 pb-[max(9rem,env(safe-area-inset-bottom,0px))] sm:pb-36 relative scroll-smooth overflow-x-hidden">
+            <ProgressSteps />
+
+            <div className="max-w-md mx-auto w-full px-3 sm:px-4 pt-5 sm:pt-6 space-y-5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <header className="text-center space-y-2">
+                    <h2 className="text-[1.35rem] sm:text-2xl md:text-3xl font-black text-white display-font tracking-tight">إكمال البيانات</h2>
+                    <p className="text-slate-400/95 text-[13px] sm:text-sm font-semibold leading-relaxed px-1">نحتاج لبعض المعلومات لتوصيل طلبك بأفضل جودة</p>
+                </header>
+
+                {/* Section 1: Personal Info */}
+                <div className="bg-dark-900 rounded-2xl sm:rounded-[1.5rem] border border-white/[0.07] p-4 sm:p-5 shadow-sm space-y-4 sm:space-y-5">
+                    <div className="flex items-center gap-3 border-b border-white/[0.06] pb-3 sm:pb-4">
+                        <User className="text-primary" size={20} />
+                        <h3 className="font-bold text-white uppercase tracking-wider text-xs">البيانات الشخصية</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5 relative">
+                            <label className="text-[10px] text-slate-500 font-black mr-2">الاسم بالكامل <span className="text-red-500">*</span></label>
+                            <input
+                                required
+                                placeholder="أسـم ثنائـي ..."
+                                className={getInputClass('name')}
+                                value={customerData.name}
+                                onChange={e => handleChange('name', e.target.value)}
+                                onFocus={() => { if (savedCustomers.length > 0) setShowSuggestions(true); }}
+                                onBlur={() => {
+                                    handleBlur('name');
+                                    setTimeout(() => setShowSuggestions(false), 200);
+                                }}
+                            />
+                            {touched.name && errors.name && <p className="text-red-500 text-[10px] font-bold mt-1 animate-pulse">{errors.name}</p>}
+
+                            {showSuggestions && savedCustomers.length > 0 && (
+                                <div className="absolute top-[100%] left-0 w-full mt-1 bg-dark-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
+                                    {savedCustomers.map((entry, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            className="flex justify-between items-center px-4 py-3 hover:bg-dark-800 cursor-pointer border-b border-white/5 last:border-0"
+                                            onClick={() => handleSelectCustomer(entry)}
+                                        >
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-white text-sm">{entry.name}</span>
+                                                <span className="text-xs text-slate-500">{entry.phone1}</span>
+                                            </div>
+                                            <button 
+                                                type="button"
+                                                className="text-slate-500 hover:text-red-400 text-xs p-1"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteCustomer(entry.phone1);
+                                                }}
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] text-slate-500 font-black mr-2">رقم الهاتف الأساسي <span className="text-red-500">*</span></label>
+                            <input
+                                required
+                                type="tel"
+                                placeholder="01xxxxxxxxx"
+                                className={`ltr ${getInputClass('phone1')}`}
+                                value={customerData.phone1}
+                                onChange={e => handleChange('phone1', e.target.value)}
+                                onBlur={() => handleBlur('phone1')}
+                                maxLength={11}
+                            />
+                            {touched.phone1 && errors.phone1 && <p className="text-red-500 text-[10px] font-bold mt-1 animate-pulse">{errors.phone1}</p>}
+                        </div>
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] text-slate-500 font-black mr-2">هاتف إضافي (إجباري) <span className="text-red-500">*</span></label>
+                        <input
+                            required
+                            type="tel"
+                            placeholder="01xxxxxxxxx"
+                            className={`ltr ${getInputClass('phone2')}`}
+                            value={customerData.phone2}
+                            onChange={e => handleChange('phone2', e.target.value)}
+                            onBlur={() => handleBlur('phone2')}
+                            maxLength={11}
+                        />
+                        {touched.phone2 && errors.phone2 && <p className="text-red-500 text-[10px] font-bold mt-1 animate-pulse">{errors.phone2}</p>}
+                    </div>
+                </div>
+
+                {/* Section 2: Delivery Control */}
+                {orderType === 'delivery' && (
+                    <div className="bg-dark-900 rounded-2xl sm:rounded-[1.5rem] border border-white/[0.07] p-4 sm:p-5 shadow-sm space-y-4 sm:space-y-5">
+                        <div className="flex items-center gap-3 border-b border-white/[0.06] pb-3 sm:pb-4">
+                            <MapPin className="text-primary" size={20} />
+                            <h3 className="font-bold text-white uppercase tracking-wider text-xs">عنوان التوصيل</h3>
+                        </div>
+
+                        {/* Location Methods Tabs */}
+                        <div className="flex bg-dark-800/55 p-1.5 rounded-xl sm:rounded-2xl border border-white/[0.06] gap-0.5">
+                            {[
+                                { id: 'gps', icon: Compass, label: 'GPS' },
+                                { id: 'map', icon: Map, label: 'الخريطة' },
+                                { id: 'fixed', icon: MapPin, label: 'مناطق ثابتة' }
+                            ].map(method => (
+                                <button
+                                    key={method.id}
+                                    onClick={() => setLocationMethod(method.id)}
+                                    className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-3 min-h-[44px] rounded-lg sm:rounded-xl transition-all font-bold text-[11px] sm:text-xs ${locationMethod === method.id
+                                        ? 'bg-primary text-white shadow-md shadow-primary/25'
+                                        : 'text-slate-500 hover:text-slate-300'
+                                        }`}
+                                >
+                                    <method.icon size={16} />
+                                    <span>{method.label}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Method Specific UI */}
+                        <div className="min-h-[100px] flex items-center justify-center">
+                            {locationMethod === 'gps' && (
+                                <div className="w-full space-y-3">
+                                    <button
+                                        type="button"
+                                        onClick={handleLocationFetch}
+                                        disabled={isLocating}
+                                        className="w-full group relative py-6 rounded-2xl border-2 border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2"
+                                    >
+                                        {isLocating ? (
+                                            <LoadingSpinner size={24} color="text-primary" />
+                                        ) : (
+                                            <>
+                                                <Compass size={32} className={`text-primary ${location ? 'animate-none' : 'animate-pulse'}`} />
+                                                <span className="font-bold text-sm text-slate-300">
+                                                    {location ? 'تم تحديث الموقع بنجاح ✓' : 'انقر لتحديد موقعك تلقائياً'}
+                                                </span>
+                                            </>
+                                        )}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleLocateAndSwitchToMap}
+                                        disabled={isLocating}
+                                        className="w-full bg-dark-800/70 border border-white/10 shadow text-white px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary hover:border-primary transition-all disabled:opacity-50"
+                                    >
+                                        {isLocating ? <LoadingSpinner size={14} color="text-white" /> : <MapPin size={16} />}
+                                        <span>أين انا! (على الخريطة)</span>
+                                    </button>
+                                    {gpsError && <p className="text-red-400 text-[10px] text-center">{gpsError}</p>}
+                                </div>
+                            )}
+
+                            {locationMethod === 'map' && (
+                                <div className="w-full space-y-4">
+                                    <div className="relative w-full">
+                                        <div ref={mapRef} className="w-full h-56 sm:h-64 rounded-xl sm:rounded-2xl border border-white/[0.08] overflow-hidden shadow-inner grayscale-[0.5] hover:grayscale-0 transition-all z-0" />
+                                        <button
+                                            type="button"
+                                            onClick={handleLocateMeOnMap}
+                                            disabled={isLocating}
+                                            className="absolute bottom-4 left-4 z-[400] bg-dark-900/90 backdrop-blur border border-white/10 shadow-lg text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-primary hover:border-primary transition-all disabled:opacity-50"
+                                        >
+                                            {isLocating ? <LoadingSpinner size={14} color="text-white" /> : <MapPin size={14} />}
+                                            <span>أين انا!</span>
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 text-center italic">اسحب الخريطة وانقر لتحديد نقطة التوصيل الدقيقة</p>
+                                </div>
+                            )}
+
+                            {locationMethod === 'fixed' && (
+                                <div className="w-full">
+                                    <select
+                                        value={selectedAreaId}
+                                        onChange={(e) => setSelectedAreaId(e.target.value)}
+                                        className="w-full p-4 bg-dark-800/50 rounded-2xl border border-white/5 text-white focus:border-primary outline-none transition-all appearance-none"
+                                    >
+                                        <option value="">-- اختر منطقتك من القائمة --</option>
+                                        {FIXED_AREAS.map(area => (
+                                            <option key={area.id} value={area.id}>{area.name} (توصيل: {area.fee} ج.م)</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Status Feedback */}
+                        {location && orderType === 'delivery' && (
+                            <div className={`p-4 rounded-2xl text-xs font-bold flex items-center gap-3 border ${deliveryFee > 0
+                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                                {deliveryFee > 0 ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                                <span>
+                                    {deliveryFee > 0
+                                        ? `موقعك ضمن النطاق. المسافة: ${distanceKm.toFixed(1)} كم | رسوم التوصيل: ${deliveryFee} ج.م`
+                                        : `خارج النطاق المسموح (${MAX_DELIVERY_DISTANCE} كم). يرجى تغيير الموقع.`}
+                                </span>
+                            </div>
+                        )}
+
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mr-2">تفاصيل العنوان</h4>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] text-slate-500 font-bold mr-2">اسم الشارع <span className="text-red-500">*</span></label>
+                                <input
+                                    required
+                                    placeholder="أدخل اسم الشارع بالتفصيل..."
+                                    className={getInputClass('street')}
+                                    value={addressDetails.street}
+                                    onChange={e => handleChange('street', e.target.value)}
+                                    onBlur={() => handleBlur('street')}
+                                />
+                                {touched.street && errors.street && <p className="text-red-500 text-[10px] font-bold mt-1 animate-pulse">{errors.street}</p>}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] text-slate-500 font-bold mr-2">رقم / اسم العمارة <span className="text-red-500">*</span></label>
+                                    <input
+                                        required
+                                        placeholder="رقم العمارة"
+                                        className={getInputClass('building')}
+                                        value={addressDetails.building}
+                                        onChange={e => handleChange('building', e.target.value)}
+                                        onBlur={() => handleBlur('building')}
+                                    />
+                                    {touched.building && errors.building && <p className="text-red-500 text-[10px] font-bold mt-1 animate-pulse">{errors.building}</p>}
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] text-slate-500 font-bold mr-2">رقم / اسم الشقة <span className="text-red-500">*</span></label>
+                                    <input
+                                        required
+                                        placeholder="رقم الشقة"
+                                        className={getInputClass('apartment')}
+                                        value={addressDetails.apartment}
+                                        onChange={e => handleChange('apartment', e.target.value)}
+                                        onBlur={() => handleBlur('apartment')}
+                                    />
+                                    {touched.apartment && errors.apartment && <p className="text-red-500 text-[10px] font-bold mt-1 animate-pulse">{errors.apartment}</p>}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Section 3: Payment Method */}
+                <div className="bg-dark-900 rounded-2xl sm:rounded-[1.5rem] border border-white/[0.07] p-4 sm:p-5 shadow-sm space-y-4 sm:space-y-5">
+                    <div className="flex items-center gap-3 border-b border-white/[0.06] pb-3 sm:pb-4">
+                        <Lock className="text-primary" size={20} />
+                        <h3 className="font-bold text-white uppercase tracking-wider text-xs">طريقة الدفع للمطعم</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                        {[
+                            { id: 'cash', label: 'نقدي' },
+                            { id: 'vodafone_cash', label: 'أتصـالات كاش' },
+                            { id: 'instapay', label: 'انستاباي' }
+                        ].map(method => (
+                            <button
+                                key={method.id}
+                                onClick={() => setPaymentMethod(method.id)}
+                                className={`py-3.5 sm:py-4 min-h-[48px] rounded-xl sm:rounded-2xl border-2 transition-all font-black text-sm ${paymentMethod === method.id
+                                    ? 'border-primary bg-primary/12 text-primary'
+                                    : 'border-white/[0.06] bg-dark-800/55 text-slate-500 hover:border-white/15'
+                                    }`}
+                            >
+                                {method.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+            </div>
+
+            {/* Fixed Bottom Action Bar for Mobile */}
+            <div className="checkout-bottom-bar">
+                <div className="max-w-md mx-auto flex gap-2 sm:gap-3">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/review')}
+                        className="flex-1 min-h-[52px] sm:h-14 rounded-xl sm:rounded-2xl font-bold border border-white/[0.08] bg-dark-800 text-slate-300 hover:bg-dark-700 active:scale-[0.98] transition-all w-full flex items-center justify-center gap-2 text-[15px] sm:text-sm"
+                        aria-label="الرجوع لمراجعة السلة"
+                    >
+                        <ArrowRight size={18} aria-hidden />
+                        <span>رجوع للسلة</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleNext}
+                        disabled={!isFormValid()}
+                        className="flex-[2] min-h-[52px] sm:h-14 bg-gradient-to-r from-primary to-orange-600 text-white rounded-xl sm:rounded-2xl font-black shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+                        aria-label={isFormValid() ? 'المتابعة إلى صفحة الدفع' : 'أكمل الحقول المطلوبة للمتابعة'}
+                    >
+                        <span className="text-[15px]">تأكيد والمتابعة للدفع</span>
+                        <ArrowLeft size={18} className="rtl:rotate-180" aria-hidden />
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default CustomerPage;
+
+

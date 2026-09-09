@@ -1,0 +1,6 @@
+{
+  "appId": "com.abukhater.menu",
+  "appName": "Abu Khater Menu",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
