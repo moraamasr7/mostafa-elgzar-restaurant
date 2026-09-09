@@ -89,3 +89,46 @@
   - فحص TypeScript (`npx tsc --noEmit`): **0 errors**.
   - فحص ESLint (`npm run lint`): **0 errors**.
   - اختبار بناء الإنتاج بالكامل (`npm run build`): **Pass (Exit code 0)**، تم إنشاء 12 مساراً بنجاح.
+
+---
+
+## 🚀 التوسعات المعتمدة (Architectural UX & Advanced Services Integration)
+> **المبدأ الحاكم:** قاعدة البيانات مشتركة مع نظام إداري في Repo آخر. لا مساس بأي جداول قائمة.
+> المنهجية: Extract (UX Idea) → Adapt (Mostafa Domain) → Integrate (Layered) → Validate.
+
+- [ ] **Phase 12: Phase 0 Discovery & Shared DB Extensions Lock**
+  - توثيق خريطة العقود وإجابات الأسئلة الـ 7 في `docs/architecture/PHASE_0_DISCOVERY_AND_CONTRACT_LOCK.md`.
+  - إنشاء جدولي `reservations` و `feedback` في سوبابيس مع دورة حياة صريحة وحماية RLS متكاملة.
+
+- [ ] **Phase 13: Operating Hours & Reservation Availability Engine**
+  - بناء دومين `features/operating-hours/domain`:
+    - قراءة `restaurant_operating_hours` و `restaurant_special_closures` و `restaurant_schedule_overrides`.
+    - فصل فحص اللحظة الحالية `isRestaurantOpenNow()` عن فحص التوافر المستقبلي `getReservationAvailability(date)`.
+    - حساب السلوتات الزمنية المتاحة (30 دقيقة) وفق سعة الطاولات والأيام المسموحة (اليوم والغد).
+  - بناء دومين `features/policies/domain`:
+    - قراءة `restaurant_policies` (الحد الأدنى 80 ج، نطاق 13 كم، سعر الكيلو 8 ج).
+
+- [ ] **Phase 14: Strict Table Reservation Domain & Decoupled Events**
+  - بناء `features/reservations`:
+    - دورة حياة الحجز: `pending` → `confirmed` → `completed` / `cancelled` / `no_show`.
+    - نقطة نهاية آمنة `/api/reservations` مع التحقق الخادمي الصارم ومكافحة الإساءة (Rate Limiting + Turnstile).
+    - حدث `ReservationCreatedEvent` معزول يرسل لتليجرام الإدارة بدون تأخير أو كسر للعملية.
+    - واجهة `TableReservationModal` الفاخرة بدون أي ذكر لكلمة "كافيه" أو هاردكود لأوقات العمل.
+
+- [ ] **Phase 15: Customer Quality & Feedback Domain**
+  - بناء `features/feedback`:
+    - نقطة نهاية `/api/feedback` مع Rate Limiting وحماية كاملة.
+    - حدث `FeedbackReceivedEvent` معزول لتليجرام الإدارة.
+    - واجهة `CustomerFeedbackModal` الراقية للمقترحات والشكاوى.
+
+- [ ] **Phase 16: Menu UX Polish (Adapted from UX Insights)**
+  - شريط الأقسام المتقدم مع عدادات الأصناف المستخرجة ديناميكياً من `v_full_menu`.
+  - شريط التفاعل الزجاجي العائم مع مؤشر حالة المنيو اللحظي والبحث السريع وأزرار الحجز والشكاوى.
+  - تحسين البطاقة الهجينة `MenuItemCard` للموبايل (مدمجة وأفقية) والديسكتوب.
+  - إضافة شريط مسار خطوات الطلب `ProgressSteps` ومؤقت مهلة التحويل `CountdownTimer` في السلة/الدفع.
+
+- [ ] **Phase 17: Admin Operations & Final Build Verification**
+  - إضافة شاشة إدارة الحجوزات في لوحة التحكم `/admin/reservations` للتحكم في قبول وتأكيد الحجوزات.
+  - التحقق الكامل: `npx tsc --noEmit` + `npm run lint` + `npm run build` (Exit 0).
+  - الالتزام الصارم بسياسة الأصول الثابتة `public/` (عدم تعديل أو حذف أي ملف موجود).
+
