@@ -11,6 +11,22 @@ interface MenuItemCardProps {
   onAddToCart?: (line: CartLine) => void;
 }
 
+function normalizeImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  // Convert Google Drive sharing links:
+  // https://drive.google.com/file/d/FILE_ID/view?usp=sharing -> https://drive.google.com/uc?export=view&id=FILE_ID
+  const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i;
+  const match = trimmed.match(driveRegex);
+  if (match && match[1]) {
+    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  }
+
+  return trimmed;
+}
+
 export default function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
   const availableVariants = item.variants.filter((v) => v.available);
   const [selectedVariantId, setSelectedVariantId] = useState(
@@ -24,7 +40,8 @@ export default function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
   const [imageError, setImageError] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
-  const imageUrl = item.image_url || item.image || null;
+  const rawImageUrl = item.image_url || item.image || null;
+  const imageUrl = normalizeImageUrl(rawImageUrl);
   const hasValidImage = Boolean(imageUrl && !imageError);
 
   const selectedVariant = item.variants.find((v) => v.id === selectedVariantId) || item.variants[0];
