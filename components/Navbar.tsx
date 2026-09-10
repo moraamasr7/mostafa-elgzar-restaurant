@@ -9,6 +9,7 @@ import {
   Phone,
   ShoppingBag,
   Home,
+  Sparkles,
   BookOpen,
   Calendar,
   MessageSquare,
@@ -20,7 +21,13 @@ import { useOrderModal } from "@/components/OrderModalContext";
 
 const navLinks = [
   { href: "/", label: "الرئيسية", icon: Home },
-  { href: "/menu", label: "المنيو", icon: BookOpen },
+  { href: "/menu", label: "المنيو الإلكتروني", icon: Sparkles },
+  {
+    href: "/menu?type=paper",
+    label: "المنيو الورقي",
+    icon: BookOpen,
+    badge: "مصور",
+  },
   {
     href: "/menu?reserve=true",
     label: "حجز طاولة",
@@ -59,6 +66,12 @@ export default function Navbar() {
   const handleNavClick = (href: string) => {
     setIsOpen(false);
     if (pathname === "/menu" && typeof window !== "undefined") {
+      if (href.includes("type=paper")) {
+        window.dispatchEvent(new CustomEvent("switch-menu-type", { detail: "paper" }));
+      } else if (href.includes("type=interactive") || href === "/menu") {
+        window.dispatchEvent(new CustomEvent("switch-menu-type", { detail: "interactive" }));
+      }
+
       if (href.includes("reserve=true")) {
         window.dispatchEvent(new CustomEvent("open-reservation-modal"));
       } else if (href.includes("feedback=true")) {
@@ -98,13 +111,13 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => handleNavClick(link.href)}
-                className={`px-2.5 lg:px-3.5 py-2 rounded-xl text-xs lg:text-sm font-medium transition-all duration-300 whitespace-nowrap ${
+                className={`px-2.5 xl:px-3.5 py-2 rounded-xl text-xs xl:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
                   pathname === link.href
                     ? "bg-primary-600/10 text-primary-600 dark:text-primary-400 font-bold"
                     : "text-stone-600 hover:text-stone-900 dark:text-gray-300 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-white/5"
@@ -116,7 +129,7 @@ export default function Navbar() {
           </div>
 
           {/* CTA Button */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3">
             <button
               type="button"
               onClick={() => openOrderModal()}
@@ -128,7 +141,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button - min 44x44 */}
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
             <button
               type="button"
               onClick={() => setIsOpen(!isOpen)}
@@ -144,7 +157,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer Navigation - Optimized for Smartphones */}
       <div
-        className={`md:hidden transition-all duration-300 overflow-hidden ${
+        className={`lg:hidden transition-all duration-300 overflow-hidden ${
           isOpen ? "max-h-[calc(100dvh-5rem)] opacity-100" : "max-h-0 opacity-0"
         }`}
       >

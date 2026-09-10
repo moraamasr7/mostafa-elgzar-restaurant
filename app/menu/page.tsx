@@ -67,6 +67,12 @@ export default function MenuPage() {
     const checkModalParams = () => {
       if (typeof window !== "undefined") {
         const params = new URLSearchParams(window.location.search);
+        if (params.get("type") === "paper") {
+          setMenuType("paper");
+        } else if (params.get("type") === "interactive") {
+          setMenuType("interactive");
+        }
+
         if (params.get("reserve") === "true") {
           setIsReservationOpen(true);
         } else if (params.get("feedback") === "true") {
@@ -79,14 +85,22 @@ export default function MenuPage() {
 
     const onOpenReservation = () => setIsReservationOpen(true);
     const onOpenFeedback = () => setIsFeedbackOpen(true);
+    const onSwitchMenuType = (e: Event) => {
+      const customEvent = e as CustomEvent<"paper" | "interactive">;
+      if (customEvent.detail) {
+        setMenuType(customEvent.detail);
+      }
+    };
 
     window.addEventListener("open-reservation-modal", onOpenReservation);
     window.addEventListener("open-feedback-modal", onOpenFeedback);
+    window.addEventListener("switch-menu-type", onSwitchMenuType);
     window.addEventListener("popstate", checkModalParams);
 
     return () => {
       window.removeEventListener("open-reservation-modal", onOpenReservation);
       window.removeEventListener("open-feedback-modal", onOpenFeedback);
+      window.removeEventListener("switch-menu-type", onSwitchMenuType);
       window.removeEventListener("popstate", checkModalParams);
     };
   }, []);
@@ -209,26 +223,6 @@ export default function MenuPage() {
               <span>المنيو الورقي المصور</span>
             </button>
           </div>
-        </div>
-
-        {/* Quick Action Buttons: Reservation & Feedback */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-10 print:hidden">
-          <button
-            type="button"
-            onClick={() => setIsReservationOpen(true)}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-gold-600 to-amber-600 hover:from-gold-500 hover:to-amber-500 text-stone-950 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md shadow-gold-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-          >
-            <Calendar className="w-4 h-4" />
-            <span>احجز طاولتك بالمطعم</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsFeedbackOpen(true)}
-            className="inline-flex items-center gap-2 bg-white dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-gray-300 border border-stone-200 dark:border-white/10 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-xs cursor-pointer"
-          >
-            <MessageSquare className="w-4 h-4 text-primary-500" />
-            <span>الشكاوى والمقترحات</span>
-          </button>
         </div>
 
         {/* Dynamic Views Rendering */}

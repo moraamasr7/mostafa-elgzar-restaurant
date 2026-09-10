@@ -14,6 +14,10 @@ export const siteConfig = {
   telUrlSecondary: "tel:01020058231",
   location: "5 شارع عمر المختار، متفرع من شارع الحرية بجوار كنيسة الرشاح، المطرية، القاهرة",
   locationMapUrl: "https://maps.app.goo.gl/D5ENYuQWe8EdeyjS6",
+  restaurantCoords: {
+    lat: 30.1305,
+    lng: 31.3135,
+  },
   workingHours: "من 10 صباحاً إلى 2 فجراً",
   talabatUrl: "https://www.talabat.com/ar/egypt/restaurant/781448/mostafa-algazaar-restaurant-matareya?aid=7827",
 

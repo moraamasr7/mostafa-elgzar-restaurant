@@ -6,10 +6,37 @@ import { Turnstile } from '@marsidev/react-turnstile';
 import { OrderType, PaymentMethod } from '@/types/orders';
 import { supabase } from '@/lib/supabase/client';
 import { useCart } from '@/features/cart/context/CartContext';
-import { X, Bike, Store, Upload, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { X, Bike, Store, Upload, CheckCircle2, AlertTriangle, MapPin, ExternalLink, RefreshCw, AlertCircle } from 'lucide-react';
+import { siteConfig } from '@/lib/config';
 import { useScrollLock } from '@/lib/hooks/useScrollLock';
 import ProgressSteps from './ProgressSteps';
 import CountdownTimer from './CountdownTimer';
+
+function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c * 10) / 10;
+}
+
+function estimateDeliveryFee(distanceKm: number): { fee: number; note: string } {
+  if (distanceKm <= 2.5) {
+    return { fee: 15, note: 'توصيل محلي سريع (المطرية)' };
+  } else if (distanceKm <= 5) {
+    return { fee: 25, note: 'المناطق المجاورة (عين شمس، حلمية الزيتون، النعام)' };
+  } else if (distanceKm <= 8) {
+    return { fee: 35, note: 'مسافة متوسطة (مصر الجديدة، الوايلي، شبرا)' };
+  } else if (distanceKm <= 12) {
+    return { fee: 50, note: 'مدينة نصر والمناطق الأبعد' };
+  } else {
+    return { fee: 65, note: 'مسافة بعيدة (تخضع لتأكيد سرعة التوصيل من الفرع)' };
+  }
+}
 
 interface CheckoutFormProps {
   isOpen: boolean;
@@ -46,11 +73,80 @@ export default function CheckoutForm({
   const [submitError, setSubmitError] = useState('');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
+  // Geolocation & Map Delivery States
+  const [customerLocation, setCustomerLocation] = useState<{
+    lat: number;
+    lng: number;
+    accuracy?: number;
+    distanceKm?: number;
+    feeEstimate?: number;
+    feeNote?: string;
+  } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [manualAddressFallback, setManualAddressFallback] = useState(false);
+
+  const handleDetectLocation = () => {
+    if (typeof window === 'undefined' || !('geolocation' in navigator)) {
+      setLocationError('خاصية تحديد الموقع غير مدعومة على متصفحك. يرجى إدخال العنوان يدوياً.');
+      setManualAddressFallback(true);
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        const distance = calculateDistanceKm(
+          siteConfig.restaurantCoords.lat,
+          siteConfig.restaurantCoords.lng,
+          latitude,
+          longitude
+        );
+        const { fee, note } = estimateDeliveryFee(distance);
+
+        setCustomerLocation({
+          lat: latitude,
+          lng: longitude,
+          accuracy: Math.round(accuracy),
+          distanceKm: distance,
+          feeEstimate: fee,
+          feeNote: note,
+        });
+        setIsLocating(false);
+        setLocationError(null);
+      },
+      (err) => {
+        setIsLocating(false);
+        let msg = 'تعذر تحديد الموقع الجغرافي.';
+        if (err.code === err.PERMISSION_DENIED) {
+          msg = 'تم رفض إذن تحديد الموقع. يرجى تفعيل الـ GPS أو كتابة العنوان يدوياً.';
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          msg = 'إشارة الـ GPS غير متاحة حالياً. يرجى كتابة العنوان يدوياً.';
+        } else if (err.code === err.TIMEOUT) {
+          msg = 'استغرق تحديد الموقع وقتاً طويلاً. يرجى المحاولة ثانية أو كتابة العنوان يدوياً.';
+        }
+        setLocationError(msg);
+        setManualAddressFallback(true);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 0,
+      }
+    );
+  };
+
   useScrollLock(isOpen);
+
+  const hasLocation = Boolean(customerLocation && customerLocation.lat && customerLocation.lng);
 
   const hasEnteredData = Boolean(
     name.trim() ||
     phone.trim() ||
+    hasLocation ||
     (orderType === 'delivery' && deliveryAddress.trim()) ||
     paymentReceipt.trim() ||
     notes.trim()
@@ -156,7 +252,11 @@ export default function CheckoutForm({
     }
   };
 
-  const isAddressValid = orderType !== 'delivery' || deliveryAddress.trim().length >= 5;
+  const isAddressValid =
+    orderType !== 'delivery' ||
+    hasLocation ||
+    deliveryAddress.trim().length >= 5;
+
   const isReceiptValid =
     orderType !== 'takeaway' && paymentMethod === 'cash'
       ? true
@@ -188,12 +288,28 @@ export default function CheckoutForm({
         item_notes: line.item_notes,
       }));
 
+      let finalDeliveryAddress: string | undefined = undefined;
+      if (orderType === 'delivery') {
+        if (hasLocation && customerLocation) {
+          const latStr = customerLocation.lat.toFixed(6);
+          const lngStr = customerLocation.lng.toFixed(6);
+          const gmapsUrl = `https://maps.google.com/?q=${latStr},${lngStr}`;
+          const distInfo = customerLocation.distanceKm
+            ? ` (مسافة: ~${customerLocation.distanceKm.toFixed(1)} كم | تقدير: ~${customerLocation.feeEstimate} ج.م)`
+            : '';
+          const details = deliveryAddress.trim() ? ` | تفاصيل: ${deliveryAddress.trim()}` : '';
+          finalDeliveryAddress = `📍 موقع بالخريطة: ${gmapsUrl}${distInfo}${details}`;
+        } else {
+          finalDeliveryAddress = deliveryAddress.trim();
+        }
+      }
+
       const payload = {
         customer_name: name.trim(),
         customer_phone: phone.replace(/\s/g, ''),
         notes: notes.trim(),
         order_type: orderType,
-        delivery_address: orderType === 'delivery' ? deliveryAddress.trim() : undefined,
+        delivery_address: finalDeliveryAddress,
         payment_method: paymentMethod,
         payment_receipt_url: paymentReceipt.trim() || undefined,
         items: orderItemsPayload,
@@ -336,23 +452,167 @@ export default function CheckoutForm({
               </div>
             </div>
 
-          {/* Delivery Address Field */}
+          {/* Delivery Address & GPS Location Section */}
           {orderType === 'delivery' && (
-            <div className="space-y-1 animate-fade-in">
-              <label className="block text-xs font-bold text-stone-700 dark:text-gray-300">
-                عنوان التوصيل بالتفصيل <span className="text-primary-600">*</span>
-              </label>
-              <input
-                type="text"
-                value={deliveryAddress}
-                onChange={(e) => setDeliveryAddress(e.target.value)}
-                placeholder="المنطقة، الشارع، رقم العمارة والشقة..."
-                required={orderType === 'delivery'}
-                disabled={isSubmitting}
-                className="w-full px-4 py-2.5 bg-stone-50 dark:bg-white/5 border border-stone-200 dark:border-white/10 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:border-primary-500 transition-all text-xs sm:text-sm placeholder:text-stone-400 min-h-[44px]"
-              />
-              {deliveryAddress.length > 0 && deliveryAddress.trim().length < 5 && (
-                <p className="text-red-500 text-[10px] font-bold">العنوان يجب أن لا يقل عن 5 حروف</p>
+            <div className="space-y-3 animate-fade-in p-3 sm:p-3.5 bg-stone-100/70 dark:bg-white/[0.03] border border-stone-200 dark:border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-stone-800 dark:text-gray-200">
+                  موقع التوصيل <span className="text-primary-600">*</span>
+                </label>
+                {hasLocation && (
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    محدد بالخريطة ✅
+                  </span>
+                )}
+              </div>
+
+              {/* 1. GPS Auto Location Trigger */}
+              {(!hasLocation || !customerLocation) ? (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={handleDetectLocation}
+                    disabled={isLocating || isSubmitting}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md shadow-emerald-600/20 transition-all hover:scale-[1.01] active:scale-[0.99] min-h-[48px] cursor-pointer"
+                  >
+                    {isLocating ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>جاري تحديد موقعك بدقة عبر الـ GPS...</span>
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="w-4 h-4 text-emerald-100" />
+                        <span>📍 تحديد موقعي الحالي على الخريطة بنقرة واحدة</span>
+                      </>
+                    )}
+                  </button>
+
+                  {!manualAddressFallback && !locationError && (
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => setManualAddressFallback(true)}
+                        className="text-[11px] text-stone-500 dark:text-gray-400 hover:text-stone-800 dark:hover:text-stone-200 underline cursor-pointer"
+                      >
+                        أو إدخال العنوان كتابياً بالتفصيل يدويًا ✍️
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* 2. Success GPS Detected Card with Distance & Fee Estimate */
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-stone-800 dark:text-emerald-100 space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>تم تحديد موقعك بدقة عبر الخريطة</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleDetectLocation}
+                      disabled={isLocating}
+                      className="text-[11px] text-emerald-700 dark:text-emerald-300 hover:underline flex items-center gap-1 cursor-pointer font-bold"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${isLocating ? 'animate-spin' : ''}`} />
+                      <span>إعادة التحديد</span>
+                    </button>
+                  </div>
+
+                  {/* Metrics: Distance & Estimated Delivery Fee */}
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-emerald-500/20 text-center">
+                    <div className="bg-white/80 dark:bg-stone-900/80 p-2 rounded-lg border border-emerald-500/20">
+                      <span className="block text-[10px] text-stone-500 dark:text-gray-400 font-medium">المسافة من الفرع:</span>
+                      <strong className="text-stone-900 dark:text-white text-xs sm:text-sm font-black">
+                        ~{customerLocation.distanceKm?.toFixed(1)} كم
+                      </strong>
+                    </div>
+                    <div className="bg-white/80 dark:bg-stone-900/80 p-2 rounded-lg border border-emerald-500/20">
+                      <span className="block text-[10px] text-stone-500 dark:text-gray-400 font-medium">سعر التوصيل التقديري:</span>
+                      <strong className="text-amber-600 dark:text-amber-400 text-xs sm:text-sm font-black">
+                        ~{customerLocation.feeEstimate} ج.م
+                      </strong>
+                    </div>
+                  </div>
+
+                  {customerLocation.feeNote && (
+                    <p className="text-[10px] text-stone-600 dark:text-emerald-200/80 text-center font-semibold">
+                      🛵 {customerLocation.feeNote}
+                    </p>
+                  )}
+
+                  {/* Google Maps link preview */}
+                  <div className="flex items-center justify-between pt-1 text-[11px]">
+                    <a
+                      href={`https://maps.google.com/?q=${customerLocation.lat},${customerLocation.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-1 font-bold"
+                    >
+                      <span>معاينة اللوكيشن على Google Maps</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCustomerLocation(null);
+                        setManualAddressFallback(true);
+                      }}
+                      className="text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 underline cursor-pointer text-[10px]"
+                    >
+                      تغيير للعنوان اليدوي
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Location Error Banner */}
+              {locationError && (
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
+                  <div>
+                    <p className="font-bold">{locationError}</p>
+                    <p className="text-[11px] mt-0.5 text-stone-600 dark:text-gray-300">
+                      يرجى كتابة عنوانك بالتفصيل أدناه وسنقوم بتوصيل الطلب إليك فوراً.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 3. Address Text Field (Mandatory if no GPS, Optional extra notes if GPS is detected) */}
+              {(!hasLocation || manualAddressFallback) ? (
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-stone-700 dark:text-gray-300">
+                    عنوان التوصيل بالتفصيل <span className="text-primary-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    placeholder="المنطقة، اسم الشارع، رقم العمارة، الدور، الشقة..."
+                    required={orderType === 'delivery' && !hasLocation}
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-2.5 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:border-primary-500 transition-all text-xs sm:text-sm placeholder:text-stone-400 min-h-[44px]"
+                  />
+                  {deliveryAddress.length > 0 && deliveryAddress.trim().length < 5 && (
+                    <p className="text-red-500 text-[10px] font-bold">العنوان يجب أن لا يقل عن 5 حروف</p>
+                  )}
+                </div>
+              ) : (
+                /* Optional extra details input when GPS is already detected */
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-semibold text-stone-600 dark:text-gray-400">
+                    تفاصيل إضافية للعنوان (رقم العمارة، الدور، الشقة، علامة مميزة) <span className="text-stone-400 font-normal">(اختياري)</span>:
+                  </label>
+                  <input
+                    type="text"
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    placeholder="مثال: عمارة 12 الدور 3 شقة 5 بجوار صيدلية..."
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-2 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:border-primary-500 transition-all text-xs placeholder:text-stone-400 min-h-[40px]"
+                  />
+                </div>
               )}
             </div>
           )}
