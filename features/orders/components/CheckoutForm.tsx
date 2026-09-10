@@ -561,8 +561,8 @@ export default function CheckoutForm({
                 onError={(errCode) => {
                   setTurnstileToken('');
                   const code = String(errCode || '');
-                  if (code === '300030' || code.includes('domain')) {
-                    setTurnstileError('الدومين الحالي غير مسجل في نطاقات Cloudflare Turnstile المصرح بها (Error 300030).');
+                  if (code === '110200' || code === '300030' || code.includes('domain')) {
+                    setTurnstileError('الدومين الحالي غير مسجل في نطاقات Cloudflare Turnstile المصرح بها (Error 110200).');
                   } else {
                     setTurnstileError('تعذر إكمال التحقق الأمني. يرجى التحقق من اتصال الإنترنت أو إيقاف مانع الإعلانات.');
                   }

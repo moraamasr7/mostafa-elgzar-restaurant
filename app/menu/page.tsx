@@ -64,15 +64,31 @@ export default function MenuPage() {
   useEffect(() => {
     loadMenu();
 
-    // Check URL parameters for direct modal triggering (e.g. ?reserve=true or ?feedback=true)
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("reserve") === "true") {
-        setIsReservationOpen(true);
-      } else if (params.get("feedback") === "true") {
-        setIsFeedbackOpen(true);
+    const checkModalParams = () => {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("reserve") === "true") {
+          setIsReservationOpen(true);
+        } else if (params.get("feedback") === "true") {
+          setIsFeedbackOpen(true);
+        }
       }
-    }
+    };
+
+    checkModalParams();
+
+    const onOpenReservation = () => setIsReservationOpen(true);
+    const onOpenFeedback = () => setIsFeedbackOpen(true);
+
+    window.addEventListener("open-reservation-modal", onOpenReservation);
+    window.addEventListener("open-feedback-modal", onOpenFeedback);
+    window.addEventListener("popstate", checkModalParams);
+
+    return () => {
+      window.removeEventListener("open-reservation-modal", onOpenReservation);
+      window.removeEventListener("open-feedback-modal", onOpenFeedback);
+      window.removeEventListener("popstate", checkModalParams);
+    };
   }, []);
 
   // Touch tracking for swipe gestures
