@@ -185,8 +185,57 @@ export function useOrderRealtime(orderId: string, token: string | null): UseOrde
       )
       .subscribe();
 
+    // 4. Ultra-responsive Polling Fallback (Every 4s)
+    // Mobile networks often throttle or delay WebSocket connections; polling ensures real-time updates never lag
+    const pollInterval = setInterval(async () => {
+      if (!isMounted) return;
+      try {
+        if (token) {
+          const { data: rpcData } = await supabase.rpc('get_customer_order_tracking', {
+            p_order_id: orderId,
+            p_tracking_token: token,
+          });
+          if (rpcData && Array.isArray(rpcData) && rpcData.length > 0 && isMounted) {
+            const current = rpcData[0];
+            setOrder((prev) => {
+              if (!prev) return prev;
+              if (prev.status !== current.status) {
+                return { ...prev, status: current.status as OrderStatus };
+              }
+              return prev;
+            });
+            if (current.status === 'delivered' || current.status === 'completed' || current.status === 'cancelled') {
+              clearInterval(pollInterval);
+            }
+          }
+        } else {
+          const { data } = await supabase
+            .from('orders')
+            .select('status')
+            .eq('id', orderId)
+            .maybeSingle();
+
+          if (data && isMounted) {
+            setOrder((prev) => {
+              if (!prev) return prev;
+              if (prev.status !== data.status) {
+                return { ...prev, status: data.status as OrderStatus };
+              }
+              return prev;
+            });
+            if (data.status === 'delivered' || data.status === 'completed' || data.status === 'cancelled') {
+              clearInterval(pollInterval);
+            }
+          }
+        }
+      } catch {
+        // Silently continue polling
+      }
+    }, 4000);
+
     return () => {
       isMounted = false;
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
   }, [orderId, token]);

@@ -330,7 +330,22 @@ export default function CheckoutForm({
         return;
       }
 
-      // Success
+      // Success - Store active order locally so customer never loses access to tracking
+      try {
+        localStorage.setItem(
+          'elgzar_active_order',
+          JSON.stringify({
+            order_id: result.order_id,
+            order_number: result.order_number,
+            tracking_token: result.tracking_token || null,
+            total_amount: result.total_amount || totalPrice,
+            created_at: new Date().toISOString(),
+          })
+        );
+      } catch (e) {
+        console.warn('Failed to save active order to localStorage', e);
+      }
+
       clearCart();
       onClose();
 

@@ -85,7 +85,13 @@ export default function AdminOrdersPage() {
       )
       .subscribe();
 
+    // Responsive Polling fallback for live admin orders
+    const interval = setInterval(() => {
+      loadData();
+    }, 6000);
+
     return () => {
+      clearInterval(interval);
       supabase.removeChannel(channel);
     };
   }, []);

@@ -21,6 +21,8 @@ import SearchBar from "@/components/SearchBar";
 import { siteConfig } from "@/lib/config";
 import { getLiveMenu } from "@/features/menu/queries/get-menu.query";
 import { GroupedCategory } from "@/types/menu";
+import { supabase } from "@/lib/supabase/client";
+import { STATUS_UI_CONFIG, OrderStatus } from "@/types/orders";
 import MenuItemCard from "@/features/menu/components/MenuItemCard";
 import MenuErrorState from "@/features/menu/components/MenuErrorState";
 import { useCart } from "@/features/cart/context/CartContext";
@@ -48,6 +50,16 @@ export default function MenuPage() {
 
   const [isReservationOpen, setIsReservationOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+
+  // Active Customer Order Tracking state
+  const [activeOrder, setActiveOrder] = useState<{
+    order_id: string;
+    order_number: number;
+    tracking_token: string | null;
+    total_amount?: number;
+    status?: OrderStatus;
+    created_at?: string;
+  } | null>(null);
 
   const loadMenu = async () => {
     setIsLoading(true);
@@ -82,6 +94,55 @@ export default function MenuPage() {
     };
 
     checkModalParams();
+
+    // Check for active customer order
+    const checkActiveOrder = async () => {
+      try {
+        const stored = localStorage.getItem("elgzar_active_order");
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+        if (!parsed || !parsed.order_id) return;
+
+        // Check created_at (keep active order for 24 hours max)
+        if (parsed.created_at) {
+          const ageHours = (Date.now() - new Date(parsed.created_at).getTime()) / (1000 * 60 * 60);
+          if (ageHours > 24) {
+            localStorage.removeItem("elgzar_active_order");
+            return;
+          }
+        }
+
+        setActiveOrder(parsed);
+
+        // Fetch current status from Supabase
+        if (parsed.tracking_token) {
+          const { data } = await supabase.rpc("get_customer_order_tracking", {
+            p_order_id: parsed.order_id,
+            p_tracking_token: parsed.tracking_token,
+          });
+          if (data && Array.isArray(data) && data.length > 0) {
+            const currentStatus = data[0].status as OrderStatus;
+            setActiveOrder((prev) => (prev ? { ...prev, status: currentStatus } : null));
+            if (currentStatus === "delivered" || currentStatus === "completed" || currentStatus === "cancelled") {
+              // Can still view, but after 6 hours clear
+            }
+          }
+        } else {
+          const { data } = await supabase
+            .from("orders")
+            .select("status")
+            .eq("id", parsed.order_id)
+            .maybeSingle();
+          if (data && data.status) {
+            setActiveOrder((prev) => (prev ? { ...prev, status: data.status as OrderStatus } : null));
+          }
+        }
+      } catch (err) {
+        console.warn("Active order check failed", err);
+      }
+    };
+
+    checkActiveOrder();
 
     const onOpenReservation = () => setIsReservationOpen(true);
     const onOpenFeedback = () => setIsFeedbackOpen(true);
@@ -313,22 +374,83 @@ export default function MenuPage() {
                 <SearchBar value={searchQuery} onChange={setSearchQuery} />
               </div>
 
-              {/* Direct Telephone Quick Order Bar */}
-              <div className="mb-8 p-4 bg-gradient-to-r from-primary-600/10 via-gold-500/10 to-primary-600/10 border border-primary-500/20 dark:border-primary-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-right max-w-4xl mx-auto">
-                <div className="text-xs sm:text-sm text-stone-700 dark:text-gray-300 font-medium">
-                  🚀 <strong className="text-stone-900 dark:text-white">أصل الأكل الحرش بالمطرية:</strong> أضف وجباتك للسلة واطلب أو اتصل بنا مباشرة:
+              {/* Direct Telephone Quick Order Bar & Active Order Live Tracker */}
+              {activeOrder ? (
+                <div className="mb-8 p-4 bg-gradient-to-r from-amber-500/15 via-gold-500/10 to-primary-600/15 border border-amber-500/30 dark:border-amber-500/40 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-right max-w-4xl mx-auto shadow-md shadow-amber-500/5 animate-fade-in">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl shrink-0">
+                      {activeOrder.status ? STATUS_UI_CONFIG[activeOrder.status]?.icon || '🛵' : '🛵'}
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                        <span className="text-xs sm:text-sm font-black text-stone-900 dark:text-white">
+                          لديك طلب جاري: طلب #{activeOrder.order_number}
+                        </span>
+                        {activeOrder.status && (
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${
+                              STATUS_UI_CONFIG[activeOrder.status]?.bgColor || 'bg-amber-500/10'
+                            } ${
+                              STATUS_UI_CONFIG[activeOrder.status]?.borderColor || 'border-amber-500/20'
+                            } ${
+                              STATUS_UI_CONFIG[activeOrder.status]?.color || 'text-amber-400'
+                            }`}
+                          >
+                            {STATUS_UI_CONFIG[activeOrder.status]?.label || activeOrder.status}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-stone-600 dark:text-gray-400 mt-0.5">
+                        يمكنك متابعة حالة إعداد طلبك والتوصيل خطوة بخطوة في أي وقت.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                    <Link
+                      href={
+                        activeOrder.tracking_token
+                          ? `/order/${activeOrder.order_id}?token=${activeOrder.tracking_token}`
+                          : `/order/${activeOrder.order_id}`
+                      }
+                      className="inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-amber-500 to-primary-600 hover:from-amber-400 hover:to-primary-500 text-stone-950 font-black px-4 py-2 rounded-xl text-xs shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer whitespace-nowrap"
+                    >
+                      <span>تتبع طلبك الآن 📍</span>
+                      <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm('هل تريد إخفاء تنبيه التتبع من القائمة؟ (لن يتم إلغاء الطلب)')) {
+                          localStorage.removeItem('elgzar_active_order');
+                          setActiveOrder(null);
+                        }
+                      }}
+                      className="p-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 rounded-lg hover:bg-stone-200/50 dark:hover:bg-white/10 transition-colors"
+                      title="إخفاء التنبيه"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <a
-                    href={siteConfig.telUrl}
-                    className="inline-flex items-center gap-1.5 bg-white dark:bg-white/10 hover:bg-stone-50 dark:hover:bg-white/20 text-stone-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border border-stone-200 dark:border-white/10 shadow-xs"
-                    dir="ltr"
-                  >
-                    <Phone className="w-3.5 h-3.5 text-primary-500" />
-                    <span>{siteConfig.phone}</span>
-                  </a>
+              ) : (
+                <div className="mb-8 p-4 bg-gradient-to-r from-primary-600/10 via-gold-500/10 to-primary-600/10 border border-primary-500/20 dark:border-primary-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-right max-w-4xl mx-auto">
+                  <div className="text-xs sm:text-sm text-stone-700 dark:text-gray-300 font-medium">
+                    🚀 <strong className="text-stone-900 dark:text-white">أصل الأكل الحرش بالمطرية:</strong> أضف وجباتك للسلة واطلب أو اتصل بنا مباشرة:
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <a
+                      href={siteConfig.telUrl}
+                      className="inline-flex items-center gap-1.5 bg-white dark:bg-white/10 hover:bg-stone-50 dark:hover:bg-white/20 text-stone-900 dark:text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border border-stone-200 dark:border-white/10 shadow-xs"
+                      dir="ltr"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-primary-500" />
+                      <span>{siteConfig.phone}</span>
+                    </a>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Sticky Category Filter Tabs */}
               {categories.length > 0 && !fetchError && (

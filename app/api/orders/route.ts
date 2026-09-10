@@ -33,6 +33,9 @@ export async function POST(request: NextRequest) {
       }
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+
         const turnstileRes = await fetch(
           'https://challenges.cloudflare.com/turnstile/v0/siteverify',
           {
@@ -42,8 +45,10 @@ export async function POST(request: NextRequest) {
               secret: turnstileSecret,
               response: turnstile_token,
             }),
+            signal: controller.signal,
           }
         );
+        clearTimeout(timeoutId);
 
         const turnstileData = await turnstileRes.json();
         if (!turnstileData.success) {
@@ -52,8 +57,12 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-      } catch (err) {
-        console.warn('Turnstile verification network error:', err);
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          console.warn('Turnstile verification timed out after 4s, proceeding gracefully to avoid blocking customer.');
+        } else {
+          console.warn('Turnstile verification network error:', err);
+        }
       }
     }
 
