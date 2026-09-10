@@ -1,390 +1,90 @@
+import { supabase } from "@/lib/supabase/client";
 import { MenuItem, MenuCategory } from "@/types/menu";
 
 export type { MenuItem, MenuCategory };
 
+/**
+ * Authoritative Supabase Data Access Layer for Menu & Categories
+ * Adheres strictly to gazzar_master_schema.sql:
+ * - categories (id, name, display_order, is_active)
+ * - menu_items (id, category_id, name, description, is_available)
+ * - item_variants (id, item_id, variant_name, price, is_available)
+ */
 
-export const categories: MenuCategory[] = [
-  { id: "all", name: "الكل", icon: "Grid3X3" },
-  { id: "orders", name: "الطلبات", icon: "UtensilsCrossed" },
-  { id: "sandwiches", name: "السندوتشات", icon: "Sandwich" },
-  { id: "family", name: "الوجبات العائلية", icon: "ChefHat" },
-  { id: "tajin", name: "الطواجن", icon: "Soup" },
-  { id: "sawaney", name: "الصواني", icon: "Beef" },
-  { id: "rice", name: "الأرز", icon: "Wheat" },
-  { id: "drinks", name: "المشروبات", icon: "CupSoda" },
-];
+export interface LiveMenuData {
+  categories: MenuCategory[];
+  menuItems: MenuItem[];
+}
 
-export const menuItems: MenuItem[] = [
-  // السندوتشات
-  {
-    id: "s1",
-    name: "رغيف مشكل كبير",
-    price: 70,
-    description: "كبدة، كفتة، سجق، ممبار، كلاوي - مزيج لا يقاوم من النكهات البلدية",
-    category: "sandwiches",
-    popular: true,
-    image: "/images/sandwiches-mix.jpg",
-    ingredients: ["كبدة بلدي", "كفتة", "سجق", "ممبار مقرمش", "كلاوي", "بهارات"],
-  },
-  {
-    id: "s2",
-    name: "رغيف كبدة كبير",
-    price: 70,
-    description: "شرائح كبدة متبلة ومشوية مع فلفل، بصل، زيت، وخلطة بلدية",
-    category: "sandwiches",
-    ingredients: ["كبدة بلدي", "فلفل أخضر", "ثوم مفروم", "خل وليمون", "توابل الجزار"],
-  },
-  {
-    id: "s3",
-    name: "رغيف كفتة كبير",
-    price: 70,
-    description: "أصابع كفتة مشوية مع طماطم، فلفل مشوي، وصلصة بلدية",
-    category: "sandwiches",
-    ingredients: ["كفتة لحم بلدي", "بقدونس طازج", "سلطة طحينة", "بهارات الكفتة"],
-  },
-  {
-    id: "s4",
-    name: "رغيف كلاوي كبير",
-    price: 70,
-    description: "قطع كلاوي مطهية على الفحم مع بصل، فلفل، وبهارات مصرية",
-    category: "sandwiches",
-    ingredients: ["كلاوي بلدي", "بصل مفروم", "فلفل رومي", "شطة وبهارات"],
-  },
-  {
-    id: "s5",
-    name: "رغيف سجق كبير",
-    price: 70,
-    description: "سجق بلدي حار مع خلطة فلفل، بصل، وصلصة طماطم",
-    category: "sandwiches",
-    ingredients: ["سجق بلدي حار", "بصل", "فلفل ألوان", "صوص طماطم", "ثوم"],
-  },
-  {
-    id: "s6",
-    name: "رغيف ممبار كبير",
-    price: 70,
-    description: "شرائح ممبار مقرمشة مطهية بالسمن البلدي",
-    category: "sandwiches",
-    ingredients: ["ممبار بلدي", "أرز مصري متبل", "خلطة خضروات", "سمن بلدي"],
-  },
-  {
-    id: "s7",
-    name: "رغيف لحمة راس كبير",
-    price: 100,
-    description: "قطع لحمة راس طرية متبلة بالثوم والكمون مع شطة",
-    category: "sandwiches",
-    ingredients: ["لحمة راس بلدي", "ثوم مفروم", "كمون", "قرون شطة حمراء"],
-  },
-  {
-    id: "s8",
-    name: "رغيف طحال كبير",
-    price: 100,
-    description: "شرائح طحال محمرة مع بصل مكرمل وخلطة فلفل",
-    category: "sandwiches",
-    ingredients: ["طحال بلدي", "بصل مكرمل", "سمن بلدي", "خلطة فلفل حار"],
-  },
-  {
-    id: "s9",
-    name: "رغيف لحمة محمرة بلدي كبير",
-    price: 130,
-    description: "لحمة بلدي محمرة بالسمن مع فلفل وبصل",
-    category: "sandwiches",
-    ingredients: ["لحم بلدي طازج", "سمن بلدي", "لية ضأن", "فلفل وبصل"],
-  },
-  {
-    id: "s10",
-    name: "رغيف الجزار كبير",
-    price: 100,
-    description: "لحمة، طحال، كبدة، كفتة، سجق، ممبار، كلاوي - التشكيلة الكاملة",
-    category: "sandwiches",
-    popular: true,
-    image: "/images/sandwiches-mix.jpg",
-    ingredients: ["لحم بلدي", "طحال", "كبدة", "كفتة مشوية", "سجق", "ممبار", "كلاوي"],
-  },
-  // الطلبات
-  {
-    id: "mix1",
-    name: "طلب كبدة",
-    price: 120,
-    description: "كبدة بلدي مشوية ومتبلة بتوابل بلدية مع سلطات وعيش",
-    category: "orders",
-    ingredients: ["كبدة بلدي طازجة", "خلطة فلفل وثوم", "بهارات بلدي"],
-  },
-  {
-    id: "mix2",
-    name: "طلب كلاوي",
-    price: 120,
-    description: "كلاوي بلدي مطهية على الفحم مع سلطات وعيش بلدي",
-    category: "orders",
-    ingredients: ["كلاوي بلدي طازجة", "خلطة الجزار السرية", "بصل وفلفل"],
-  },
-  {
-    id: "mix3",
-    name: "طلب كفتة",
-    price: 120,
-    description: "أصابع كفتة مشوية على الجريل وتقدم مع سلطات وعيش بلدي",
-    category: "orders",
-    ingredients: ["لحم بلدي مفروم", "بقدونس", "بصل مفروم", "توابل مشويات"],
-  },
-  {
-    id: "mix4",
-    name: "طلب سجق",
-    price: 110,
-    description: "سجق بلدي مطبوخ مع بصل وفلفل ألوان يقدم ساخناً",
-    category: "orders",
-    ingredients: ["سجق بلدي بالبهارات", "فلفل أخضر وألوان", "بصل مكعبات", "ثوم"],
-  },
-  {
-    id: "mix5",
-    name: "طلب ممبار",
-    price: 90,
-    description: "ممبار محشي بالأرز والتوابل ومحمر بالسمن البلدي",
-    category: "orders",
-    ingredients: ["ممبار بلدي", "أرز مصري متبل", "خضرة ممبار", "سمن بلدي محمر"],
-  },
-  {
-    id: "mix6",
-    name: "طلب لحمة راس",
-    price: 140,
-    description: "لحمة راس طرية متبلة بالثوم والكمون وتقدم ساخنة مع عيش بلدي",
-    category: "orders",
-    ingredients: ["لحمة راس بلدي", "خل وليمون", "ثوم وكمون", "شطة"],
-  },
-  {
-    id: "mix7",
-    name: "طلب طحال",
-    price: 140,
-    description: "طحال بلدي محمر بالسمن مع بصل مكرمل يقدم مع عيش بلدي",
-    category: "orders",
-    ingredients: ["طحال بلدي", "بصل شرائح", "سمن بلدي", "بهارات"],
-  },
-  {
-    id: "so1",
-    name: "شوربة لسان عصفور صغير",
-    price: 30,
-    description: "لسان عصفور محمص مطهى بمرق لحم بلدي دسم",
-    category: "orders",
-    ingredients: ["مكرونة لسان عصفور", "مرق لحم غني", "ليمون طازج"],
-  },
-  {
-    id: "so2",
-    name: "شوربة كوارع سادة صغير",
-    price: 40,
-    description: "مرق كوارع صافٍ غني بنكهة الثوم والتوابل",
-    category: "orders",
-    ingredients: ["مرق كوارع بلدي دسم", "ليمون وبصل", "توابل الشوربة"],
-  },
-  {
-    id: "so3",
-    name: "شوربة كوارع مخلية صغير",
-    price: 150,
-    description: "مرق كوارع مركز مع قطع كوارع بلدي مخلية طرية",
-    category: "orders",
-    ingredients: ["كوارع بلدي مخلية طرية", "مرق كوارع دسم", "ثوم وليمون"],
-  },
-  {
-    id: "h1",
-    name: "حواوشي سادة",
-    price: 50,
-    description: "عيش بلدي محشي بلحم مفروم متبل بالبصل والفلفل ومشوي بالفرن",
-    category: "orders",
-    ingredients: ["خبز بلدي طازج", "لحم بلدي مفروم ومتبل", "بصل وفلفل أخضر"],
-  },
-  {
-    id: "h2",
-    name: "حواوشي موتزاريلا",
-    price: 60,
-    description: "لحم مفروم متبل مغطى بطبقة موتزاريلا ذائبة ومطاطية",
-    category: "orders",
-    ingredients: ["خبز بلدي", "لحم بلدي مفروم", "جبنة موتزاريلا غنية", "بصل وفلفل"],
-  },
-  {
-    id: "h3",
-    name: "حواوشي إضافة سجق",
-    price: 80,
-    description: "خليط لحم مفروم وسجق بلدي متبل بنكهة غنية",
-    category: "orders",
-    ingredients: ["خبز بلدي", "لحم بلدي مفروم", "قطع سجق بلدي متبل", "بهارات"],
-  },
-  {
-    id: "f1",
-    name: "فتة سادة",
-    price: 60,
-    description: "أرز مصري بلدي وعيش محمص مغموس بدقة الثوم والخل والصلصة",
-    category: "orders",
-    ingredients: ["أرز مصري", "عيش محمص", "خل وثوم", "صلصة طماطم بلدي", "مرق لحم"],
-  },
-  {
-    id: "f2",
-    name: "فتة لحمة كبير",
-    price: 300,
-    description: "فتة بلدي مع لحمة بلدي طرية محمرة ومغطاة بدقة الثوم والخل",
-    category: "orders",
-    ingredients: ["قطع لحم بلدي طازجة", "أرز أبيض مصري", "عيش بلدي محمص", "صوص طماطم وثوم بالخل"],
-  },
-  {
-    id: "f3",
-    name: "فتة كوارع كبير",
-    price: 250,
-    description: "فتة بلدي مع كوارع بلدي مخلية طرية مطبوخة ببطء",
-    category: "orders",
-    ingredients: ["كوارع بلدي مخلية طرية", "أرز مصري", "عيش بلدي محمص", "دقة ثوم وخل"],
-  },
-  // الوجبات العائلية
-  {
-    id: "m1",
-    name: "لحمة بلدي محمرة باللية - ربع كيلو",
-    price: 250,
-    description: "لحمة بلدي محمرة بالسمن البلدي واللية وتقدم مع سلطات ومخلل وعيش",
-    category: "family",
-    ingredients: ["لحم بلدي صافي", "لية ضأن بلدي", "سمن بلدي خالص", "فلفل أسود حصى"],
-  },
-  {
-    id: "m2",
-    name: "لحمة بلدي محمرة باللية - نص كيلو",
-    price: 500,
-    description: "لحمة بلدي محمرة بالسمن البلدي واللية - كافية لمشاركة شخصين إلى ثلاثة",
-    category: "family",
-    popular: true,
-    ingredients: ["لحم بلدي صافي", "لية ضأن بلدي", "سمن بلدي خالص", "فلفل أسود حصى"],
-  },
-  {
-    id: "m3",
-    name: "لحمة بلدي محمرة باللية - كيلو",
-    price: 1000,
-    description: "لحمة بلدي محمرة بالسمن البلدي واللية - وجبة عائلية كبيرة كاملة مع كل السلطات",
-    category: "family",
-    ingredients: ["لحم بلدي صافي", "لية ضأن بلدي", "سمن بلدي خالص", "فلفل أسود حصى"],
-  },
-  {
-    id: "fam1",
-    name: "وجبة العيلة المشكلة",
-    price: 650,
-    description: "تشكيلة من كفتة، سجق، ممبار، كبدة محمرة بالسمن مع أرز بلدي وسلطة وشوربة كوارع",
-    category: "family",
-    popular: true,
-    image: "/images/sawaney-gzar.jpg",
-    ingredients: ["كفتة بلدي", "سجق بلدي", "ممبار محمر", "كبدة بلدي", "أرز مصري"],
-  },
-  // الطواجن
-  {
-    id: "t1",
-    name: "طاجن كوارع",
-    price: 300,
-    description: "كوارع طرية في طاجن فخاري مع صلصة طماطم وتوابل بلدية",
-    category: "tajin",
-    popular: true,
-    ingredients: ["كوارع بلدي مخلية", "صلصة طماطم دسمة", "ثوم وكزبرة", "مرق كوارع"],
-  },
-  {
-    id: "t2",
-    name: "طاجن عكاوي",
-    price: 400,
-    description: "قطع عكاوي مطهوة ببطء في طاجن فخاري مع بصل مكرمل وتوابل غنية",
-    category: "tajin",
-    ingredients: ["عكاوي بلدي", "بصل مكرمل", "فلفل ألوان وطماطم", "بهارات لحم"],
-  },
-  {
-    id: "t3",
-    name: "طاجن فتة كوارع فخار",
-    price: 200,
-    description: "أرز مصري وعيش محمص مغموس بمرق الكوارع وقطع كوارع بالثوم والصلصة",
-    category: "tajin",
-    ingredients: ["أرز أبيض مصري", "خبز بلدي محمص", "كوارع بلدي مخلية", "صوص ثوم بالخل"],
-  },
-  {
-    id: "t4",
-    name: "طاجن ورق عنب بالكوارع",
-    price: 270,
-    description: "ورق عنب محشي بالأرز والتوابل مغطى بقطع كوارع بلدي مخلية غنية بالدسم",
-    category: "tajin",
-    ingredients: ["محشي ورق عنب", "قطع كوارع بلدي", "خلطة أرز بالخلطة", "مرق كوارع غني"],
-  },
-  {
-    id: "t5",
-    name: "طاجن ملوخية بالثوم",
-    price: 60,
-    description: "ملوخية خضراء بلدي مطهية بالطشة المصرية التقليدية بالثوم والكزبرة",
-    category: "tajin",
-    ingredients: ["ملوخية طازجة", "طشة ثوم بلدي", "كزبرة جافة", "مرق لحم بلدي"],
-  },
-  {
-    id: "t6",
-    name: "طاجن ورق عنب سادة",
-    price: 100,
-    description: "ورق عنب فخار محشي بالأرز والطماطم والبصل مطبوخ بالفرن البلدي",
-    category: "tajin",
-    ingredients: ["ورق عنب طازج", "أرز بالخلطة المصرية", "صلصة طماطم وبصل", "ليمون"],
-  },
-  // الصواني
-  {
-    id: "mix8",
-    name: "صينية مشكل بلدي",
-    price: 290,
-    description: "تشكيلة بلدية فاخرة تجمع الطحال المحمر، لحمة الراس الطرية، والممبار المقرمش",
-    category: "sawaney",
-    image: "/images/sawaney-gzar.jpg",
-    ingredients: ["طحال بلدي", "لحمة راس", "ممبار مقرمش", "سمن بلدي", "ثوم وفلفل"],
-  },
-  {
-    id: "mix9",
-    name: "صينية الجزار الكبيرة",
-    price: 380,
-    description: "لحمة، طحال، كبدة، كفتة، سجق، ممبار، كلاوي - صينية كاملة محمرة بالسمن واللية",
-    category: "sawaney",
-    popular: true,
-    image: "/images/sawaney-gzar1.jpg",
-    ingredients: ["لحم بلدي محمر", "طحال", "كبدة", "كفتة", "سجق", "ممبار", "كلاوي", "لية وسمن بلدي"],
-  },
-  {
-    id: "saw3",
-    name: "صينية الفخامة الكبرى",
-    price: 850,
-    description: "مشكل لحوم بلدي، كوارع بلدي مخلية، ممبار محمر، ورق عنب، كفتة وسجق بالسمن البلدي واللية",
-    category: "sawaney",
-    popular: true,
-    image: "/images/sawaney-gzar1.jpg",
-    ingredients: ["كوارع مخلية", "ورق عنب", "كفتة وسجق", "ممبار محمر", "لية وسمن بلدي"],
-  },
-  // الأرز
-  {
-    id: "r1",
-    name: "أرز سادة بالسمن",
-    price: 40,
-    description: "أرز مصري بلدي مطبوخ بالسمن البلدي الطبيعي",
-    category: "rice",
-    ingredients: ["أرز مصري فاخر", "سمن بلدي", "مرق"],
-  },
-  {
-    id: "r2",
-    name: "أرز خلطة الجزار",
-    price: 90,
-    description: "أرز مصري بلدي مع خلطة كبدة أو كلاوي متبلة بالثوم والفلفل والبهارات",
-    category: "rice",
-    ingredients: ["أرز مصري", "خلطة كبدة وكلاوي متبلة بالثوم والفلفل"],
-  },
-  // المشروبات
-  {
-    id: "d1",
-    name: "بيبسي كانز",
-    price: 20,
-    description: "مشروب غازي بيبسي بارد ومنعش",
-    category: "drinks",
-    ingredients: ["بيبسي بارد"],
-  },
-  {
-    id: "d2",
-    name: "ميرندا برتقال كانز",
-    price: 20,
-    description: "مشروب غازي ميرندا بطعم البرتقال اللذيذ بارد",
-    category: "drinks",
-    ingredients: ["ميرندا برتقال"],
-  },
-  {
-    id: "d3",
-    name: "مياه معدنية صغيرة",
-    price: 10,
-    description: "زجاجة مياه معدنية طبيعية باردة ومنعشة",
-    category: "drinks",
-    ingredients: ["مياه طبيعية"],
-  },
-];
+export async function fetchLiveMenuFromSupabase(): Promise<LiveMenuData> {
+  try {
+    const [categoriesRes, itemsRes] = await Promise.all([
+      supabase
+        .from("categories")
+        .select("id, name, display_order, is_active")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true }),
+      supabase
+        .from("menu_items")
+        .select(`
+          id,
+          category_id,
+          name,
+          description,
+          is_available,
+          item_variants (
+            id,
+            variant_name,
+            price,
+            is_available
+          )
+        `)
+        .eq("is_available", true)
+        .order("name", { ascending: true }),
+    ]);
+
+    if (categoriesRes.error) {
+      console.error("Error fetching categories from Supabase:", categoriesRes.error);
+    }
+    if (itemsRes.error) {
+      console.error("Error fetching menu items from Supabase:", itemsRes.error);
+    }
+
+    const rawCategories = categoriesRes.data || [];
+    const rawItems = itemsRes.data || [];
+
+    const categories: MenuCategory[] = [
+      { id: "all", name: "الكل", icon: "Grid3X3" },
+      ...rawCategories.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        icon: "UtensilsCrossed",
+      })),
+    ];
+
+    const menuItems: MenuItem[] = rawItems.map((item: any) => {
+      const activeVariants = (item.item_variants || []).filter((v: any) => v.is_available !== false);
+      const minPrice = activeVariants.length > 0
+        ? Math.min(...activeVariants.map((v: any) => Number(v.price) || 0))
+        : 0;
+
+      return {
+        id: item.id,
+        name: item.name,
+        price: minPrice,
+        description: item.description || "",
+        category: item.category_id,
+        available: item.is_available,
+      };
+    });
+
+    return { categories, menuItems };
+  } catch (err) {
+    console.error("fetchLiveMenuFromSupabase exception:", err);
+    return { categories: [], menuItems: [] };
+  }
+}
+
+// Zero mock data: fallback arrays are strictly empty to prevent showing synthetic data
+export const categories: MenuCategory[] = [];
+export const menuItems: MenuItem[] = [];

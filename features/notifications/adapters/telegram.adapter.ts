@@ -65,6 +65,64 @@ export class TelegramAdapter implements NotificationAdapter {
         return true;
       }
 
+      if (event.type === 'reservation.created') {
+        const lines = [
+          `📅 <b>حجز طاولة جديد بمطعم مصطفى الجزار!</b>`,
+          ``,
+          `🏷️ <b>رقم الحجز:</b> #${event.reservationNumber}`,
+          `👤 <b>اسم العميل:</b> ${escapeHtml(event.customerName)}`,
+          `📞 <b>الموبايل:</b> <code>${escapeHtml(event.customerPhone)}</code>`,
+          `👥 <b>عدد الأفراد:</b> <b>${event.guestCount} أفراد</b>`,
+          `📆 <b>التاريخ:</b> ${escapeHtml(event.reservationDate)}`,
+          `⏰ <b>الموعد المطلوب:</b> <b>${escapeHtml(event.reservationTime)}</b>`,
+        ];
+
+        if (event.notes) {
+          lines.push(`📝 <b>ملاحظات خاصة:</b> ${escapeHtml(event.notes)}`);
+        }
+
+        lines.push(``);
+        lines.push(`ℹ️ <i>الحالة الحالية: قيد المراجعة (Pending)</i>`);
+
+        const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: lines.join('\n'),
+            parse_mode: 'HTML',
+          }),
+        });
+
+        return response.ok;
+      }
+
+      if (event.type === 'feedback.received') {
+        const typeBadge = event.feedbackType === 'complaint' ? '⚠️ شكوى عميل' : '💡 مقترح / إشادة';
+        const lines = [
+          `💬 <b>وصلت رسالة جديدة من عميل!</b> (${typeBadge})`,
+          ``,
+          `👤 <b>الاسم:</b> ${escapeHtml(event.customerName)}`,
+          `📞 <b>الهاتف:</b> <code>${escapeHtml(event.customerPhone)}</code>`,
+          `📝 <b>نص الرسالة:</b>`,
+          `<blockquote>${escapeHtml(event.message)}</blockquote>`,
+          ``,
+          `⏰ <i>الوقت: ${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</i>`,
+        ];
+
+        const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: lines.join('\n'),
+            parse_mode: 'HTML',
+          }),
+        });
+
+        return response.ok;
+      }
+
       return true;
     } catch (err) {
       console.warn('[TelegramAdapter] Exception sending message to Telegram:', err);

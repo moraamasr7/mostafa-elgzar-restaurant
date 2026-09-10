@@ -143,7 +143,7 @@ export async function PATCH(request: NextRequest) {
       const { error: updateErr } = await supabase
         .from('orders')
         .update({
-          status: 'delivery_failed',
+          status: 'failed',
           notes: opResult.changes?.internal_notes,
         })
         .eq('id', order_id);

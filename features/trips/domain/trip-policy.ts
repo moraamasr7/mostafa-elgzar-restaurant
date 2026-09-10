@@ -17,7 +17,7 @@ export class TripPolicy {
     tripStatus: TripStatus,
     order: { order_type: string; status: string }
   ): TripPolicyEvaluation {
-    if (tripStatus !== 'draft' && tripStatus !== 'assigned') {
+    if (tripStatus !== 'created') {
       return {
         allowed: false,
         reason: `لا يمكن إضافة طلبات إلى رحلة بحالة "${tripStatus}". الرحلة قيد التوصيل أو منتهية.`,

@@ -62,7 +62,7 @@ export function OrderTrackingView({ orderId }: { orderId: string }) {
 
   const currentStatus = order.status;
   const statusConfig = STATUS_UI_CONFIG[currentStatus] || STATUS_UI_CONFIG.pending;
-  const isFailedOrCancelled = currentStatus === 'cancelled' || currentStatus === 'delivery_failed';
+  const isFailedOrCancelled = currentStatus === 'cancelled' || currentStatus === 'failed';
 
   // Calculate current step index in standard progression
   let currentStepIdx = STEP_SEQUENCE.indexOf(currentStatus);

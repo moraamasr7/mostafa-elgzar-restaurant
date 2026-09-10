@@ -108,7 +108,7 @@ export class OrderOperations {
       };
     }
 
-    const validation = OrderStateMachine.validateTransition(order.status, 'delivery_failed', 'delivery');
+    const validation = OrderStateMachine.validateTransition(order.status, 'failed', 'delivery');
     if (!validation.success) {
       return {
         success: false,
@@ -122,7 +122,7 @@ export class OrderOperations {
     return {
       success: true,
       changes: {
-        status: 'delivery_failed' as OrderStatus,
+        status: 'failed' as OrderStatus,
         delivery_failed_reason: reason,
         internal_notes: updatedNotes,
       },

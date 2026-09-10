@@ -15,7 +15,28 @@ export interface OrderCreatedEvent {
   createdAt: string;
 }
 
-export type DomainNotificationEvent = OrderCreatedEvent;
+export interface ReservationCreatedEvent {
+  type: 'reservation.created';
+  reservationNumber: number;
+  customerName: string;
+  customerPhone: string;
+  reservationDate: string;
+  reservationTime: string;
+  guestCount: number;
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface FeedbackReceivedEvent {
+  type: 'feedback.received';
+  customerName: string;
+  customerPhone: string;
+  feedbackType: 'suggestion' | 'complaint';
+  message: string;
+  createdAt: string;
+}
+
+export type DomainNotificationEvent = OrderCreatedEvent | ReservationCreatedEvent | FeedbackReceivedEvent;
 
 export interface NotificationAdapter {
   name: string;

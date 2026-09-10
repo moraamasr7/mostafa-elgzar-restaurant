@@ -1,39 +1,35 @@
 export interface Driver {
   id: string;
   name: string;
-  phone: string;
+  phone?: string | null;
   status: 'available' | 'busy' | 'offline';
-  active_shift_id?: string;
-  current_trip_id?: string;
-  current_orders_count: number;
-  total_delivered_today: number;
-  total_cash_collected: number;
+  is_active?: boolean;
+  active_trips_count?: number;
 }
 
-export type TripStatus = 'draft' | 'assigned' | 'active' | 'completed' | 'cancelled';
+export type TripStatus = 'created' | 'picked_up' | 'out_for_delivery' | 'completed' | 'cancelled';
 
-export interface Trip {
+export interface DeliveryTrip {
   id: string;
+  trip_number?: number;
   driver_id: string;
   shift_id: string;
   status: TripStatus;
-  order_ids: string[];
-  max_orders: 5;
-  departed_at?: string;
-  returned_at?: string;
-  notes?: string;
+  expected_amount?: number;
+  collected_amount?: number;
+  collection_status?: string;
+  created_at: string;
+  completed_at?: string | null;
 }
+
+// Backward-compatible aliases
+export type Trip = DeliveryTrip;
 
 export interface Shift {
   id: string;
-  opened_at: string;
-  closed_at?: string;
-  opened_by: string;
-  closed_by?: string;
-  total_orders_count: number;
-  total_revenue: number;
-  total_cash_expected: number;
-  total_cash_received?: number;
-  discrepancy?: number;
+  driver_id: string;
+  started_at: string;
+  ended_at?: string | null;
   status: 'open' | 'closed';
+  created_at: string;
 }

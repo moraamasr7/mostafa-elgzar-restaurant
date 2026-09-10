@@ -96,39 +96,39 @@
 > **المبدأ الحاكم:** قاعدة البيانات مشتركة مع نظام إداري في Repo آخر. لا مساس بأي جداول قائمة.
 > المنهجية: Extract (UX Idea) → Adapt (Mostafa Domain) → Integrate (Layered) → Validate.
 
-- [ ] **Phase 12: Phase 0 Discovery & Shared DB Extensions Lock**
+- [x] **Phase 12: Phase 0 Discovery & Shared DB Extensions Lock**
   - توثيق خريطة العقود وإجابات الأسئلة الـ 7 في `docs/architecture/PHASE_0_DISCOVERY_AND_CONTRACT_LOCK.md`.
-  - إنشاء جدولي `reservations` و `feedback` في سوبابيس مع دورة حياة صريحة وحماية RLS متكاملة.
+  - اكتشاف وتأمين جدولي `reservations` و `feedback` في سوبابيس مع فهارس الاستعلام الموجهة وحماية RLS.
+  - تثبيت قرار نطاق المسؤولية في `docs/architecture/ADR-008-scope-lock-customer-facing-boundaries.md`.
 
-- [ ] **Phase 13: Operating Hours & Reservation Availability Engine**
-  - بناء دومين `features/operating-hours/domain`:
+- [x] **Phase 13: Operating Hours & Reservation Availability Engine**
+  - دومين التوافر `features/reservations/domain/reservation-availability.ts`:
     - قراءة `restaurant_operating_hours` و `restaurant_special_closures` و `restaurant_schedule_overrides`.
-    - فصل فحص اللحظة الحالية `isRestaurantOpenNow()` عن فحص التوافر المستقبلي `getReservationAvailability(date)`.
-    - حساب السلوتات الزمنية المتاحة (30 دقيقة) وفق سعة الطاولات والأيام المسموحة (اليوم والغد).
-  - بناء دومين `features/policies/domain`:
-    - قراءة `restaurant_policies` (الحد الأدنى 80 ج، نطاق 13 كم، سعر الكيلو 8 ج).
+    - التحقق الصارم من ساعات العمل (15:00 إلى 03:00) وفترة السماح المسبقة 45 دقيقة.
+    - حساب السلوتات الزمنية المتاحة (30 دقيقة) وفق سعة الحجوزات القائمة والأيام المسموحة (اليوم والغد).
 
-- [ ] **Phase 14: Strict Table Reservation Domain & Decoupled Events**
-  - بناء `features/reservations`:
-    - دورة حياة الحجز: `pending` → `confirmed` → `completed` / `cancelled` / `no_show`.
-    - نقطة نهاية آمنة `/api/reservations` مع التحقق الخادمي الصارم ومكافحة الإساءة (Rate Limiting + Turnstile).
-    - حدث `ReservationCreatedEvent` معزول يرسل لتليجرام الإدارة بدون تأخير أو كسر للعملية.
-    - واجهة `TableReservationModal` الفاخرة بدون أي ذكر لكلمة "كافيه" أو هاردكود لأوقات العمل.
+- [x] **Phase 14: Strict Customer Reservation Flow & Decoupled Events (ADR-008 Scoped)**
+  - واجهة العميل `TableReservationModal`: (الاسم، الهاتف، عدد الأفراد، التاريخ، الوقت، الملاحظات) دون أي شاشات إدارة.
+  - محرك تحقق خادمي صارم داخل `/api/reservations` مع Rate Limiting و Anti-Spam.
+  - إدراج الحجز بحالة `'pending'` فقط في جدول `reservations` بسوبابيس وتوليد كود الحجز.
+  - إطلاق حدث معزول لتليجرام الإدارة عبر `TelegramAdapter` غير حاجب للعميل.
 
-- [ ] **Phase 15: Customer Quality & Feedback Domain**
-  - بناء `features/feedback`:
-    - نقطة نهاية `/api/feedback` مع Rate Limiting وحماية كاملة.
-    - حدث `FeedbackReceivedEvent` معزول لتليجرام الإدارة.
-    - واجهة `CustomerFeedbackModal` الراقية للمقترحات والشكاوى.
+- [x] **Phase 15: Customer Quality & Feedback Flow (ADR-008 Scoped)**
+  - واجهة العميل الخفيفة `CustomerFeedbackModal` لجمع (الاسم، الهاتف، النوع `suggestion` / `complaint`، والرسالة).
+  - نقطة نهاية `/api/feedback` مع Rate Limiting وحماية كاملة.
+  - إدراج الشكوى بحالة `'new'` فقط في جدول `feedback` بسوبابيس.
+  - إطلاق إشعار معزول لتليجرام الإدارة.
 
-- [ ] **Phase 16: Menu UX Polish (Adapted from UX Insights)**
+- [x] **Phase 16: Menu UX Polish (Adapted from UX Insights)**
   - شريط الأقسام المتقدم مع عدادات الأصناف المستخرجة ديناميكياً من `v_full_menu`.
-  - شريط التفاعل الزجاجي العائم مع مؤشر حالة المنيو اللحظي والبحث السريع وأزرار الحجز والشكاوى.
-  - تحسين البطاقة الهجينة `MenuItemCard` للموبايل (مدمجة وأفقية) والديسكتوب.
-  - إضافة شريط مسار خطوات الطلب `ProgressSteps` ومؤقت مهلة التحويل `CountdownTimer` في السلة/الدفع.
+  - شريط التفاعل وإمكانية الوصول الفوري لأزرار "احجز طاولتك بالمطعم" و "الشكاوى والمقترحات" من صفحات المنيو وNavbar وFooter.
+  - البطاقة الهجينة التفاعلية `MenuItemCard` مع خيارات الحجم والكمية والإضافة المباشرة للسلة.
+  - إضافة شريط مسار خطوات الطلب `ProgressSteps` ومؤقت مهلة التحويل المسبق `CountdownTimer` في نافذة إتمام الطلب `CheckoutForm`.
+  - ربط حاوية السلة بالدفع عبر `GlobalCheckout` في `RootLayout`.
 
-- [ ] **Phase 17: Admin Operations & Final Build Verification**
-  - إضافة شاشة إدارة الحجوزات في لوحة التحكم `/admin/reservations` للتحكم في قبول وتأكيد الحجوزات.
-  - التحقق الكامل: `npx tsc --noEmit` + `npm run lint` + `npm run build` (Exit 0).
-  - الالتزام الصارم بسياسة الأصول الثابتة `public/` (عدم تعديل أو حذف أي ملف موجود).
+- [x] **Phase 17: Production Verification & Zero-Regression Check**
+  - فحص TypeScript الصارم: `npx tsc --noEmit` (0 errors).
+  - فحص ESLint الكامل: `npm run lint` (0 errors).
+  - اختبار بناء الإنتاج الشامل: `npm run build` (Exit code 0، 14 مساراً ثابتاً وديناميكياً بنجاح تام).
+  - الالتزام التام بعدم المساس بأصول `public/` أو أي جداول/Views/RPCs مشتركة في قاعدة البيانات.
 

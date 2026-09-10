@@ -207,7 +207,7 @@ export default function AdminOrdersPage() {
       }
 
       setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: 'delivery_failed' } : o))
+        prev.map((o) => (o.id === orderId ? { ...o, status: 'failed' } : o))
       );
     } catch (e: any) {
       alert(e.message || 'حدث خطأ');
@@ -264,7 +264,7 @@ export default function AdminOrdersPage() {
       if (selectedStatusTab === 'completed' && !['delivered', 'completed'].includes(order.status)) {
         return false;
       }
-      if (selectedStatusTab === 'failed' && !['cancelled', 'delivery_failed'].includes(order.status)) {
+      if (selectedStatusTab === 'failed' && !['cancelled', 'failed'].includes(order.status)) {
         return false;
       }
     }
@@ -468,7 +468,7 @@ export default function AdminOrdersPage() {
                       // Skip assigned from direct button (handled via assign modal)
                       if (targetStatus === 'assigned') return null;
                       if (targetStatus === 'cancelled') return null;
-                      if (targetStatus === 'delivery_failed') return null;
+                      if (targetStatus === 'failed') return null;
 
                       return (
                         <button

@@ -11,6 +11,7 @@ import { useOrderModal } from "@/components/OrderModalContext";
 const navLinks = [
   { href: "/", label: "الرئيسية" },
   { href: "/menu", label: "المنيو" },
+  { href: "/menu?reserve=true", label: "حجز طاولة" },
   { href: "/about", label: "عن المطعم" },
   { href: "/contact", label: "تواصل معنا" },
 ];

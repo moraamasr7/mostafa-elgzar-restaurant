@@ -73,6 +73,16 @@ export default function Footer() {
                   تواصل معنا
                 </Link>
               </li>
+              <li>
+                <Link href="/menu?reserve=true" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
+                  حجز طاولة بالمطعم
+                </Link>
+              </li>
+              <li>
+                <Link href="/menu?feedback=true" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
+                  الشكاوى والمقترحات
+                </Link>
+              </li>
             </ul>
           </div>
 

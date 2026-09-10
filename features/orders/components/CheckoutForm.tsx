@@ -7,6 +7,8 @@ import { OrderType, PaymentMethod } from '@/types/orders';
 import { supabase } from '@/lib/supabase/client';
 import { useCart } from '@/features/cart/context/CartContext';
 import { X, Bike, Store, ArrowLeft, Upload, CheckCircle2 } from 'lucide-react';
+import ProgressSteps from './ProgressSteps';
+import CountdownTimer from './CountdownTimer';
 
 interface CheckoutFormProps {
   isOpen: boolean;
@@ -219,6 +221,8 @@ export default function CheckoutForm({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
+          <ProgressSteps currentStep={name.trim() && phone.trim() ? 3 : 2} />
+
           {/* Order Type Toggle */}
           <div>
             <label className="block text-xs font-bold text-stone-500 dark:text-gray-400 mb-2">
@@ -347,6 +351,8 @@ export default function CheckoutForm({
           {/* Payment Proof for Takeaway or Digital Payment */}
           {(orderType === 'takeaway' || paymentMethod !== 'cash') && (
             <div className="p-3.5 bg-gold-500/10 border border-gold-500/25 rounded-2xl space-y-2.5 animate-fade-in text-right">
+              <CountdownTimer initialMinutes={10} />
+
               <div className="text-xs text-stone-800 dark:text-gold-200 space-y-1">
                 {orderType === 'takeaway' ? (
                   <p className="font-bold text-red-600 dark:text-red-400">

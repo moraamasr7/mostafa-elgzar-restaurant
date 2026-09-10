@@ -9,6 +9,7 @@ import { siteConfig } from "@/lib/config";
 import { CartProvider } from "@/features/cart/context/CartContext";
 import CartBar from "@/features/cart/components/CartBar";
 import CartModal from "@/features/cart/components/CartModal";
+import GlobalCheckout from "@/features/orders/components/GlobalCheckout";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.siteUrl),
@@ -157,6 +158,7 @@ export default function RootLayout({
               <FloatingActions />
               <CartBar />
               <CartModal />
+              <GlobalCheckout />
             </OrderModalProvider>
           </CartProvider>
         </ThemeProvider>

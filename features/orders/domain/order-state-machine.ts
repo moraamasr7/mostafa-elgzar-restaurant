@@ -15,16 +15,15 @@ export interface OrderStateTransitionResult {
  */
 const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   pending: ['processing', 'cancelled'],
-  processing: ['ready', 'cancelled'],
+  processing: ['ready', 'completed', 'cancelled'],
   ready: ['assigned', 'completed', 'cancelled'], // completed directly for takeaway/dine_in
   assigned: ['picked_up', 'ready', 'cancelled'], // 'ready' when driver unassigned
-  picked_up: ['out_for_delivery', 'ready', 'delivery_failed', 'cancelled'],
-  out_for_delivery: ['delivered', 'delivery_failed', 'cancelled'],
+  picked_up: ['out_for_delivery', 'ready', 'cancelled'],
+  out_for_delivery: ['delivered', 'failed', 'cancelled'],
   delivered: ['completed'],
-  delivery_failed: ['returned_to_branch', 'ready', 'cancelled'],
-  returned_to_branch: ['ready', 'cancelled'],
   completed: [], // Terminal
   cancelled: [], // Terminal
+  failed: ['ready', 'cancelled'],
 };
 
 export class OrderStateMachine {
@@ -46,8 +45,7 @@ export class OrderStateMachine {
         'picked_up',
         'out_for_delivery',
         'delivered',
-        'delivery_failed',
-        'returned_to_branch',
+        'failed',
       ];
       if (deliverySpecificStatuses.includes(to)) {
         return false;

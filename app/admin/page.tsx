@@ -60,7 +60,7 @@ export default function AdminDashboardPage() {
         let delivering = 0;
 
         ordersData.forEach((order) => {
-          if (order.status !== 'cancelled' && order.status !== 'delivery_failed') {
+          if (order.status !== 'cancelled' && order.status !== 'failed') {
             revenue += Number(order.total_amount || 0);
           }
           if (order.status === 'pending') pending++;

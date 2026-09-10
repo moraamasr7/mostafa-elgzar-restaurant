@@ -22,9 +22,16 @@ export async function POST(request: NextRequest) {
       turnstile_token,
     } = body;
 
-    // Optional Cloudflare Turnstile anti-bot verification
+    // Cloudflare Turnstile anti-bot verification
     const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
-    if (turnstileSecret && turnstile_token) {
+    if (turnstileSecret) {
+      if (!turnstile_token) {
+        return NextResponse.json(
+          { error: 'يلزم التحقق الأمني ضد الروبوتات (Turnstile Token مفقود). يرجى تحديث الصفحة.' },
+          { status: 400 }
+        );
+      }
+
       try {
         const turnstileRes = await fetch(
           'https://challenges.cloudflare.com/turnstile/v0/siteverify',
@@ -33,7 +40,7 @@ export async function POST(request: NextRequest) {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
               secret: turnstileSecret,
-              response: turnstile_token || '',
+              response: turnstile_token,
             }),
           }
         );
@@ -46,7 +53,7 @@ export async function POST(request: NextRequest) {
           );
         }
       } catch (err) {
-        console.warn('Turnstile verification error:', err);
+        console.warn('Turnstile verification network error:', err);
       }
     }
 

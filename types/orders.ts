@@ -7,9 +7,8 @@ export type OrderStatus =
   | 'out_for_delivery'
   | 'delivered'
   | 'completed'
-  | 'delivery_failed'
-  | 'returned_to_branch'
-  | 'cancelled';
+  | 'cancelled'
+  | 'failed';
 
 export type OrderType = 'takeaway' | 'delivery' | 'dine_in';
 export type PaymentMethod = 'cash' | 'instapay' | 'wallet';
@@ -130,19 +129,12 @@ export const STATUS_UI_CONFIG: Record<OrderStatus, StatusUIConfig> = {
     bgColor: 'bg-green-500/10',
     borderColor: 'border-green-500/20',
   },
-  delivery_failed: {
+  failed: {
     label: 'تعذر التوصيل',
     icon: '⚠️',
     color: 'text-orange-400',
     bgColor: 'bg-orange-500/10',
     borderColor: 'border-orange-500/20',
-  },
-  returned_to_branch: {
-    label: 'مرتجع للفرع',
-    icon: '↩️',
-    color: 'text-stone-400',
-    bgColor: 'bg-stone-500/10',
-    borderColor: 'border-stone-500/20',
   },
   cancelled: {
     label: 'تم الإلغاء',
