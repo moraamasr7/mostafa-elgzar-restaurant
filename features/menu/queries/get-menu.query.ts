@@ -23,6 +23,8 @@ export function groupMenu(rows: MenuVariantRow[]): GroupedCategory[] {
         name: row.item_name,
         description: row.item_description,
         available: row.item_available,
+        image_url: row.item_image_url || null,
+        image: row.item_image_url || undefined,
         category_id: row.category_id,
         variants: [],
       };

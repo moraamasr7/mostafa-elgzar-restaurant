@@ -11,6 +11,7 @@ export interface GroupedMenuItem {
   description: string | null;
   available: boolean;
   image?: string;
+  image_url?: string | null;
   popular?: boolean;
   category_id?: string;
   variants: MenuItemVariant[];
@@ -31,6 +32,7 @@ export interface MenuVariantRow {
   item_id: string;
   item_name: string;
   item_description: string | null;
+  item_image_url?: string | null;
   item_available: boolean;
   variant_id: string;
   variant_name: string;
