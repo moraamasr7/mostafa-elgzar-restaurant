@@ -37,7 +37,10 @@ export default function CheckoutForm({
   const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [notes, setNotes] = useState('');
-  const [turnstileToken, setTurnstileToken] = useState('demo-token');
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim();
+  const [turnstileToken, setTurnstileToken] = useState(turnstileSiteKey ? '' : 'demo-token');
+  const [turnstileError, setTurnstileError] = useState<string | null>(null);
+  const [turnstileWidgetKey, setTurnstileWidgetKey] = useState(0);
   const [phoneError, setPhoneError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -159,7 +162,6 @@ export default function CheckoutForm({
       ? true
       : paymentReceipt.trim().length >= 3;
 
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const isTurnstileValid = !turnstileSiteKey || turnstileToken.length > 0;
 
   const isFormValid =
@@ -547,17 +549,52 @@ export default function CheckoutForm({
           </div>
 
           {/* Turnstile Captcha - Responsive Container (no overflow on 320px) */}
-          {turnstileSiteKey && (
-            <div className="w-full flex justify-center py-1 overflow-x-auto max-w-full">
+          {turnstileSiteKey ? (
+            <div className="w-full flex flex-col items-center justify-center py-1 overflow-x-auto max-w-full">
               <Turnstile
+                key={turnstileWidgetKey}
                 siteKey={turnstileSiteKey}
-                onSuccess={(token) => setTurnstileToken(token)}
-                onError={() => setTurnstileToken('')}
-                onExpire={() => setTurnstileToken('')}
+                onSuccess={(token) => {
+                  setTurnstileToken(token);
+                  setTurnstileError(null);
+                }}
+                onError={(errCode) => {
+                  setTurnstileToken('');
+                  const code = String(errCode || '');
+                  if (code === '300030' || code.includes('domain')) {
+                    setTurnstileError('الدومين الحالي غير مسجل في نطاقات Cloudflare Turnstile المصرح بها (Error 300030).');
+                  } else {
+                    setTurnstileError('تعذر إكمال التحقق الأمني. يرجى التحقق من اتصال الإنترنت أو إيقاف مانع الإعلانات.');
+                  }
+                }}
+                onExpire={() => {
+                  setTurnstileToken('');
+                  setTurnstileError('انتهت صلاحية رمز التحقق، يرجى إعادة النقر على المربع.');
+                }}
                 options={{ theme: 'auto', language: 'ar' }}
               />
+              {turnstileError && (
+                <div className="mt-2 p-2 rounded-xl bg-red-500/10 border border-red-500/30 text-center text-xs text-red-600 dark:text-red-400 font-semibold space-y-1">
+                  <p>{turnstileError}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTurnstileError(null);
+                      setTurnstileToken('');
+                      setTurnstileWidgetKey((k) => k + 1);
+                    }}
+                    className="inline-block mt-1 px-3 py-1 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-700 dark:text-red-300 font-bold transition-colors cursor-pointer"
+                  >
+                    إعادة تحميل المربع 🔄
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          ) : process.env.NODE_ENV !== 'production' ? (
+            <div className="w-full text-center py-2.5 px-3 bg-stone-100 dark:bg-stone-900/80 border border-dashed border-stone-300 dark:border-stone-700 rounded-xl text-[11px] text-stone-500 dark:text-stone-400">
+              ℹ️ (بيئة محلية): لم يتم تعيين مفتاح <code className="text-primary-500 font-mono text-[10px]">NEXT_PUBLIC_TURNSTILE_SITE_KEY</code> — يتم تخطي التحقق تلقائياً للاختبار.
+            </div>
+          ) : null}
         </div>
 
         {/* Pinned Docked Modal Footer (Checkout Focus Mode) */}

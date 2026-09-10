@@ -23,11 +23,11 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Cloudflare Turnstile anti-bot verification
-    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY?.trim();
     if (turnstileSecret) {
-      if (!turnstile_token) {
+      if (!turnstile_token || turnstile_token === 'demo-token') {
         return NextResponse.json(
-          { error: 'يلزم التحقق الأمني ضد الروبوتات (Turnstile Token مفقود). يرجى تحديث الصفحة.' },
+          { error: 'يلزم التحقق الأمني ضد الروبوتات (يرجى تحديد مربع التحقق). يرجى المحاولة ثانية.' },
           { status: 400 }
         );
       }
