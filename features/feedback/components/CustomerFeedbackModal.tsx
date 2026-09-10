@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FeedbackType } from '../types/feedback.types';
+import { useScrollLock } from '@/lib/hooks/useScrollLock';
 
 interface CustomerFeedbackModalProps {
   isOpen: boolean;
@@ -18,7 +19,18 @@ export function CustomerFeedbackModal({ isOpen, onClose }: CustomerFeedbackModal
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  useScrollLock(isOpen);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen && !submitting) {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, submitting]);
 
   const handleClose = () => {
     setSuccessMessage(null);
@@ -74,22 +86,36 @@ export function CustomerFeedbackModal({ isOpen, onClose }: CustomerFeedbackModal
     }
   }
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
-      <div className="bg-stone-900 border border-stone-800 rounded-3xl p-5 sm:p-7 max-w-md w-full shadow-2xl space-y-5 my-auto text-right">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 select-none dir-rtl animate-fade-in">
+      {/* Backdrop with click to close */}
+      <div
+        className="absolute inset-0 bg-black/85 backdrop-blur-md"
+        onClick={!submitting ? handleClose : undefined}
+      />
+
+      {/* Modal Box */}
+      <div
+        className="relative bg-stone-900 border border-stone-800 rounded-3xl p-5 sm:p-7 max-w-md w-full shadow-2xl space-y-5 my-auto text-right z-10 max-h-[92dvh] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="feedback-modal-title"
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-stone-800 pb-3">
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
               خدمة العملاء والجودة
             </span>
-            <h2 className="text-xl font-black text-white mt-1">الشكاوى والمقترحات</h2>
+            <h2 id="feedback-modal-title" className="text-xl font-black text-white mt-1">الشكاوى والمقترحات</h2>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white transition-colors"
-            aria-label="إغلاق"
+            className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="إغلاق النافذة"
           >
             ✕
           </button>
@@ -132,7 +158,7 @@ export function CustomerFeedbackModal({ isOpen, onClose }: CustomerFeedbackModal
                 <button
                   type="button"
                   onClick={() => setFeedbackType('suggestion')}
-                  className={`py-2 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  className={`py-2.5 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 min-h-[44px] ${
                     feedbackType === 'suggestion'
                       ? 'bg-amber-500 text-stone-950 font-black shadow-md shadow-amber-500/10'
                       : 'bg-stone-950 border border-stone-800 text-stone-400 hover:text-stone-200'
@@ -144,7 +170,7 @@ export function CustomerFeedbackModal({ isOpen, onClose }: CustomerFeedbackModal
                 <button
                   type="button"
                   onClick={() => setFeedbackType('complaint')}
-                  className={`py-2 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  className={`py-2.5 px-3 rounded-xl font-bold transition-all flex items-center justify-center gap-1.5 min-h-[44px] ${
                     feedbackType === 'complaint'
                       ? 'bg-orange-600 text-white font-black shadow-md shadow-orange-600/10'
                       : 'bg-stone-950 border border-stone-800 text-stone-400 hover:text-stone-200'
@@ -166,7 +192,7 @@ export function CustomerFeedbackModal({ isOpen, onClose }: CustomerFeedbackModal
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="الاسم"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-stone-200 focus:outline-none focus:border-amber-500 min-h-[44px]"
                 />
               </div>
 
@@ -178,7 +204,7 @@ export function CustomerFeedbackModal({ isOpen, onClose }: CustomerFeedbackModal
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="01xxxxxxxxx"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500 font-mono"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-stone-200 focus:outline-none focus:border-amber-500 font-mono min-h-[44px]"
                   dir="ltr"
                 />
               </div>
@@ -191,7 +217,7 @@ export function CustomerFeedbackModal({ isOpen, onClose }: CustomerFeedbackModal
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="اكتب مقترحك أو تفاصيل الشكوى بوضوح لمساعدتنا على تقديم أفضل خدمة تليق بكم..."
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-3 text-stone-200 focus:outline-none focus:border-amber-500 resize-none leading-relaxed"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-3.5 text-stone-200 focus:outline-none focus:border-amber-500 resize-none leading-relaxed"
                 />
               </div>
             </div>
@@ -201,14 +227,14 @@ export function CustomerFeedbackModal({ isOpen, onClose }: CustomerFeedbackModal
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs transition-all disabled:opacity-50 shadow-lg shadow-amber-500/10"
+                className="flex-1 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs sm:text-sm transition-all disabled:opacity-50 shadow-lg shadow-amber-500/10 min-h-[48px] flex items-center justify-center active:scale-[0.98]"
               >
                 {submitting ? 'جاري الإرسال...' : 'إرسال الرسالة للإدارة'}
               </button>
               <button
                 type="button"
                 onClick={handleClose}
-                className="py-3 px-4 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs transition-colors"
+                className="py-3 px-5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs sm:text-sm transition-colors min-h-[48px] flex items-center justify-center active:scale-[0.98]"
               >
                 إلغاء
               </button>

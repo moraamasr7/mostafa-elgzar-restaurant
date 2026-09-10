@@ -90,7 +90,7 @@ export default function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
             <span className="text-[11px] font-bold text-stone-400 dark:text-stone-400 block">
               اختر الحجم / النوع:
             </span>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {availableVariants.map((variant) => {
                 const isSelected = selectedVariantId === variant.id;
                 return (
@@ -98,7 +98,7 @@ export default function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
                     key={variant.id}
                     type="button"
                     onClick={() => setSelectedVariantId(variant.id)}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all border ${
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border min-h-[40px] flex items-center ${
                       isSelected
                         ? 'bg-primary-600 border-primary-600 text-white shadow-sm shadow-primary-500/20 scale-[1.02]'
                         : 'bg-stone-100 dark:bg-white/5 border-stone-200 dark:border-white/10 text-stone-700 dark:text-gray-300 hover:border-primary-500/50'
@@ -122,16 +122,16 @@ export default function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
             placeholder="ملاحظات خاصة (بدون بصل، مشوي زيادة...)"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full px-3 py-1.5 bg-stone-50 dark:bg-dark-900/80 border border-stone-200 dark:border-white/10 rounded-xl text-xs placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:border-primary-500/50 transition-all text-stone-900 dark:text-white"
+            className="w-full px-3.5 py-2 bg-stone-50 dark:bg-dark-900/80 border border-stone-200 dark:border-white/10 rounded-xl text-xs placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:border-primary-500/50 transition-all text-stone-900 dark:text-white min-h-[40px]"
           />
 
           <div className="flex items-center justify-between gap-2">
-            {/* Quantity Stepper */}
+            {/* Quantity Stepper - Minimum 40px touch targets */}
             <div className="flex items-center bg-stone-100 dark:bg-white/5 p-1 rounded-xl border border-stone-200 dark:border-white/10 shrink-0">
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="w-7 h-7 flex items-center justify-center bg-white dark:bg-dark-800 hover:bg-stone-200 dark:hover:bg-dark-700 text-stone-900 dark:text-white rounded-lg transition-all font-bold text-sm active:scale-95 shadow-xs"
+                className="w-10 h-10 flex items-center justify-center bg-white dark:bg-dark-800 hover:bg-stone-200 dark:hover:bg-dark-700 text-stone-900 dark:text-white rounded-lg transition-all font-bold text-base active:scale-95 shadow-xs min-w-[40px] min-h-[40px]"
                 aria-label="تقليل الكمية"
               >
                 −
@@ -142,22 +142,22 @@ export default function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.min(50, q + 1))}
-                className="w-7 h-7 flex items-center justify-center bg-primary-600 hover:bg-primary-500 text-white rounded-lg transition-all font-bold text-sm active:scale-95 shadow-xs"
+                className="w-10 h-10 flex items-center justify-center bg-primary-600 hover:bg-primary-500 text-white rounded-lg transition-all font-bold text-base active:scale-95 shadow-xs min-w-[40px] min-h-[40px]"
                 aria-label="زيادة الكمية"
               >
                 +
               </button>
             </div>
 
-            {/* Add to Order Button */}
+            {/* Add to Order Button - Minimum 44px touch target */}
             <button
               type="button"
               onClick={handleAdd}
-              className="flex-1 btn-primary text-xs py-2 px-3 flex items-center justify-center gap-1.5 font-bold shadow-md shadow-primary-500/20 active:scale-[0.98]"
+              className="flex-1 btn-primary text-xs sm:text-sm py-2.5 px-3.5 flex items-center justify-center gap-1.5 font-bold shadow-md shadow-primary-500/20 active:scale-[0.98] min-h-[44px]"
             >
-              <ShoppingBag className="w-3.5 h-3.5" />
+              <ShoppingBag className="w-4 h-4" />
               <span>إضافة للطلب</span>
-              <span className="bg-white/20 px-1.5 py-0.5 rounded-md text-[11px] font-black tabular-nums mr-0.5">
+              <span className="bg-white/20 px-2 py-0.5 rounded-md text-[11px] font-black tabular-nums mr-0.5">
                 {totalPrice.toFixed(0)} ج
               </span>
             </button>

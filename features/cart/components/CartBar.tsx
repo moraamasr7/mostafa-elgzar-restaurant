@@ -1,23 +1,29 @@
 'use client';
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { useCart } from '../context/CartContext';
 import { ShoppingBag, ArrowLeft } from 'lucide-react';
 
 export default function CartBar() {
-  const { totalCount, totalPrice, openCart } = useCart();
+  const pathname = usePathname();
+  const { totalCount, totalPrice, openCart, isCartOpen, isCheckoutOpen } = useCart();
 
-  if (totalCount === 0) return null;
+  // Hide on admin routes, order tracking, when cart has no items, or when cart/checkout is open
+  if (totalCount === 0 || isCartOpen || isCheckoutOpen) return null;
+  if (pathname.startsWith('/admin') || pathname.startsWith('/order')) return null;
 
   return (
     <div
       className="fixed z-50 max-w-lg mx-auto left-4 right-4 animate-slide-up select-none"
       style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom, 0px))' }}
+      role="region"
+      aria-label="شريط السلة السريع"
     >
       <button
         type="button"
         onClick={openCart}
-        className="group w-full bg-stone-900/95 dark:bg-dark-950/95 text-white p-3 pr-4 sm:pr-5 rounded-2xl shadow-2xl shadow-black/50 border border-stone-700/50 dark:border-white/10 backdrop-blur-xl flex items-center justify-between gap-3 transition-all active:scale-[0.98]"
+        className="group w-full bg-stone-900/95 dark:bg-dark-950/95 text-white p-3 pr-4 sm:pr-5 rounded-2xl shadow-2xl shadow-black/50 border border-stone-700/50 dark:border-white/10 backdrop-blur-xl flex items-center justify-between gap-3 transition-all active:scale-[0.98] min-h-[56px]"
         aria-label={`عرض السلة: ${totalCount} عناصر، الإجمالي ${totalPrice.toFixed(0)} ج`}
       >
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
@@ -35,7 +41,7 @@ export default function CartBar() {
           </div>
         </div>
 
-        <div className="btn-primary py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shrink-0">
+        <div className="btn-primary py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shrink-0 min-h-[44px]">
           <span>عرض السلة</span>
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
         </div>

@@ -24,8 +24,9 @@ import { GroupedCategory } from "@/types/menu";
 import MenuItemCard from "@/features/menu/components/MenuItemCard";
 import MenuErrorState from "@/features/menu/components/MenuErrorState";
 import { useCart } from "@/features/cart/context/CartContext";
-import { TableReservationModal } from "@/features/reservations/components/TableReservationModal";
 import { CustomerFeedbackModal } from "@/features/feedback/components/CustomerFeedbackModal";
+import { TableReservationModal } from "@/features/reservations/components/TableReservationModal";
+import { useScrollLock } from "@/lib/hooks/useScrollLock";
 
 const paperImages = ["/images/menu1.jpg", "/images/menu2.jpg"];
 
@@ -35,6 +36,8 @@ export default function MenuPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right">("left");
+
+  useScrollLock(lightboxIndex !== null);
 
   // Live Menu Data Layer state (Single Source of Truth: Supabase v_full_menu)
   const [categories, setCategories] = useState<GroupedCategory[]>([]);
@@ -141,7 +144,7 @@ export default function MenuPage() {
   }, [categories, activeCategoryId, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-dark-950 pt-24 pb-20 transition-colors duration-300">
+    <div className="min-h-screen bg-stone-50 dark:bg-dark-950 pt-24 pb-36 sm:pb-28 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -319,43 +322,49 @@ export default function MenuPage() {
 
               {/* Sticky Category Filter Tabs */}
               {categories.length > 0 && !fetchError && (
-                <div className="sticky top-20 z-40 bg-stone-50/95 dark:bg-dark-950/95 backdrop-blur-md py-3 border-b border-stone-200/50 dark:border-white/5 mb-8 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-                  <div className="max-w-4xl mx-auto flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" dir="rtl">
-                    <button
-                      type="button"
-                      onClick={() => setActiveCategoryId("all")}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border shrink-0 ${
-                        activeCategoryId === "all"
-                          ? "bg-primary-600 border-primary-600 text-white shadow-md shadow-primary-500/20"
-                          : "bg-white dark:bg-white/5 border-stone-200 dark:border-white/10 text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
-                      }`}
-                    >
-                      <span>🍽️ الكل</span>
-                      <span className="text-[10px] bg-black/10 dark:bg-white/10 px-1.5 py-0.2 rounded-md tabular-nums">
-                        {totalItemsCount}
-                      </span>
-                    </button>
+                <div className="sticky top-20 z-30 bg-stone-50/95 dark:bg-dark-950/95 backdrop-blur-md py-3 border-b border-stone-200/50 dark:border-white/5 mb-8 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+                  <div className="relative max-w-4xl mx-auto">
+                    {/* Left/Right scroll indicators on small screens */}
+                    <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-stone-50 dark:from-dark-950 to-transparent z-10 sm:hidden" />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-stone-50 dark:from-dark-950 to-transparent z-10 sm:hidden" />
 
-                    {categories.map((cat) => {
-                      const isActive = activeCategoryId === cat.id;
-                      return (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => setActiveCategoryId(cat.id)}
-                          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border shrink-0 ${
-                            isActive
-                              ? "bg-primary-600 border-primary-600 text-white shadow-md shadow-primary-500/20"
-                              : "bg-white dark:bg-white/5 border-stone-200 dark:border-white/10 text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
-                          }`}
-                        >
-                          <span>{cat.name}</span>
-                          <span className="text-[10px] bg-black/10 dark:bg-white/10 px-1.5 py-0.2 rounded-md tabular-nums">
-                            {cat.items.length}
-                          </span>
-                        </button>
-                      );
-                    })}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none px-1" dir="rtl">
+                      <button
+                        type="button"
+                        onClick={() => setActiveCategoryId("all")}
+                        className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap border shrink-0 min-h-[40px] ${
+                          activeCategoryId === "all"
+                            ? "bg-primary-600 border-primary-600 text-white shadow-md shadow-primary-500/20"
+                            : "bg-white dark:bg-white/5 border-stone-200 dark:border-white/10 text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
+                        }`}
+                      >
+                        <span>🍽️ الكل</span>
+                        <span className="text-[10px] bg-black/10 dark:bg-white/10 px-1.5 py-0.2 rounded-md tabular-nums">
+                          {totalItemsCount}
+                        </span>
+                      </button>
+
+                      {categories.map((cat) => {
+                        const isActive = activeCategoryId === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => setActiveCategoryId(cat.id)}
+                            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap border shrink-0 min-h-[40px] ${
+                              isActive
+                                ? "bg-primary-600 border-primary-600 text-white shadow-md shadow-primary-500/20"
+                                : "bg-white dark:bg-white/5 border-stone-200 dark:border-white/10 text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
+                            }`}
+                          >
+                            <span>{cat.name}</span>
+                            <span className="text-[10px] bg-black/10 dark:bg-white/10 px-1.5 py-0.2 rounded-md tabular-nums">
+                              {cat.items.length}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               )}
@@ -434,7 +443,7 @@ export default function MenuPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4 select-none touch-none"
+            className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4 select-none touch-none"
             onClick={() => setLightboxIndex(null)}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}

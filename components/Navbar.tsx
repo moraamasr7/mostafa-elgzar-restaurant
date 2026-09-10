@@ -31,9 +31,19 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close mobile navigation on route change
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
+  // Do not render public customer navigation on admin operational routes
+  if (pathname.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
         scrolled
           ? "bg-white/95 dark:bg-dark-950/95 backdrop-blur-lg shadow-md dark:shadow-xl border-b border-stone-200/50 dark:border-white/5"
           : "bg-transparent"
@@ -88,8 +98,11 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 md:hidden">
             <button
+              type="button"
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors whitespace-nowrap shrink-0 inline-flex items-center justify-center"
+              className="p-2.5 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors whitespace-nowrap shrink-0 inline-flex items-center justify-center min-w-[44px] min-h-[44px]"
+              aria-label={isOpen ? "إغلاق القائمة" : "فتح القائمة الرئيسية"}
+              aria-expanded={isOpen}
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>

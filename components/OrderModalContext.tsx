@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Bike, X, Phone, ArrowLeft, Store } from "lucide-react";
 import { getOrderingActionUrl, siteConfig, PublicOrderType } from "@/lib/config";
+import { useScrollLock } from "@/lib/hooks/useScrollLock";
 
 interface OrderModalContextType {
   openOrderModal: (itemId?: string) => void;
@@ -24,6 +25,8 @@ export function OrderModalProvider({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | undefined>(undefined);
+
+  useScrollLock(isOpen);
 
   const openOrderModal = (itemId?: string) => {
     setSelectedItemId(itemId);
@@ -61,7 +64,7 @@ export function OrderModalProvider({ children }: { children: React.ReactNode }) 
 
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 select-none dir-rtl">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 select-none dir-rtl">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -84,8 +87,9 @@ export function OrderModalProvider({ children }: { children: React.ReactNode }) 
             >
               {/* Close Button */}
               <button
+                type="button"
                 onClick={closeOrderModal}
-                className="absolute top-5 left-5 p-2 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-white bg-stone-100 dark:bg-white/5 transition-colors"
+                className="absolute top-4 left-4 p-2.5 rounded-full text-stone-400 hover:text-stone-700 dark:hover:text-white bg-stone-100 dark:bg-white/5 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="إغلاق النافذة"
               >
                 <X className="w-5 h-5" />

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AvailableSlot, DayAvailabilityResult } from '../domain/reservation-availability';
+import { useScrollLock } from '@/lib/hooks/useScrollLock';
 
 interface TableReservationModalProps {
   isOpen: boolean;
@@ -27,6 +28,19 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successInfo, setSuccessInfo] = useState<{ resNumber: number; msg: string } | null>(null);
+
+  useScrollLock(isOpen);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen && !submitting) {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, submitting]);
 
   // Fetch available slots whenever date changes
   useEffect(() => {
@@ -64,7 +78,7 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
     return () => {
       isMounted = false;
     };
-  }, [isOpen, selectedDate]);
+  }, [selectedDate, isOpen]);
 
   // Reset state on close
   const handleClose = () => {
@@ -73,26 +87,24 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
     onClose();
   };
 
-  if (!isOpen) return null;
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage(null);
 
     if (!customerName.trim()) {
-      setErrorMessage('يرجى إدخال الاسم');
+      setErrorMessage('يرجى كتابة الاسم');
       return;
     }
 
     const cleanPhone = customerPhone.trim().replace(/\s+/g, '');
     const egPhoneRegex = /^01[0125][0-9]{8}$/;
     if (!egPhoneRegex.test(cleanPhone)) {
-      setErrorMessage('يرجى إدخال رقم هاتف مصري صحيح يبدأ بـ 010 أو 011 أو 012 أو 015 (11 رقماً)');
+      setErrorMessage('يرجى إدخال رقم هاتف مصري صحيح يبدأ بـ 01 (11 رقماً)');
       return;
     }
 
     if (!selectedSlot) {
-      setErrorMessage('يرجى اختيار موعد الحجز المناسب');
+      setErrorMessage('يرجى اختيار موعد الحجز من الأوقات المتاحة');
       return;
     }
 
@@ -104,16 +116,16 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
         body: JSON.stringify({
           customer_name: customerName.trim(),
           customer_phone: cleanPhone,
+          guest_count: guestCount,
           reservation_date: selectedDate,
           reservation_time: selectedSlot,
-          guest_count: guestCount,
-          notes: notes.trim() || undefined,
+          notes: notes.trim(),
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        setErrorMessage(data.error || 'تعذر تسجيل الحجز');
+        setErrorMessage(data.error || 'تعذر تأكيد الحجز');
         return;
       }
 
@@ -128,22 +140,36 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
     }
   }
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
-      <div className="bg-stone-900 border border-stone-800 rounded-3xl p-5 sm:p-7 max-w-lg w-full shadow-2xl space-y-5 my-auto text-right">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 select-none dir-rtl animate-fade-in">
+      {/* Backdrop with click to close */}
+      <div
+        className="absolute inset-0 bg-black/85 backdrop-blur-md"
+        onClick={!submitting ? handleClose : undefined}
+      />
+
+      {/* Modal Content Box */}
+      <div
+        className="relative bg-stone-900 border border-stone-800 rounded-3xl p-5 sm:p-7 max-w-lg w-full shadow-2xl space-y-5 my-auto text-right z-10 max-h-[92dvh] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reservation-modal-title"
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-stone-800 pb-3">
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
               مطعم ومسمط مصطفى الجزار
             </span>
-            <h2 className="text-xl font-black text-white mt-1">حجز طاولة</h2>
+            <h2 id="reservation-modal-title" className="text-xl font-black text-white mt-1">حجز طاولة</h2>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white transition-colors"
-            aria-label="إغلاق"
+            className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="إغلاق النافذة"
           >
             ✕
           </button>
@@ -191,7 +217,7 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
                 <button
                   type="button"
                   onClick={() => setSelectedDate(todayStr)}
-                  className={`py-2 px-3 rounded-xl font-bold transition-all ${
+                  className={`py-2.5 px-3 rounded-xl font-bold transition-all min-h-[44px] flex items-center justify-center ${
                     selectedDate === todayStr
                       ? 'bg-amber-500 text-stone-950 font-black shadow-md shadow-amber-500/10'
                       : 'bg-stone-950 border border-stone-800 text-stone-400 hover:text-stone-200'
@@ -202,7 +228,7 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
                 <button
                   type="button"
                   onClick={() => setSelectedDate(tomorrowStr)}
-                  className={`py-2 px-3 rounded-xl font-bold transition-all ${
+                  className={`py-2.5 px-3 rounded-xl font-bold transition-all min-h-[44px] flex items-center justify-center ${
                     selectedDate === tomorrowStr
                       ? 'bg-amber-500 text-stone-950 font-black shadow-md shadow-amber-500/10'
                       : 'bg-stone-950 border border-stone-800 text-stone-400 hover:text-stone-200'
@@ -229,14 +255,14 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
                   {availability.reason || 'المطعم مغلق في هذا التاريخ'}
                 </div>
               ) : availability && availability.slots.length > 0 ? (
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 max-h-36 overflow-y-auto p-1 bg-stone-950/60 rounded-xl border border-stone-800/80">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto p-1.5 bg-stone-950/60 rounded-xl border border-stone-800/80">
                   {availability.slots.map((slot) => (
                     <button
                       key={slot.time}
                       type="button"
                       disabled={!slot.available}
                       onClick={() => setSelectedSlot(slot.time)}
-                      className={`py-1.5 px-2 rounded-lg text-center text-[11px] font-bold transition-all ${
+                      className={`py-2 px-2.5 rounded-xl text-center text-xs font-bold transition-all min-h-[40px] flex items-center justify-center ${
                         !slot.available
                           ? 'opacity-30 cursor-not-allowed bg-stone-900 text-stone-600'
                           : selectedSlot === slot.time
@@ -259,13 +285,13 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
             {/* Guest Count */}
             <div>
               <label className="font-bold text-stone-300 block mb-1.5">عدد الأفراد (الضيوف):</label>
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1.5">
                 {[2, 4, 6, 8, 10, 15, 20].map((num) => (
                   <button
                     key={num}
                     type="button"
                     onClick={() => setGuestCount(num)}
-                    className={`py-1.5 px-3 rounded-lg font-bold text-xs shrink-0 transition-all ${
+                    className={`py-2 px-3.5 rounded-xl font-bold text-xs shrink-0 transition-all min-h-[40px] flex items-center justify-center ${
                       guestCount === num
                         ? 'bg-amber-500 text-stone-950 font-black'
                         : 'bg-stone-950 border border-stone-800 text-stone-400 hover:text-stone-200'
@@ -287,7 +313,7 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="الاسم بالكامل"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-stone-200 focus:outline-none focus:border-amber-500 min-h-[44px]"
                 />
               </div>
 
@@ -299,7 +325,7 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="01xxxxxxxxx"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500 font-mono"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-stone-200 focus:outline-none focus:border-amber-500 font-mono min-h-[44px]"
                   dir="ltr"
                 />
               </div>
@@ -313,7 +339,7 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="مثال: تجهيز طاولة عائلية، عيد ميلاد..."
-                className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500"
+                className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-stone-200 focus:outline-none focus:border-amber-500 min-h-[44px]"
               />
             </div>
 
@@ -322,14 +348,14 @@ export function TableReservationModal({ isOpen, onClose }: TableReservationModal
               <button
                 type="submit"
                 disabled={submitting || !selectedSlot}
-                className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs transition-all disabled:opacity-50 shadow-lg shadow-amber-500/10"
+                className="flex-1 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs sm:text-sm transition-all disabled:opacity-50 shadow-lg shadow-amber-500/10 min-h-[48px] flex items-center justify-center active:scale-[0.98]"
               >
                 {submitting ? 'جاري إرسال الطلب...' : 'تأكيد إرسال طلب الحجز'}
               </button>
               <button
                 type="button"
                 onClick={handleClose}
-                className="py-3 px-4 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs transition-colors"
+                className="py-3 px-5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs sm:text-sm transition-colors min-h-[48px] flex items-center justify-center active:scale-[0.98]"
               >
                 إلغاء
               </button>

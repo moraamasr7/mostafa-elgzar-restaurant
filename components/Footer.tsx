@@ -7,7 +7,7 @@ import { siteConfig } from "@/lib/config";
 export default function Footer() {
   return (
     <footer className="bg-stone-100 dark:bg-dark-950 border-t border-stone-200 dark:border-white/5 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-28 sm:pb-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Brand */}
           <div className="space-y-4">
