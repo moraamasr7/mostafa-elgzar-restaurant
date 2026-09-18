@@ -24,10 +24,12 @@ import { GroupedCategory } from "@/types/menu";
 import { supabase } from "@/lib/supabase/client";
 import { STATUS_UI_CONFIG, OrderStatus } from "@/types/orders";
 import MenuItemCard from "@/features/menu/components/MenuItemCard";
+import CategoryRail from "@/features/menu/components/CategoryRail";
 import MenuErrorState from "@/features/menu/components/MenuErrorState";
 import { useCart } from "@/features/cart/context/CartContext";
 import { CustomerFeedbackModal } from "@/features/feedback/components/CustomerFeedbackModal";
 import { TableReservationModal } from "@/features/reservations/components/TableReservationModal";
+import LiveStoreBadge from "@/features/menu/components/LiveStoreBadge";
 import { useScrollLock } from "@/lib/hooks/useScrollLock";
 
 const paperImages = ["/images/menu1.jpg", "/images/menu2.jpg"];
@@ -212,10 +214,6 @@ export default function MenuPage() {
 
     return categories
       .map((cat) => {
-        if (activeCategoryId !== "all" && cat.id !== activeCategoryId) {
-          return null;
-        }
-
         const items = cat.items.filter((item) => {
           if (!query) return true;
           return (
@@ -232,57 +230,129 @@ export default function MenuPage() {
         };
       })
       .filter((cat): cat is GroupedCategory => cat !== null);
-  }, [categories, activeCategoryId, searchQuery]);
+  }, [categories, searchQuery]);
+
+  const handleSelectCategory = (catId: string) => {
+    setActiveCategoryId(catId);
+    if (catId === "all") {
+      const topElem = document.getElementById("menu-sections-top");
+      topElem?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      const sectionElem = document.getElementById(`cat-section-${catId}`);
+      if (sectionElem) {
+        sectionElem.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  };
+
+  // ScrollSpy: Automatically synchronizes activeCategoryId as user scrolls
+  useEffect(() => {
+    if (menuType !== "interactive" || categories.length === 0 || searchQuery.trim()) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const sectionId = entry.target.getAttribute("data-category-id");
+            if (sectionId) {
+              setActiveCategoryId(sectionId);
+            }
+          }
+        }
+      },
+      {
+        rootMargin: "-100px 0px -55% 0px",
+        threshold: 0.05,
+      }
+    );
+
+    const sectionElements = document.querySelectorAll("[data-category-section]");
+    sectionElements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [menuType, categories, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-dark-950 pt-24 pb-36 sm:pb-28 transition-colors duration-300">
+    <div className="min-h-screen bg-stone-50 dark:bg-dark-950 pt-20 sm:pt-24 pb-36 sm:pb-28 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8"
-        >
-          <div className="inline-flex items-center gap-2 bg-primary-600/10 border border-primary-500/20 rounded-full px-4 py-2 mb-6">
-            <BookOpen className="w-4 h-4 text-primary-600 dark:text-primary-400" />
-            <span className="text-primary-700 dark:text-primary-300 text-sm font-medium">
-              قائمة الطعام
-            </span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-stone-900 dark:text-white mb-4">
-            منيو <span className="text-gradient">الجزار</span> الكامل
-          </h1>
-          <p className="text-stone-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
-            أصل الأكل الحرش البلدي المصري الأصيل — تصفح أصنافنا واطلب مباشرة لاستلام طازج وسريع.
-          </p>
-        </motion.div>
+        {/* Compact Responsive Brand Header */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-5xl mx-auto pb-3 border-b border-stone-200/50 dark:border-white/5">
+            {/* Brand Title & Subtitle */}
+            <div className="flex items-center gap-2.5 text-right w-full sm:w-auto justify-between sm:justify-start">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-primary-600/10 border border-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400 shrink-0 shadow-xs">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-stone-900 dark:text-white leading-tight">
+                      منيو <span className="text-gradient">الجزار</span>
+                    </h1>
+                    <LiveStoreBadge />
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-stone-500 dark:text-gray-400 font-semibold">
+                    أصل الأكل الحرش البلدي المصري الأصيل 🔥
+                  </p>
+                </div>
+              </div>
 
-        {/* Menu View Switcher Tab Toggle */}
-        <div className="flex justify-center mb-10 print:hidden">
-          <div className="flex items-center gap-2 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 p-1.5 rounded-2xl shadow-sm">
-            <button
-              onClick={() => setMenuType("interactive")}
-              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-                menuType === "interactive"
-                  ? "bg-primary-600 text-white shadow-md shadow-primary-500/10"
-                  : "text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>المنيو الإلكتروني التفاعلي</span>
-            </button>
-            <button
-              onClick={() => setMenuType("paper")}
-              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap ${
-                menuType === "paper"
-                  ? "bg-primary-600 text-white shadow-md shadow-primary-500/10"
-                  : "text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
-              }`}
-            >
-              <BookOpen className="w-4 h-4" />
-              <span>المنيو الورقي المصور</span>
-            </button>
+              {/* View Switcher on Mobile inline */}
+              <div className="flex sm:hidden items-center gap-1 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 p-1 rounded-xl shadow-xs print:hidden shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setMenuType("interactive")}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 whitespace-nowrap cursor-pointer ${
+                    menuType === "interactive"
+                      ? "bg-primary-600 text-white shadow-xs"
+                      : "text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
+                  }`}
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>تفاعلي</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMenuType("paper")}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 whitespace-nowrap cursor-pointer ${
+                    menuType === "paper"
+                      ? "bg-primary-600 text-white shadow-xs"
+                      : "text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
+                  }`}
+                >
+                  <BookOpen className="w-3 h-3" />
+                  <span>مصور</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop View Switcher */}
+            <div className="hidden sm:flex items-center gap-1.5 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 p-1.5 rounded-2xl shadow-xs print:hidden">
+              <button
+                type="button"
+                onClick={() => setMenuType("interactive")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                  menuType === "interactive"
+                    ? "bg-primary-600 text-white shadow-md shadow-primary-500/15"
+                    : "text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>المنيو الإلكتروني التفاعلي</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMenuType("paper")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                  menuType === "paper"
+                    ? "bg-primary-600 text-white shadow-md shadow-primary-500/15"
+                    : "text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>المنيو الورقي المصور</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -452,54 +522,18 @@ export default function MenuPage() {
                 </div>
               )}
 
-              {/* Sticky Category Filter Tabs */}
+              {/* Modern Thumb-Friendly Sticky Category Rail */}
               {categories.length > 0 && !fetchError && (
-                <div className="sticky top-20 z-30 bg-stone-50/95 dark:bg-dark-950/95 backdrop-blur-md py-3 border-b border-stone-200/50 dark:border-white/5 mb-8 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-                  <div className="relative max-w-4xl mx-auto">
-                    {/* Left/Right scroll indicators on small screens */}
-                    <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-stone-50 dark:from-dark-950 to-transparent z-10 sm:hidden" />
-                    <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-stone-50 dark:from-dark-950 to-transparent z-10 sm:hidden" />
-
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none px-1" dir="rtl">
-                      <button
-                        type="button"
-                        onClick={() => setActiveCategoryId("all")}
-                        className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap border shrink-0 min-h-[40px] ${
-                          activeCategoryId === "all"
-                            ? "bg-primary-600 border-primary-600 text-white shadow-md shadow-primary-500/20"
-                            : "bg-white dark:bg-white/5 border-stone-200 dark:border-white/10 text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
-                        }`}
-                      >
-                        <span>🍽️ الكل</span>
-                        <span className="text-[10px] bg-black/10 dark:bg-white/10 px-1.5 py-0.2 rounded-md tabular-nums">
-                          {totalItemsCount}
-                        </span>
-                      </button>
-
-                      {categories.map((cat) => {
-                        const isActive = activeCategoryId === cat.id;
-                        return (
-                          <button
-                            key={cat.id}
-                            type="button"
-                            onClick={() => setActiveCategoryId(cat.id)}
-                            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap border shrink-0 min-h-[40px] ${
-                              isActive
-                                ? "bg-primary-600 border-primary-600 text-white shadow-md shadow-primary-500/20"
-                                : "bg-white dark:bg-white/5 border-stone-200 dark:border-white/10 text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white"
-                            }`}
-                          >
-                            <span>{cat.name}</span>
-                            <span className="text-[10px] bg-black/10 dark:bg-white/10 px-1.5 py-0.2 rounded-md tabular-nums">
-                              {cat.items.length}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+                <CategoryRail
+                  categories={categories}
+                  activeCategoryId={activeCategoryId}
+                  totalItemsCount={totalItemsCount}
+                  onSelectCategory={handleSelectCategory}
+                />
               )}
+
+              {/* Anchor element for smooth scroll to top of menu */}
+              <div id="menu-sections-top" className="h-0 w-0 pointer-events-none" />
 
               {/* Loading State */}
               {isLoading ? (
@@ -515,8 +549,8 @@ export default function MenuPage() {
                   errorMessage={fetchError}
                 />
               ) : (
-                /* Live Menu Grid by Category */
-                <div className="space-y-10 max-w-6xl mx-auto">
+                /* Live Menu Grid by Category with ScrollSpy Sections */
+                <div className="space-y-12 max-w-6xl mx-auto">
                   {filteredCategories.length === 0 ? (
                     <div className="text-center py-20 glass-card rounded-3xl max-w-md mx-auto p-8 space-y-3">
                       <span className="text-4xl block">🔍</span>
@@ -530,16 +564,22 @@ export default function MenuPage() {
                           setActiveCategoryId("all");
                           setSearchQuery("");
                         }}
-                        className="btn-primary text-xs px-4 py-2 mt-2"
+                        className="btn-primary text-xs px-4 py-2 mt-2 cursor-pointer"
                       >
                         عرض كل الأطباق
                       </button>
                     </div>
                   ) : (
                     filteredCategories.map((category) => (
-                      <section key={category.id} className="space-y-4">
+                      <section
+                        key={category.id}
+                        id={`cat-section-${category.id}`}
+                        data-category-id={category.id}
+                        data-category-section="true"
+                        className="space-y-4 scroll-mt-28 sm:scroll-mt-36"
+                      >
                         <div className="flex items-center gap-3">
-                          <h2 className="text-xl font-bold text-stone-900 dark:text-white flex items-center gap-2">
+                          <h2 className="text-lg sm:text-xl font-bold text-stone-900 dark:text-white flex items-center gap-2">
                             <span className="text-primary-600">🥩</span>
                             <span>{category.name}</span>
                           </h2>
@@ -549,7 +589,7 @@ export default function MenuPage() {
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                           {category.items.map((item) => (
                             <MenuItemCard
                               key={item.id}

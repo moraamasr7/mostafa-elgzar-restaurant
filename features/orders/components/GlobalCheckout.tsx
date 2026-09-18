@@ -1,13 +1,6 @@
 'use client';
 
-import React from 'react';
-import { useCart } from '@/features/cart/context/CartContext';
-import CheckoutForm from './CheckoutForm';
-
+// Integrated into UnifiedCartDrawer via CartContext
 export default function GlobalCheckout() {
-  const { isCheckoutOpen, closeCheckout } = useCart();
-
-  if (!isCheckoutOpen) return null;
-
-  return <CheckoutForm isOpen={isCheckoutOpen} onClose={closeCheckout} />;
+  return null;
 }

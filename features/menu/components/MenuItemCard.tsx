@@ -4,11 +4,13 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { GroupedMenuItem } from '@/types/menu';
 import { CartLine } from '@/types/orders';
-import { ShoppingBag, Check, ZoomIn, X, ImageIcon } from 'lucide-react';
+import { Plus, Check, ZoomIn, X, SlidersHorizontal, Sparkles } from 'lucide-react';
+import ProductOptionsSheet from './ProductOptionsSheet';
 
 interface MenuItemCardProps {
   item: GroupedMenuItem;
   onAddToCart?: (line: CartLine) => void;
+  onOpenOptions?: (item: GroupedMenuItem) => void;
 }
 
 function normalizeImageUrl(url: string | null | undefined): string | null {
@@ -16,8 +18,6 @@ function normalizeImageUrl(url: string | null | undefined): string | null {
   const trimmed = url.trim();
   if (!trimmed) return null;
 
-  // Convert Google Drive sharing links:
-  // https://drive.google.com/file/d/FILE_ID/view?usp=sharing -> https://drive.google.com/uc?export=view&id=FILE_ID
   const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i;
   const match = trimmed.match(driveRegex);
   if (match && match[1]) {
@@ -27,228 +27,286 @@ function normalizeImageUrl(url: string | null | undefined): string | null {
   return trimmed;
 }
 
-export default function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
+export default function MenuItemCard({
+  item,
+  onAddToCart,
+  onOpenOptions,
+}: MenuItemCardProps) {
   const availableVariants = item.variants.filter((v) => v.available);
-  const [selectedVariantId, setSelectedVariantId] = useState(
-    availableVariants[0]?.id || item.variants[0]?.id || ''
-  );
-  const [quantity, setQuantity] = useState(1);
-  const [notes, setNotes] = useState('');
-  const [justAdded, setJustAdded] = useState(false);
+  const isFullyUnavailable = !item.available || availableVariants.length === 0;
+  const isSimpleProduct = availableVariants.length === 1;
 
-  // Image states: error handling and full-screen mobile lightbox preview
+  const defaultVariant = availableVariants[0] || item.variants[0];
+  const lowestPrice = availableVariants.reduce(
+    (min, v) => (v.price < min ? v.price : min),
+    defaultVariant?.price || 0
+  );
+  const hasPriceRange = availableVariants.length > 1;
+
+  // Local state
+  const [justAdded, setJustAdded] = useState(false);
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
   const rawImageUrl = item.image_url || item.image || null;
   const imageUrl = normalizeImageUrl(rawImageUrl);
   const hasValidImage = Boolean(imageUrl && !imageError);
 
-  const selectedVariant = item.variants.find((v) => v.id === selectedVariantId) || item.variants[0];
-  const isFullyUnavailable = !item.available || availableVariants.length === 0;
+  // Simple direct 1-tap add handler
+  const handleDirectAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isFullyUnavailable || !defaultVariant) return;
 
-  const handleAdd = () => {
-    if (!selectedVariant || isFullyUnavailable) return;
+    if (isSimpleProduct) {
+      if (onAddToCart) {
+        onAddToCart({
+          variant_id: defaultVariant.id,
+          item_name: item.name,
+          variant_name: defaultVariant.name,
+          price: defaultVariant.price,
+          quantity: 1,
+        });
+      }
 
-    if (onAddToCart) {
-      onAddToCart({
-        variant_id: selectedVariant.id,
-        item_name: item.name,
-        variant_name: selectedVariant.name,
-        price: selectedVariant.price,
-        quantity: quantity,
-        item_notes: notes.trim() || undefined,
-      });
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 900);
+    } else {
+      // Configurable item -> open options sheet
+      if (onOpenOptions) {
+        onOpenOptions(item);
+      } else {
+        setIsOptionsOpen(true);
+      }
     }
-
-    setQuantity(1);
-    setNotes('');
-    setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 1000);
   };
 
-  const currentPrice = selectedVariant?.price || 0;
-  const totalPrice = currentPrice * quantity;
+  const handleOpenSheet = () => {
+    if (isFullyUnavailable) return;
+    if (onOpenOptions) {
+      onOpenOptions(item);
+    } else {
+      setIsOptionsOpen(true);
+    }
+  };
 
   return (
     <>
       <div
-        className={`group glass-card rounded-2xl flex flex-col justify-between transition-all duration-300 hover-lift overflow-hidden ${
-          isFullyUnavailable ? 'opacity-50 grayscale' : ''
+        className={`group bg-white dark:bg-stone-900 border rounded-2xl flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:border-stone-300 dark:hover:border-stone-700 overflow-hidden ${
+          isFullyUnavailable ? 'opacity-50 grayscale select-none' : ''
         } ${
           justAdded
             ? 'border-emerald-500 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500/50'
             : 'border-stone-200 dark:border-white/10'
         }`}
       >
-        {/* Item Image Section (Responsive, Fixed Aspect Ratio, Touch Preview) */}
-        {hasValidImage && (
-          <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] bg-stone-100 dark:bg-dark-900 overflow-hidden group/img">
+        {/* Item Image Section */}
+        {hasValidImage ? (
+          <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] bg-stone-950 overflow-hidden group/img">
+            {/* Skeleton Shimmer while loading */}
+            {!isImageLoaded && (
+              <div className="absolute inset-0 bg-stone-850 animate-pulse flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-stone-800 animate-ping opacity-25" />
+              </div>
+            )}
+
             <Image
               src={imageUrl!}
               alt={item.name}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               loading="lazy"
+              onLoad={() => setIsImageLoaded(true)}
               onError={() => setImageError(true)}
-              className="object-cover transition-transform duration-500 group-hover/img:scale-105 cursor-pointer select-none"
+              className={`object-cover transition-all duration-500 group-hover/img:scale-105 cursor-pointer select-none ${
+                isImageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
               onClick={() => setIsZoomOpen(true)}
             />
+            {/* Dark gradient overlay at the bottom of the image for contrast */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+
             {/* Quick Mobile Zoom Tap Badge */}
             <button
               type="button"
-              onClick={() => setIsZoomOpen(true)}
-              className="absolute bottom-2 left-2 px-2.5 py-1 bg-stone-950/75 hover:bg-stone-900 text-white rounded-lg backdrop-blur-md text-[11px] font-bold flex items-center gap-1 transition-all opacity-90 hover:opacity-100 shadow-sm cursor-pointer"
-              title="اضغط للتكبير"
-              aria-label="تكبير صورة الوجبة"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsZoomOpen(true);
+              }}
+              className="absolute bottom-2 left-2 px-2 py-1 bg-stone-950/75 hover:bg-stone-900 text-white rounded-lg backdrop-blur-md text-[10px] font-bold flex items-center gap-1 transition-all opacity-80 hover:opacity-100 shadow-sm cursor-pointer"
+              title="تكبير الصورة"
+              aria-label={`تكبير صورة ${item.name}`}
             >
-              <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden xs:inline">تكبير</span>
+              <ZoomIn className="w-3 h-3 text-gold-400" />
+              <span>تكبير</span>
             </button>
-          </div>
-        )}
 
-        <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+            {/* Multiple sizes badge on top corner */}
+            {hasPriceRange && !isFullyUnavailable && (
+              <div className="absolute top-2.5 right-2.5 bg-stone-900/85 backdrop-blur-md text-gold-400 border border-gold-500/30 px-2 py-0.5 rounded-lg text-[10px] font-bold shadow-sm">
+                <span>أحجام متعددة</span>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {/* Card Body */}
+        <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between">
           <div>
             {/* Title & Badge */}
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <h3 className="text-lg font-bold text-stone-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors leading-tight">
+            <div className="flex items-start justify-between gap-2 mb-1.5">
+              <h3
+                onClick={handleOpenSheet}
+                className="text-base sm:text-lg font-bold text-stone-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors leading-snug cursor-pointer line-clamp-1"
+              >
                 {item.name}
               </h3>
+
               {isFullyUnavailable ? (
-                <span className="bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 px-2.5 py-0.5 rounded-full text-xs font-bold shrink-0">
-                  غير متوفر
+                <span className="bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0">
+                  غير متاح
                 </span>
               ) : justAdded ? (
-                <span className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full text-xs font-bold shrink-0 flex items-center gap-1 animate-fade-in">
-                  <Check className="w-3.5 h-3.5" />
+                <span className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 flex items-center gap-1 animate-fade-in">
+                  <Check className="w-3 h-3" />
                   <span>تمت الإضافة</span>
                 </span>
-              ) : (
-                <span className="text-gold-600 dark:text-gold-400 font-black text-base shrink-0 tabular-nums">
-                  {currentPrice > 0 ? `${currentPrice} ج.م` : 'حسب الاختيار'}
-                </span>
-              )}
+              ) : null}
             </div>
 
             {/* Description */}
-            {item.description && (
-              <p className="text-stone-500 dark:text-gray-400 text-xs sm:text-sm leading-relaxed mb-3 line-clamp-2 min-h-[36px]">
+            {item.description ? (
+              <p className="text-stone-500 dark:text-gray-400 text-xs leading-relaxed mb-3 line-clamp-2 min-h-[32px]">
                 {item.description}
               </p>
-            )}
-
-            {/* Variants Selector */}
-            {!isFullyUnavailable && availableVariants.length > 1 && (
-              <div className="space-y-1.5 my-3 pt-2 border-t border-stone-200/60 dark:border-white/5">
-                <span className="text-[11px] font-bold text-stone-400 dark:text-stone-400 block">
-                  اختر الحجم / النوع:
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {availableVariants.map((variant) => {
-                    const isSelected = selectedVariantId === variant.id;
-                    return (
-                      <button
-                        key={variant.id}
-                        type="button"
-                        onClick={() => setSelectedVariantId(variant.id)}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border min-h-[40px] flex items-center ${
-                          isSelected
-                            ? 'bg-primary-600 border-primary-600 text-white shadow-sm shadow-primary-500/20 scale-[1.02]'
-                            : 'bg-stone-100 dark:bg-white/5 border-stone-200 dark:border-white/10 text-stone-700 dark:text-gray-300 hover:border-primary-500/50'
-                        }`}
-                      >
-                        <span>{variant.name}</span>
-                        <span className="mr-1 opacity-80 tabular-nums">· {variant.price} ج</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+            ) : (
+              <div className="min-h-[12px]" />
             )}
           </div>
 
-          {/* Action Controls */}
-          {!isFullyUnavailable && (
-            <div className="mt-4 pt-3 border-t border-stone-200/60 dark:border-white/5 space-y-2.5">
-              <input
-                type="text"
-                placeholder="ملاحظات خاصة (بدون بصل، مشوي زيادة...)"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3.5 py-2 bg-stone-50 dark:bg-dark-900/80 border border-stone-200 dark:border-white/10 rounded-xl text-xs placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:border-primary-500/50 transition-all text-stone-900 dark:text-white min-h-[40px]"
-              />
+          {/* Bottom Row: Price & Action CTA */}
+          <div className="pt-2.5 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between gap-2">
+            {/* Price display */}
+            <div className="flex flex-col text-right">
+              {hasPriceRange ? (
+                <span className="text-[10px] text-stone-400 font-medium">يبدأ من</span>
+              ) : null}
+              <span className="text-stone-900 dark:text-white font-black text-sm sm:text-base tabular-nums">
+                {lowestPrice > 0 ? (
+                  <>
+                    {lowestPrice}{' '}
+                    <small className="text-[10px] text-gold-600 dark:text-gold-400 font-bold uppercase">
+                      ج.م
+                    </small>
+                  </>
+                ) : (
+                  'حسب الاختيار'
+                )}
+              </span>
+            </div>
 
-              <div className="flex items-center justify-between gap-2">
-                {/* Quantity Stepper - Minimum 40px touch targets */}
-                <div className="flex items-center bg-stone-100 dark:bg-white/5 p-1 rounded-xl border border-stone-200 dark:border-white/10 shrink-0">
+            {/* CTA Button */}
+            {!isFullyUnavailable ? (
+              <div className="flex items-center gap-1.5 shrink-0">
+                {/* For simple products: Optional Customize Sheet button */}
+                {isSimpleProduct && (
                   <button
                     type="button"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="w-10 h-10 flex items-center justify-center bg-white dark:bg-dark-800 hover:bg-stone-200 dark:hover:bg-dark-700 text-stone-900 dark:text-white rounded-lg transition-all font-bold text-base active:scale-95 shadow-xs min-w-[40px] min-h-[40px]"
-                    aria-label="تقليل الكمية"
+                    onClick={handleOpenSheet}
+                    className="p-2 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+                    title="تخصيص الملاحظات والكمية"
+                    aria-label={`تخصيص طلب ${item.name}`}
                   >
-                    −
+                    <SlidersHorizontal className="w-4 h-4" />
                   </button>
-                  <span className="w-8 text-center text-xs font-black text-stone-900 dark:text-white tabular-nums">
-                    {quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.min(50, q + 1))}
-                    className="w-10 h-10 flex items-center justify-center bg-primary-600 hover:bg-primary-500 text-white rounded-lg transition-all font-bold text-base active:scale-95 shadow-xs min-w-[40px] min-h-[40px]"
-                    aria-label="زيادة الكمية"
-                  >
-                    +
-                  </button>
-                </div>
+                )}
 
-                {/* Add to Order Button - Minimum 44px touch target */}
+                {/* Primary Action Button (44px min target) */}
                 <button
                   type="button"
-                  onClick={handleAdd}
-                  className="flex-1 btn-primary text-xs sm:text-sm py-2.5 px-3.5 flex items-center justify-center gap-1.5 font-bold shadow-md shadow-primary-500/20 active:scale-[0.98] min-h-[44px]"
+                  onClick={handleDirectAdd}
+                  className={`btn-primary py-2 px-3.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all min-h-[42px] cursor-pointer ${
+                    justAdded ? 'bg-emerald-600 border-emerald-600' : ''
+                  }`}
+                  aria-label={
+                    isSimpleProduct
+                      ? `أضف ${item.name} للسلة`
+                      : `اختر حجم وتفاصيل ${item.name}`
+                  }
                 >
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>إضافة للطلب</span>
-                  <span className="bg-white/20 px-2 py-0.5 rounded-md text-[11px] font-black tabular-nums mr-0.5">
-                    {totalPrice.toFixed(0)} ج
-                  </span>
+                  {justAdded ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>تمت</span>
+                    </>
+                  ) : isSimpleProduct ? (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span>أضف للطلب</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-gold-300" />
+                      <span>اختر الحجم</span>
+                    </>
+                  )}
                 </button>
               </div>
-            </div>
-          )}
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="py-1.5 px-3 bg-stone-200 dark:bg-stone-800 text-stone-400 dark:text-stone-500 rounded-xl text-xs font-bold cursor-not-allowed min-h-[40px]"
+              >
+                نفدت الكمية
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Mobile Fullscreen Zoom Modal (Lightbox) */}
+      {/* Embedded Product Options Sheet */}
+      <ProductOptionsSheet
+        isOpen={isOptionsOpen}
+        item={item}
+        onClose={() => setIsOptionsOpen(false)}
+        onAddToCart={(line) => {
+          if (onAddToCart) onAddToCart(line);
+          setJustAdded(true);
+          setTimeout(() => setJustAdded(false), 900);
+        }}
+      />
+
+      {/* Lightbox Zoom Modal */}
       {isZoomOpen && hasValidImage && (
         <div
-          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fade-in"
+          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fade-in select-none"
           onClick={() => setIsZoomOpen(false)}
           role="dialog"
           aria-modal="true"
         >
-          {/* Top Bar with Title and Close Button */}
           <div
             className="w-full max-w-2xl flex items-center justify-between text-white pb-3 mb-2"
             onClick={(e) => e.stopPropagation()}
           >
             <div>
-              <h4 className="font-black text-sm sm:text-base">{item.name}</h4>
-              <span className="text-xs text-amber-400 font-bold">{currentPrice > 0 ? `${currentPrice} ج.م` : ''}</span>
+              <h4 className="font-bold text-base sm:text-lg">{item.name}</h4>
+              <span className="text-xs text-gold-400 font-bold">
+                {lowestPrice > 0 ? `${lowestPrice} ج.م` : ''}
+              </span>
             </div>
             <button
               type="button"
               onClick={() => setIsZoomOpen(false)}
               className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="إغلاق التكبير"
+              aria-label="إغلاق"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Large Image Container */}
           <div
             className="relative w-full max-w-2xl aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden shadow-2xl border border-white/10"
             onClick={(e) => e.stopPropagation()}
@@ -262,8 +320,7 @@ export default function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
               className="object-contain bg-stone-950"
             />
           </div>
-
-          <p className="text-xs text-stone-400 mt-4 text-center">
+          <p className="text-xs text-stone-400 mt-3 text-center">
             انقر في أي مكان فارغ للإغلاق ✕
           </p>
         </div>
