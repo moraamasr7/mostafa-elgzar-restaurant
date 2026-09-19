@@ -7,7 +7,31 @@ export interface CreateReservationPayload {
   reservation_time: string; // HH:mm
   guest_count: number;     // 1 - 30
   notes?: string;
+  deposit_amount?: number;
+  deposit_receipt_url?: string;
+  deposit_payment_method?: 'instapay' | 'wallet';
+  deposit_sender_phone?: string;
   turnstile_token?: string;
+}
+
+export interface ReservationPaymentAccounts {
+  instapay?: {
+    identifier: string;
+    account_name: string;
+    note?: string;
+  };
+  wallet?: {
+    identifier: string;
+    account_name: string;
+    note?: string;
+  };
+}
+
+export interface DeliveryZone {
+  id: string;
+  name: string;
+  fee: number;
+  distance_km?: number;
 }
 
 export interface ReservationSubmissionResult {
@@ -23,6 +47,7 @@ export interface CustomerReservationStatus {
   reservation_date: string;
   reservation_time: string;
   guest_count: number;
+  deposit_amount?: number | null;
   created_at?: string;
   updated_at?: string;
 }

@@ -36,6 +36,10 @@ export async function POST(request: NextRequest) {
       reservation_time,
       guest_count,
       notes,
+      deposit_amount,
+      deposit_receipt_url,
+      deposit_payment_method,
+      deposit_sender_phone,
     } = body;
 
     // 1. Validation: Name
@@ -57,7 +61,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Validation: Guest Count
+    // 3. Validation: Guest Count & Deposit Calculation
     const guests = parseInt(String(guest_count), 10);
     if (isNaN(guests) || guests < 1 || guests > 30) {
       return NextResponse.json(
@@ -65,6 +69,28 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Arabon deposit rule: 1-3 guests = 100 EGP, 4-6 = 200 EGP, 7-9 = 300 EGP, etc.
+    const expectedDeposit = Math.ceil(guests / 3) * 100;
+
+    // 3.1 Validation: Deposit receipt proof & sender phone
+    const cleanReceiptUrl = (deposit_receipt_url || '').trim();
+    if (!cleanReceiptUrl || cleanReceiptUrl.length < 5) {
+      return NextResponse.json(
+        { error: 'يلزم رفع صورة إشعار أو إيصال تحويل مبلغ العربون لتأكيد حجز الطاولة' },
+        { status: 400 }
+      );
+    }
+
+    const cleanSenderPhone = (deposit_sender_phone || cleanPhone).trim().replace(/\s+/g, '');
+    if (!egPhoneRegex.test(cleanSenderPhone)) {
+      return NextResponse.json(
+        { error: 'يرجى إدخال رقم هاتف صحيح تم التحويل منه (11 رقماً يبدأ بـ 01)' },
+        { status: 400 }
+      );
+    }
+
+    const validPaymentMethod = deposit_payment_method === 'wallet' ? 'wallet' : 'instapay';
 
     // 4. Rate Limiting (60s window per phone)
     const now = Date.now();
@@ -111,14 +137,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Authoritative Reservation Creation via RPC
+    // 6. Format Notes with Deposit Metadata
+    const depositNoteMeta = `[عربون: ${expectedDeposit} ج.م | وسيلة الدفع: ${validPaymentMethod === 'instapay' ? 'إنستاباي' : 'محفظة كاش'} | رقم المحول: ${cleanSenderPhone}]`;
+    const combinedNotes = notes?.trim()
+      ? `${notes.trim().slice(0, 200)} | ${depositNoteMeta}`
+      : depositNoteMeta;
+
+    // 7. Authoritative Reservation Creation via RPC
     const { data: rpcData, error: dbErr } = await supabase.rpc('create_reservation_secure', {
       p_customer_name: cleanName,
       p_customer_phone: cleanPhone,
       p_reservation_date: reservation_date,
       p_reservation_time: `${requestedSlot.time}:00`,
       p_guest_count: guests,
-      p_notes: notes ? notes.trim().slice(0, 300) : null,
+      p_notes: combinedNotes,
+      p_deposit_amount: expectedDeposit,
+      p_deposit_receipt_url: cleanReceiptUrl,
     });
 
     if (dbErr || !rpcData || rpcData.length === 0) {
@@ -138,7 +172,7 @@ export async function POST(request: NextRequest) {
     const insertedData = rpcData[0];
     const resNumber = Number(insertedData.reservation_number || 0);
 
-    // 7. Decoupled Non-blocking Notification Dispatch
+    // 8. Decoupled Non-blocking Notification Dispatch
     notificationService
       .dispatch({
         type: 'reservation.created',
@@ -148,7 +182,7 @@ export async function POST(request: NextRequest) {
         reservationDate: reservation_date,
         reservationTime: requestedSlot.displayTime,
         guestCount: guests,
-        notes: notes ? notes.trim() : null,
+        notes: combinedNotes,
         createdAt: insertedData.created_at || new Date().toISOString(),
       })
       .catch((e) => console.warn('[Notification] Dispatch error:', e));
@@ -157,7 +191,8 @@ export async function POST(request: NextRequest) {
       success: true,
       reservation_id: insertedData.reservation_id,
       reservation_number: resNumber,
-      message: 'تم إرسال طلب الحجز بنجاح. سيتم مراجعة وتأكيد الحجز من إدارة المطعم هاتفياً قبل الموعد.',
+      deposit_amount: expectedDeposit,
+      message: `تم إرسال طلب الحجز بنجاح برقم #${resNumber}. تم تسجيل إيصال العربون بمبلغ ${expectedDeposit} ج.م وسيتم خصمه من فاتورتك عند الحضور.`,
     });
   } catch (err: any) {
     console.error('[Reservations API Fatal Error]', err);

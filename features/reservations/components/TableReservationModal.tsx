@@ -1,19 +1,47 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase/client';
 import { DayAvailabilityResult } from '../domain/reservation-availability';
 import {
   ReservationStatus,
   CustomerReservationStatus,
+  ReservationPaymentAccounts,
   RESERVATION_STATUS_CONFIG,
 } from '../types/reservation.types';
 import { useScrollLock } from '@/lib/hooks/useScrollLock';
+import {
+  Upload,
+  CheckCircle2,
+  Copy,
+  Check,
+  AlertTriangle,
+  Clock,
+  CreditCard,
+  Smartphone,
+  Calendar,
+  Search,
+  X,
+} from 'lucide-react';
 
 interface TableReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: 'create' | 'inquiry';
 }
+
+const DEFAULT_ACCOUNTS: ReservationPaymentAccounts = {
+  instapay: {
+    identifier: 'elgzar@instapay',
+    account_name: 'Mostafa Elgzar',
+    note: 'تحويل عبر تطبيق إنستاباي لعنوان الدفع اللحظي',
+  },
+  wallet: {
+    identifier: '01026131499',
+    account_name: 'محفظة كاش',
+    note: 'فودافون كاش / أورانج كاش / اتصالات كاش / وي باي',
+  },
+};
 
 export function TableReservationModal({
   isOpen,
@@ -35,11 +63,22 @@ export function TableReservationModal({
   const [customerPhone, setCustomerPhone] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
 
+  // --- Arabon / Deposit Payment State ---
+  const [paymentAccounts, setPaymentAccounts] = useState<ReservationPaymentAccounts>(DEFAULT_ACCOUNTS);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'instapay' | 'wallet'>('instapay');
+  const [depositSenderPhone, setDepositSenderPhone] = useState<string>('');
+  const [isSenderPhoneManual, setIsSenderPhoneManual] = useState<boolean>(false);
+  const [depositReceiptUrl, setDepositReceiptUrl] = useState<string>('');
+  const [depositReceiptPreview, setDepositReceiptPreview] = useState<string>('');
+  const [isUploadingReceipt, setIsUploadingReceipt] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [copiedIdentifier, setCopiedIdentifier] = useState<boolean>(false);
+
   const [availability, setAvailability] = useState<DayAvailabilityResult | null>(null);
   const [loadingSlots, setLoadingSlots] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successInfo, setSuccessInfo] = useState<{ resNumber: number; msg: string } | null>(null);
+  const [successInfo, setSuccessInfo] = useState<{ resNumber: number; msg: string; depositAmount: number } | null>(null);
 
   // --- Inquiry Mode State ---
   const [inquiryResNum, setInquiryResNum] = useState<string>('');
@@ -49,6 +88,47 @@ export function TableReservationModal({
   const [inquiryResult, setInquiryResult] = useState<CustomerReservationStatus | null>(null);
 
   useScrollLock(isOpen);
+
+  // Calculate deposit dynamically based on guests: 1-3 = 100, 4-6 = 200, etc.
+  const depositAmount = Math.ceil(guestCount / 3) * 100;
+
+  // Sync sender phone if user hasn't typed a custom sender phone
+  const handleCustomerPhoneChange = (val: string) => {
+    setCustomerPhone(val);
+    if (!isSenderPhoneManual) {
+      setDepositSenderPhone(val);
+    }
+  };
+
+  const handleSenderPhoneChange = (val: string) => {
+    setIsSenderPhoneManual(true);
+    setDepositSenderPhone(val);
+  };
+
+  // Fetch Payment Accounts from Supabase Source of Truth
+  useEffect(() => {
+    if (!isOpen) return;
+    let isMounted = true;
+    async function loadPaymentAccounts() {
+      try {
+        const { data, error } = await supabase
+          .from('restaurant_policies')
+          .select('value')
+          .eq('key', 'reservation_payment_accounts')
+          .single();
+
+        if (isMounted && data?.value && !error) {
+          setPaymentAccounts(data.value as ReservationPaymentAccounts);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch reservation payment accounts, using fallback.', err);
+      }
+    }
+    loadPaymentAccounts();
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
 
   // Populate phone and active reservation if available in localStorage
   useEffect(() => {
@@ -62,6 +142,7 @@ export function TableReservationModal({
           }
           if (parsed?.customer_phone) {
             setCustomerPhone(parsed.customer_phone);
+            if (!isSenderPhoneManual) setDepositSenderPhone(parsed.customer_phone);
             setInquiryPhone(parsed.customer_phone);
           }
         }
@@ -69,7 +150,7 @@ export function TableReservationModal({
         // ignore
       }
     }
-  }, [isOpen]);
+  }, [isOpen, isSenderPhoneManual]);
 
   // Close on Escape key
   useEffect(() => {
@@ -124,7 +205,67 @@ export function TableReservationModal({
     setErrorMessage(null);
     setInquiryError(null);
     setInquiryResult(null);
+    setUploadError(null);
     onClose();
+  };
+
+  const handleCopyIdentifier = (textToCopy: string) => {
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedIdentifier(true);
+    setTimeout(() => setCopiedIdentifier(false), 2000);
+  };
+
+  const handleReceiptUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadError(null);
+
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedMimeTypes.includes(file.type)) {
+      setUploadError('نوع الملف غير مدعوم. يرجى رفع صورة بصيغة JPG أو PNG أو WebP فقط.');
+      return;
+    }
+
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_FILE_SIZE) {
+      setUploadError('حجم الصورة كبير جداً. الحد الأقصى المسموح به هو 5 ميجابايت.');
+      return;
+    }
+
+    setIsUploadingReceipt(true);
+
+    try {
+      const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+      const fileName = `deposit-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+
+      const { data, error } = await supabase.storage
+        .from('receipts')
+        .upload(fileName, file, {
+          contentType: file.type,
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (error) {
+        throw new Error(error.message || 'فشل رفع صورة الإيصال');
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('receipts')
+        .getPublicUrl(data.path);
+
+      const uploadedUrl = publicUrlData.publicUrl;
+      setDepositReceiptUrl(uploadedUrl);
+      setDepositReceiptPreview(uploadedUrl);
+    } catch (err: unknown) {
+      console.error('Deposit receipt upload error:', err);
+      const msg = err instanceof Error ? err.message : 'تعذر رفع صورة الإيصال';
+      setUploadError(msg);
+    } finally {
+      setIsUploadingReceipt(false);
+    }
   };
 
   async function handleSubmit(e: React.FormEvent) {
@@ -148,6 +289,17 @@ export function TableReservationModal({
       return;
     }
 
+    const cleanSenderPhone = (depositSenderPhone || cleanPhone).trim().replace(/\s+/g, '');
+    if (!egPhoneRegex.test(cleanSenderPhone)) {
+      setErrorMessage('يرجى إدخال رقم هاتف صحيح تم تحويل مبلغ العربون منه (11 رقماً يبدأ بـ 01)');
+      return;
+    }
+
+    if (!depositReceiptUrl || depositReceiptUrl.trim().length < 5) {
+      setErrorMessage('يلزم رفع صورة إشعار أو سكرين شوت إيصال تحويل العربون لتأكيد الحجز');
+      return;
+    }
+
     try {
       setSubmitting(true);
       const res = await fetch('/api/reservations', {
@@ -160,6 +312,10 @@ export function TableReservationModal({
           reservation_date: selectedDate,
           reservation_time: selectedSlot,
           notes: notes.trim(),
+          deposit_amount: depositAmount,
+          deposit_receipt_url: depositReceiptUrl,
+          deposit_payment_method: selectedPaymentMethod,
+          deposit_sender_phone: cleanSenderPhone,
         }),
       });
 
@@ -178,6 +334,7 @@ export function TableReservationModal({
         reservation_date: selectedDate,
         reservation_time: selectedSlot,
         guest_count: guestCount,
+        deposit_amount: depositAmount,
         status: 'pending',
         created_at: new Date().toISOString(),
       };
@@ -191,6 +348,7 @@ export function TableReservationModal({
       setSuccessInfo({
         resNumber: resNumber,
         msg: data.message,
+        depositAmount: depositAmount,
       });
     } catch {
       setErrorMessage('حدث خطأ في الاتصال، يرجى التأكد من اتصالك بالإنترنت');
@@ -245,6 +403,7 @@ export function TableReservationModal({
             reservation_date: data.reservation.reservation_date,
             reservation_time: data.reservation.reservation_time,
             guest_count: data.reservation.guest_count,
+            deposit_amount: data.reservation.deposit_amount,
             status: data.reservation.status,
             created_at: data.reservation.created_at || new Date().toISOString(),
           };
@@ -262,6 +421,22 @@ export function TableReservationModal({
   }
 
   if (!isOpen) return null;
+
+  const currentAccount =
+    selectedPaymentMethod === 'instapay'
+      ? paymentAccounts.instapay || DEFAULT_ACCOUNTS.instapay!
+      : paymentAccounts.wallet || DEFAULT_ACCOUNTS.wallet!;
+
+  const egPhoneRegex = /^01[0125][0-9]{8}$/;
+  const isSenderPhoneValid = egPhoneRegex.test((depositSenderPhone || customerPhone).trim().replace(/\s+/g, ''));
+  const isReceiptUploaded = Boolean(depositReceiptUrl && depositReceiptUrl.trim().length > 5);
+  const isFormValid =
+    customerName.trim().length >= 2 &&
+    egPhoneRegex.test(customerPhone.trim().replace(/\s+/g, '')) &&
+    Boolean(selectedSlot) &&
+    isReceiptUploaded &&
+    isSenderPhoneValid &&
+    !isUploadingReceipt;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 select-none dir-rtl animate-fade-in">
@@ -294,7 +469,7 @@ export function TableReservationModal({
             className="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-400 hover:text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="إغلاق النافذة"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -313,7 +488,7 @@ export function TableReservationModal({
                   : 'text-stone-400 hover:text-stone-200'
               }`}
             >
-              <span>📅</span>
+              <Calendar className="w-3.5 h-3.5" />
               <span>حجز طاولة جديدة</span>
             </button>
             <button
@@ -328,7 +503,7 @@ export function TableReservationModal({
                   : 'text-stone-400 hover:text-stone-200'
               }`}
             >
-              <span>🔍</span>
+              <Search className="w-3.5 h-3.5" />
               <span>الاستعلام عن حجز</span>
             </button>
           </div>
@@ -390,6 +565,14 @@ export function TableReservationModal({
                     <span className="font-bold text-stone-200 mt-0.5 block">{inquiryResult.guest_count} ضيوف</span>
                   </div>
                 </div>
+
+                {inquiryResult.deposit_amount && Number(inquiryResult.deposit_amount) > 0 && (
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-center">
+                    <span className="text-[11px] text-amber-300 font-bold">
+                      💳 العربون المسجل: {inquiryResult.deposit_amount} ج.م (يُخصم من الفاتورة)
+                    </span>
+                  </div>
+                )}
 
                 <p className="text-[11px] text-stone-400 text-center pt-1">
                   {inquiryResult.status === 'confirmed'
@@ -465,6 +648,17 @@ export function TableReservationModal({
                     #{successInfo.resNumber}
                   </span>
                 </div>
+
+                <div className="p-3 bg-stone-950 border border-amber-500/20 rounded-2xl max-w-sm mx-auto text-right space-y-1.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-stone-400">عربون الطاولة:</span>
+                    <span className="font-bold text-emerald-400">{successInfo.depositAmount} ج.م (مسجل)</span>
+                  </div>
+                  <p className="text-[11px] text-stone-300 leading-relaxed">
+                    تم تسجيل إيصال التحويل بنجاح، وسيتم خصم هذا المبلغ بالكامل من فاتورة طعامك عند الحضور.
+                  </p>
+                </div>
+
                 <p className="text-stone-300 text-xs leading-relaxed max-w-sm mx-auto">
                   {successInfo.msg}
                 </p>
@@ -483,7 +677,7 @@ export function TableReservationModal({
                 {/* Error Alert */}
                 {errorMessage && (
                   <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 font-bold text-xs leading-relaxed flex items-start gap-2">
-                    <span>⚠️</span>
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
                     <span>{errorMessage}</span>
                   </div>
                 )}
@@ -533,7 +727,7 @@ export function TableReservationModal({
                       {availability.reason || 'المطعم مغلق في هذا التاريخ'}
                     </div>
                   ) : availability && availability.slots.length > 0 ? (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto p-1.5 bg-stone-950/60 rounded-xl border border-stone-800/80">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-36 overflow-y-auto p-1.5 bg-stone-950/60 rounded-xl border border-stone-800/80">
                       {availability.slots.map((slot) => (
                         <button
                           key={slot.time}
@@ -562,20 +756,25 @@ export function TableReservationModal({
 
                 {/* Guest Count */}
                 <div>
-                  <label className="font-bold text-stone-300 block mb-1.5">عدد الأفراد (الضيوف):</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="font-bold text-stone-300">عدد الأفراد (الضيوف):</label>
+                    <span className="text-[11px] font-black text-amber-400">
+                      العربون: {depositAmount} ج.م
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2 overflow-x-auto pb-1.5">
-                    {[2, 4, 6, 8, 10, 15, 20].map((num) => (
+                    {[1, 2, 3, 4, 6, 8, 10, 12, 15, 20].map((num) => (
                       <button
                         key={num}
                         type="button"
                         onClick={() => setGuestCount(num)}
-                        className={`py-2 px-3.5 rounded-xl font-bold text-xs shrink-0 transition-all min-h-[40px] flex items-center justify-center ${
+                        className={`py-2 px-3 rounded-xl font-bold text-xs shrink-0 transition-all min-h-[40px] flex items-center justify-center ${
                           guestCount === num
                             ? 'bg-amber-500 text-stone-950 font-black'
                             : 'bg-stone-950 border border-stone-800 text-stone-400 hover:text-stone-200'
                         }`}
                       >
-                        {num} أفراد
+                        {num} {num === 1 ? 'فرد' : num === 2 ? 'فردين' : 'أفراد'}
                       </button>
                     ))}
                   </div>
@@ -601,7 +800,7 @@ export function TableReservationModal({
                       type="tel"
                       required
                       value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      onChange={(e) => handleCustomerPhoneChange(e.target.value)}
                       placeholder="01xxxxxxxxx"
                       className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-stone-200 text-base sm:text-xs focus:outline-none focus:border-amber-500 font-mono min-h-[44px]"
                       dir="ltr"
@@ -616,19 +815,173 @@ export function TableReservationModal({
                     type="text"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="مثال: تجهيز طاولة عائلية، عيد ميلاد..."
+                    placeholder="مثال: طاولة عائلية، منطقة هادئة..."
                     className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-stone-200 text-base sm:text-xs focus:outline-none focus:border-amber-500 min-h-[44px]"
                   />
+                </div>
+
+                {/* --- ARABON / DEPOSIT PAYMENT SECTION --- */}
+                <div className="p-4 bg-stone-950 border border-amber-500/30 rounded-2xl space-y-3.5 animate-fade-in text-right">
+                  <div className="flex items-center justify-between border-b border-stone-800 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">💳</span>
+                      <div>
+                        <h4 className="font-black text-amber-400 text-xs sm:text-sm">
+                          عربون تأكيد حجز الطاولة ({depositAmount} ج.م)
+                        </h4>
+                        <span className="text-[10px] text-stone-400 block mt-0.5">
+                          100 ج.م لكل 3 أفراد · يُخصم بالكامل من فاتورة طعامك
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Method Selector */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-300 mb-1.5">
+                      اختر وسيلة تحويل العربون:
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPaymentMethod('instapay')}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 min-h-[42px] ${
+                          selectedPaymentMethod === 'instapay'
+                            ? 'border-amber-500 bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/40'
+                            : 'border-stone-800 bg-stone-900 text-stone-400 hover:text-stone-200'
+                        }`}
+                      >
+                        <CreditCard className="w-3.5 h-3.5" />
+                        <span>⚡ إنستاباي (Instapay)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPaymentMethod('wallet')}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 min-h-[42px] ${
+                          selectedPaymentMethod === 'wallet'
+                            ? 'border-amber-500 bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/40'
+                            : 'border-stone-800 bg-stone-900 text-stone-400 hover:text-stone-200'
+                        }`}
+                      >
+                        <Smartphone className="w-3.5 h-3.5" />
+                        <span>📱 محفظة كاش</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Account Details Box */}
+                  <div className="p-3 bg-stone-900 border border-stone-800 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-stone-400 font-bold">
+                        {selectedPaymentMethod === 'instapay' ? 'عنوان الدفع اللحظي (IPA):' : 'رقم محفظة كاش:'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyIdentifier(currentAccount.identifier)}
+                        className="text-[10px] bg-stone-800 hover:bg-stone-700 text-amber-400 px-2 py-1 rounded-lg flex items-center gap-1 transition-colors"
+                      >
+                        {copiedIdentifier ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-400" />
+                            <span className="text-emerald-400 font-bold">تم النسخ</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3" />
+                            <span>نسخ الرقم</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between font-mono font-black text-white text-sm bg-stone-950 px-3 py-2 rounded-lg border border-stone-800" dir="ltr">
+                      <span>{currentAccount.identifier}</span>
+                      <span className="text-[10px] font-sans font-normal text-stone-400">({currentAccount.account_name})</span>
+                    </div>
+
+                    {currentAccount.note && (
+                      <p className="text-[10px] text-stone-400 leading-relaxed">
+                        💡 {currentAccount.note}
+                      </p>
+                    )}
+
+                    <div className="flex items-center gap-1.5 text-[10px] text-amber-400/90 font-bold pt-0.5">
+                      <Clock className="w-3 h-3 text-amber-400" />
+                      <span>تنبيه: مدة صلاحية عملية التحويل 15 دقيقة لربطها بالحجز</span>
+                    </div>
+                  </div>
+
+                  {/* Sender Phone */}
+                  <div>
+                    <label className="font-bold text-stone-300 block mb-1">
+                      رقم الموبايل الذي تم التحويل منه (المحول): <span className="text-amber-400">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={depositSenderPhone}
+                      onChange={(e) => handleSenderPhoneChange(e.target.value)}
+                      placeholder="01xxxxxxxxx"
+                      className={`w-full bg-stone-900 border rounded-xl px-3.5 py-2 text-stone-200 text-base sm:text-xs focus:outline-none font-mono min-h-[40px] ${
+                        isSenderPhoneValid ? 'border-emerald-500/50' : 'border-stone-800 focus:border-amber-500'
+                      }`}
+                      dir="ltr"
+                    />
+                  </div>
+
+                  {/* Screenshot Proof Upload */}
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-stone-300 block">
+                      صورة إشعار / إيصال التحويل: <span className="text-amber-400">*</span>
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleReceiptUpload}
+                      disabled={isUploadingReceipt || submitting}
+                      className="hidden"
+                      id="reservation-deposit-upload"
+                    />
+                    <label
+                      htmlFor="reservation-deposit-upload"
+                      className={`w-full py-2.5 px-3 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 cursor-pointer transition-all text-xs font-bold min-h-[44px] ${
+                        isUploadingReceipt
+                          ? 'border-amber-500 bg-amber-500/10 text-amber-400'
+                          : depositReceiptPreview
+                          ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                          : 'border-stone-700 bg-stone-900 hover:border-amber-500 text-stone-300'
+                      }`}
+                    >
+                      {isUploadingReceipt ? (
+                        <span>جاري رفع صورة الإيصال...</span>
+                      ) : depositReceiptPreview ? (
+                        <span className="flex items-center gap-1.5 text-emerald-400">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>تم رفع إثبات العربون بنجاح ✓</span>
+                        </span>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 text-amber-400" />
+                          <span>اضغط هنا لرفع سكرين شوت إيصال التحويل</span>
+                        </>
+                      )}
+                    </label>
+
+                    {uploadError && (
+                      <p className="text-red-400 text-[10px] font-bold">{uploadError}</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-2">
                   <button
                     type="submit"
-                    disabled={submitting || !selectedSlot}
-                    className="flex-1 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs sm:text-sm transition-all disabled:opacity-50 shadow-lg shadow-amber-500/10 min-h-[48px] flex items-center justify-center active:scale-[0.98]"
+                    disabled={submitting || !isFormValid}
+                    className="flex-1 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs sm:text-sm transition-all disabled:opacity-50 shadow-lg shadow-amber-500/10 min-h-[48px] flex items-center justify-center active:scale-[0.98] disabled:cursor-not-allowed"
                   >
-                    {submitting ? 'جاري إرسال الطلب...' : 'تأكيد إرسال طلب الحجز'}
+                    {submitting ? 'جاري إرسال وتأكيد الطلب...' : `تأكيد حجز الطاولة (${depositAmount} ج.م عربون)`}
                   </button>
                   <button
                     type="button"

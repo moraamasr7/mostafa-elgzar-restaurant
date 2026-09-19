@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
       delivery_address,
       payment_method,
       payment_receipt_url,
+      customer_lat,
+      customer_lng,
       items,
       turnstile_token,
     } = body;
@@ -174,6 +176,8 @@ export async function POST(request: NextRequest) {
       p_delivery_address: cleanOrderType === 'delivery' ? cleanDeliveryAddress : null,
       p_payment_method: cleanPaymentMethod,
       p_payment_receipt_url: cleanPaymentReceipt || null,
+      p_customer_lat: typeof customer_lat === 'number' && !isNaN(customer_lat) ? customer_lat : null,
+      p_customer_lng: typeof customer_lng === 'number' && !isNaN(customer_lng) ? customer_lng : null,
     });
 
     if (rpcError || !rpcData || rpcData.length === 0) {

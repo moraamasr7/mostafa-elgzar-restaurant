@@ -36,6 +36,9 @@ export interface CreateOrderPayload {
   delivery_address?: string;
   payment_method?: PaymentMethod;
   payment_receipt_url?: string;
+  customer_lat?: number;
+  customer_lng?: number;
+  delivery_zone_id?: string;
   items: OrderItemInput[];
   turnstile_token?: string;
 }
