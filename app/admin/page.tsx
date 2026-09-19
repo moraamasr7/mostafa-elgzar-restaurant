@@ -34,35 +34,41 @@ export default function AdminDashboardPage() {
     try {
       setLoading(true);
 
-      // Fetch today's start timestamp in ISO
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-      const startOfDayIso = startOfDay.toISOString();
+      // 1. Fetch active shift to determine authoritative temporal window
+      let shiftOpenedAt: string | null = null;
+      try {
+        const shiftRes = await fetch('/api/admin/shifts');
+        const shiftJson = await shiftRes.json();
+        if (shiftJson.success && shiftJson.shift) {
+          shiftOpenedAt = shiftJson.shift.opened_at;
+        }
+      } catch (e) {
+        console.warn('Could not fetch active shift temporal boundary:', e);
+      }
 
-      // 1. Fetch orders from today
+      // Fallback boundary if no open shift: start of day (Africa/Cairo)
+      const startOfDayIso = shiftOpenedAt || new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
+
+      // 2. Fetch orders from authoritative shift window
       const { data: ordersData, error: ordersErr } = await supabase
         .from('orders')
         .select('*')
         .gte('created_at', startOfDayIso)
         .order('created_at', { ascending: false });
 
-      // 2. Fetch drivers count
+      // 3. Fetch active drivers count
       const { data: driversData } = await supabase
         .from('drivers')
         .select('id, is_active, status')
         .eq('is_active', true);
 
       if (!ordersErr && ordersData) {
-        let revenue = 0;
         let pending = 0;
         let processing = 0;
         let ready = 0;
         let delivering = 0;
 
         ordersData.forEach((order) => {
-          if (order.status !== 'cancelled' && order.status !== 'failed') {
-            revenue += Number(order.total_amount || 0);
-          }
           if (order.status === 'pending') pending++;
           if (order.status === 'processing') processing++;
           if (order.status === 'ready') ready++;
@@ -74,7 +80,7 @@ export default function AdminDashboardPage() {
         setStats({
           totalOrdersToday: ordersData.length,
           activeOrders: activeTotal,
-          totalRevenueToday: revenue,
+          totalRevenueToday: 0, // Authoritative financial truth deferred to server shift reconciliation API
           activeDriversCount: driversData?.length || 0,
           pendingCount: pending,
           processingCount: processing,
@@ -154,11 +160,11 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="bg-stone-900/80 border border-stone-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-          <div className="text-stone-400 text-xs font-bold mb-1">إجمالي المبيعات اليوم</div>
-          <div className="text-3xl font-black text-emerald-400 tabular-nums">
-            {loading ? '...' : `${stats.totalRevenueToday.toLocaleString()} ج.م`}
+          <div className="text-stone-400 text-xs font-bold mb-1">تسوية مبيعات الوردية</div>
+          <div className="text-xl font-black text-emerald-400 tabular-nums mt-1">
+            محتسبة بالسيرفر 🔒
           </div>
-          <div className="text-[11px] text-emerald-500/80 mt-2">الطلبات المؤكدة وغير الملغية</div>
+          <div className="text-[11px] text-emerald-500/80 mt-2">تصدر تلقائياً من تقرير تسوية الوردية بالسيرفر</div>
         </div>
 
         <div className="bg-stone-900/80 border border-stone-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
