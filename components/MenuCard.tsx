@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import { Flame, ShoppingBag } from "lucide-react";
+import Link from "next/link";
 import { MenuItem } from "@/types/menu";
-import { useOrderModal } from "@/components/OrderModalContext";
 
 interface MenuCardProps {
   item: MenuItem;
@@ -11,7 +11,6 @@ interface MenuCardProps {
 }
 
 export default function MenuCard({ item, index }: MenuCardProps) {
-  const { openOrderModal } = useOrderModal();
 
   return (
     <motion.div
@@ -77,14 +76,13 @@ export default function MenuCard({ item, index }: MenuCardProps) {
 
       {/* Order Button */}
       <div className="mt-4">
-        <button
-          type="button"
-          onClick={() => openOrderModal(item.id)}
+        <Link
+          href="/menu"
           className="w-full flex items-center justify-center gap-2 bg-stone-100 dark:bg-white/5 hover:bg-primary-600/10 dark:hover:bg-primary-600/20 border border-stone-200 dark:border-white/10 hover:border-primary-500/30 text-stone-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-white py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap inline-flex cursor-pointer"
         >
           <ShoppingBag className="w-4 h-4" />
           <span>اطلب الآن</span>
-        </button>
+        </Link>
       </div>
     </motion.div>
   );

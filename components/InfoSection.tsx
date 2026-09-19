@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import { MapPin, Phone, Clock, Truck, Award, ChefHat, ShoppingBag } from "lucide-react";
+import Link from "next/link";
 import { siteConfig } from "@/lib/config";
-import { useOrderModal } from "@/components/OrderModalContext";
 
 const features = [
   {
@@ -24,8 +24,6 @@ const features = [
 ];
 
 export default function InfoSection() {
-  const { openOrderModal } = useOrderModal();
-
   return (
     <section className="py-24 bg-stone-50 dark:bg-dark-900/30 relative transition-colors duration-300">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(220,38,38,0.03),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(220,38,38,0.05),transparent_70%)]" />
@@ -126,14 +124,13 @@ export default function InfoSection() {
 
               {/* Order Buttons */}
               <div className="pt-4 space-y-3">
-                <button
-                  type="button"
-                  onClick={() => openOrderModal()}
+                <Link
+                  href="/menu"
                   className="btn-primary w-full flex items-center justify-center gap-2 text-center cursor-pointer"
                 >
                   <ShoppingBag className="w-5 h-5" />
                   <span>طلب أونلاين (استلام / توصيل)</span>
-                </button>
+                </Link>
                 <a
                   href={siteConfig.talabatUrl}
                   target="_blank"

@@ -17,7 +17,6 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { siteConfig } from "@/lib/config";
-import { useOrderModal } from "@/components/OrderModalContext";
 
 const navLinks = [
   { href: "/", label: "الرئيسية", icon: Home },
@@ -48,7 +47,6 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const { openOrderModal } = useOrderModal();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -130,14 +128,13 @@ export default function Navbar() {
 
           {/* CTA Button */}
           <div className="hidden lg:flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => openOrderModal()}
+            <Link
+              href="/menu"
               className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg shadow-primary-900/30 whitespace-nowrap shrink-0 inline-flex justify-center select-none cursor-pointer"
             >
               <ShoppingBag className="w-4 h-4" />
               <span>اطلب الآن</span>
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button - min 44x44 */}
@@ -202,17 +199,14 @@ export default function Navbar() {
           })}
 
           <div className="pt-2">
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                openOrderModal();
-              }}
+            <Link
+              href="/menu"
+              onClick={() => setIsOpen(false)}
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white px-4 py-3.5 rounded-2xl text-sm font-bold shadow-lg shadow-primary-900/30 min-h-[52px] active:scale-[0.98] transition-transform cursor-pointer"
             >
               <ShoppingBag className="w-5 h-5" />
-              <span>اطلب الآن (استلام / توصيل)</span>
-            </button>
+              <span>اطلب الآن</span>
+            </Link>
           </div>
         </div>
       </div>

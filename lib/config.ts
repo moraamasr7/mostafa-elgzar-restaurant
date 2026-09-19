@@ -55,16 +55,6 @@ export interface OrderingActionParams {
  * Returns the effective URL for ordering actions.
  * Directs seamlessly to the internal platform menu and ordering system (/menu).
  */
-export function getOrderingActionUrl(params?: OrderingActionParams): string {
-  const search = new URLSearchParams();
-  if (params?.type) {
-    // Normalize 'pickup' to 'takeaway' for strict backend compatibility
-    const normalizedType = params.type === "pickup" ? "takeaway" : params.type;
-    search.set("type", normalizedType);
-  }
-  if (params?.itemId) {
-    search.set("item", params.itemId);
-  }
-  const query = search.toString();
-  return query ? `/menu?${query}` : `/menu`;
+export function getOrderingActionUrl(_params?: OrderingActionParams): string {
+  return "/menu";
 }

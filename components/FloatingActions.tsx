@@ -4,14 +4,13 @@ import { MapPin, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { siteConfig } from "@/lib/config";
-import { useOrderModal } from "@/components/OrderModalContext";
 import { useCart } from "@/features/cart/context/CartContext";
 
 export default function FloatingActions() {
   const [isVisible, setIsVisible] = useState(false);
   const pathname = usePathname();
-  const { openOrderModal, isOpen: isOrderModalOpen } = useOrderModal();
   const { totalCount, isCartOpen, isCheckoutOpen } = useCart();
 
   useEffect(() => {
@@ -30,8 +29,8 @@ export default function FloatingActions() {
   }
 
   // Priority UI rule:
-  // When Checkout or Cart is open, or Order Modal is open, hide FloatingActions completely
-  if (isCheckoutOpen || isCartOpen || isOrderModalOpen) {
+  // When Checkout or Cart is open, hide FloatingActions completely
+  if (isCheckoutOpen || isCartOpen) {
     return null;
   }
 
@@ -53,15 +52,14 @@ export default function FloatingActions() {
           role="region"
           aria-label="إجراءات سريعة"
         >
-          <button
-            type="button"
-            onClick={() => openOrderModal()}
+          <Link
+            href="/menu"
             className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-primary-500/20 flex-1 justify-center cursor-pointer min-h-[44px] active:scale-[0.98]"
             aria-label="اطلب الآن"
           >
             <ShoppingBag className="w-4 h-4 shrink-0" />
             <span className="whitespace-nowrap">اطلب الآن</span>
-          </button>
+          </Link>
           <a
             href={siteConfig.locationMapUrl}
             target="_blank"
