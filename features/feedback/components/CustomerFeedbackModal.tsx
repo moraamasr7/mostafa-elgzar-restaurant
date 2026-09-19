@@ -192,7 +192,7 @@ export function CustomerFeedbackModal({ isOpen, onClose }: CustomerFeedbackModal
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="الاسم"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-stone-200 focus:outline-none focus:border-amber-500 min-h-[44px]"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-stone-200 text-base sm:text-xs focus:outline-none focus:border-amber-500 min-h-[44px]"
                 />
               </div>
 
@@ -204,7 +204,7 @@ export function CustomerFeedbackModal({ isOpen, onClose }: CustomerFeedbackModal
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="01xxxxxxxxx"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-stone-200 focus:outline-none focus:border-amber-500 font-mono min-h-[44px]"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-stone-200 text-base sm:text-xs focus:outline-none focus:border-amber-500 font-mono min-h-[44px]"
                   dir="ltr"
                 />
               </div>
@@ -217,7 +217,7 @@ export function CustomerFeedbackModal({ isOpen, onClose }: CustomerFeedbackModal
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="اكتب مقترحك أو تفاصيل الشكوى بوضوح لمساعدتنا على تقديم أفضل خدمة تليق بكم..."
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-3.5 text-stone-200 focus:outline-none focus:border-amber-500 resize-none leading-relaxed"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-3.5 text-stone-200 text-base sm:text-xs focus:outline-none focus:border-amber-500 resize-none leading-relaxed"
                 />
               </div>
             </div>

@@ -178,15 +178,30 @@ export default function UnifiedCartDrawer() {
     if (!file) return;
 
     setUploadError('');
+
+    // B1: Strict Client-Side File Validation
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedMimeTypes.includes(file.type)) {
+      setUploadError('نوع الملف غير مدعوم. يرجى رفع صورة بصيغة JPG أو PNG أو WebP فقط.');
+      return;
+    }
+
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_FILE_SIZE) {
+      setUploadError('حجم الصورة كبير جداً. الحد الأقصى المسموح به هو 5 ميجابايت.');
+      return;
+    }
+
     setIsUploadingReceipt(true);
 
     try {
-      const fileName = `receipt-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
+      const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+      const fileName = `receipt-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
       const { data, error } = await supabase.storage
         .from('receipts')
         .upload(fileName, file, {
-          contentType: file.type || 'image/jpeg',
+          contentType: file.type,
           cacheControl: '3600',
           upsert: false,
         });
@@ -559,7 +574,7 @@ export default function UnifiedCartDrawer() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="اكتب اسمك الكريم..."
-                    className={`w-full px-4 py-2.5 bg-stone-950 border rounded-xl text-xs sm:text-sm text-white placeholder:text-stone-500 focus:outline-none transition-all min-h-[44px] ${
+                    className={`w-full px-4 py-2.5 bg-stone-950 border rounded-xl text-base sm:text-sm text-white placeholder:text-stone-500 focus:outline-none transition-all min-h-[44px] ${
                       name.trim().length >= 2
                         ? 'border-emerald-500/50'
                         : 'border-stone-800 focus:border-primary-500'
@@ -593,7 +608,7 @@ export default function UnifiedCartDrawer() {
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="01xxxxxxxxx"
                     dir="ltr"
-                    className={`w-full px-4 py-2.5 bg-stone-950 border rounded-xl text-xs sm:text-sm text-left transition-all min-h-[44px] font-mono ${
+                    className={`w-full px-4 py-2.5 bg-stone-950 border rounded-xl text-base sm:text-sm text-left transition-all min-h-[44px] font-mono ${
                       isPhoneValid
                         ? 'border-emerald-500/60 text-emerald-400'
                         : phone.length > 0 && !isPhoneValid
@@ -628,7 +643,7 @@ export default function UnifiedCartDrawer() {
                     value={deliveryAddress}
                     onChange={(e) => setDeliveryAddress(e.target.value)}
                     placeholder="المنطقة، الشارع، رقم العمارة، الدور، الشقة، علامة مميزة..."
-                    className={`w-full px-4 py-2 bg-stone-950 border rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none transition-all resize-none min-h-[64px] ${
+                    className={`w-full px-4 py-2 bg-stone-950 border rounded-xl text-base sm:text-xs text-white placeholder:text-stone-500 focus:outline-none transition-all resize-none min-h-[64px] ${
                       deliveryAddress.trim().length >= 5
                         ? 'border-emerald-500/50'
                         : 'border-stone-800 focus:border-primary-500'
@@ -780,7 +795,7 @@ export default function UnifiedCartDrawer() {
                       value={paymentReceipt}
                       onChange={(e) => setPaymentReceipt(e.target.value)}
                       placeholder="أو اكتب رقم العملية / كود التحويل نصياً..."
-                      className="w-full px-3.5 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-primary-500 min-h-[44px]"
+                      className="w-full px-3.5 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-base sm:text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-primary-500 min-h-[44px]"
                     />
                   </div>
                 </div>
@@ -796,7 +811,7 @@ export default function UnifiedCartDrawer() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="أي تعليمات خاصة بالتحضير..."
-                  className="w-full px-4 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-primary-500 min-h-[42px]"
+                  className="w-full px-4 py-2.5 bg-stone-950 border border-stone-800 rounded-xl text-base sm:text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-primary-500 min-h-[44px]"
                 />
               </div>
 

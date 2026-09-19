@@ -16,3 +16,54 @@ export interface ReservationSubmissionResult {
   message: string;
   error?: string;
 }
+
+export interface CustomerReservationStatus {
+  reservation_number: number;
+  status: ReservationStatus;
+  reservation_date: string;
+  reservation_time: string;
+  guest_count: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const RESERVATION_STATUS_CONFIG: Record<
+  ReservationStatus,
+  { label: string; icon: string; color: string; bgColor: string; borderColor: string }
+> = {
+  pending: {
+    label: 'قيد المراجعة والتأكيد',
+    icon: '⏳',
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/30',
+  },
+  confirmed: {
+    label: 'تم تأكيد الحجز',
+    icon: '✅',
+    color: 'text-emerald-400',
+    bgColor: 'bg-emerald-500/10',
+    borderColor: 'border-emerald-500/30',
+  },
+  completed: {
+    label: 'اكتمل الحجز بنجاح',
+    icon: '🎉',
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-500/10',
+    borderColor: 'border-blue-500/30',
+  },
+  cancelled: {
+    label: 'تم إلغاء الحجز',
+    icon: '❌',
+    color: 'text-rose-400',
+    bgColor: 'bg-rose-500/10',
+    borderColor: 'border-rose-500/30',
+  },
+  no_show: {
+    label: 'لم يحضر',
+    icon: '⚠️',
+    color: 'text-stone-400',
+    bgColor: 'bg-stone-500/10',
+    borderColor: 'border-stone-500/30',
+  },
+};

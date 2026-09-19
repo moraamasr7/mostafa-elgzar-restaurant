@@ -15,11 +15,13 @@ import {
   RefreshCw,
   Calendar,
   MessageSquare,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import { siteConfig } from "@/lib/config";
 import { getLiveMenu } from "@/features/menu/queries/get-menu.query";
+import { getPaperMenuImages, EMERGENCY_PAPER_IMAGES } from "@/features/menu/queries/get-paper-menu.query";
 import { GroupedCategory } from "@/types/menu";
 import { supabase } from "@/lib/supabase/client";
 import { STATUS_UI_CONFIG, OrderStatus } from "@/types/orders";
@@ -29,10 +31,12 @@ import MenuErrorState from "@/features/menu/components/MenuErrorState";
 import { useCart } from "@/features/cart/context/CartContext";
 import { CustomerFeedbackModal } from "@/features/feedback/components/CustomerFeedbackModal";
 import { TableReservationModal } from "@/features/reservations/components/TableReservationModal";
+import {
+  ReservationStatus,
+  RESERVATION_STATUS_CONFIG,
+} from "@/features/reservations/types/reservation.types";
 import LiveStoreBadge from "@/features/menu/components/LiveStoreBadge";
 import { useScrollLock } from "@/lib/hooks/useScrollLock";
-
-const paperImages = ["/images/menu1.jpg", "/images/menu2.jpg"];
 
 export default function MenuPage() {
   const [menuType, setMenuType] = useState<"paper" | "interactive">("interactive");
@@ -48,9 +52,16 @@ export default function MenuPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  // Scanned Paper Menu Data Layer state (Single Source of Truth: Supabase restaurant_policies)
+  const [paperImages, setPaperImages] = useState<string[]>([]);
+  const [isPaperLoading, setIsPaperLoading] = useState(true);
+  const [paperError, setPaperError] = useState<string | null>(null);
+  const [isFallbackActive, setIsFallbackActive] = useState(false);
+
   const { addToCart } = useCart();
 
   const [isReservationOpen, setIsReservationOpen] = useState(false);
+  const [reservationModalMode, setReservationModalMode] = useState<"create" | "inquiry">("create");
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   // Active Customer Order Tracking state
@@ -61,6 +72,17 @@ export default function MenuPage() {
     total_amount?: number;
     status?: OrderStatus;
     created_at?: string;
+  } | null>(null);
+
+  // Active Customer Reservation Reminder state (Non-sensitive Local Reminder Reference + Live Status)
+  const [activeReservation, setActiveReservation] = useState<{
+    reservation_number: number;
+    customer_phone?: string;
+    reservation_date: string;
+    reservation_time: string;
+    guest_count: number;
+    status?: ReservationStatus;
+    created_at: string;
   } | null>(null);
 
   const loadMenu = async () => {
@@ -75,8 +97,21 @@ export default function MenuPage() {
     setIsLoading(false);
   };
 
+  const loadPaperMenu = async () => {
+    setIsPaperLoading(true);
+    setPaperError(null);
+    const result = await getPaperMenuImages();
+    setPaperImages(result.images);
+    setIsFallbackActive(result.isFallback);
+    if (result.error && !result.isFallback) {
+      setPaperError(result.error);
+    }
+    setIsPaperLoading(false);
+  };
+
   useEffect(() => {
     loadMenu();
+    loadPaperMenu();
 
     const checkModalParams = () => {
       if (typeof window !== "undefined") {
@@ -125,9 +160,6 @@ export default function MenuPage() {
           if (data && Array.isArray(data) && data.length > 0) {
             const currentStatus = data[0].status as OrderStatus;
             setActiveOrder((prev) => (prev ? { ...prev, status: currentStatus } : null));
-            if (currentStatus === "delivered" || currentStatus === "completed" || currentStatus === "cancelled") {
-              // Can still view, but after 6 hours clear
-            }
           }
         } else {
           const { data } = await supabase
@@ -144,9 +176,96 @@ export default function MenuPage() {
       }
     };
 
-    checkActiveOrder();
+    // Check for active customer reservation reminder (Local Reminder Reference + Live Status)
+    const checkActiveReservation = async () => {
+      try {
+        const stored = localStorage.getItem("elgzar_active_reservation");
+        if (!stored) {
+          setActiveReservation(null);
+          return;
+        }
+        const parsed = JSON.parse(stored);
+        if (!parsed || !parsed.reservation_number) {
+          setActiveReservation(null);
+          return;
+        }
 
-    const onOpenReservation = () => setIsReservationOpen(true);
+        // Expire reminder after 48 hours max
+        if (parsed.created_at) {
+          const ageHours = (Date.now() - new Date(parsed.created_at).getTime()) / (1000 * 60 * 60);
+          if (ageHours > 48) {
+            localStorage.removeItem("elgzar_active_reservation");
+            setActiveReservation(null);
+            return;
+          }
+        }
+
+        setActiveReservation(parsed);
+
+        // Check if reservation is already in a terminal status in local reference
+        const isTerminal = ['completed', 'cancelled', 'no_show'].includes(parsed.status);
+
+        // Background live status sync only for active/in-flight reservations (pending/confirmed)
+        if (parsed.customer_phone && !isTerminal) {
+          try {
+            const res = await fetch("/api/reservations/status", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                reservation_number: parsed.reservation_number,
+                customer_phone: parsed.customer_phone,
+              }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data?.reservation) {
+                setActiveReservation((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        status: data.reservation.status,
+                        reservation_date: data.reservation.reservation_date,
+                        reservation_time: data.reservation.reservation_time,
+                        guest_count: data.reservation.guest_count,
+                      }
+                    : null
+                );
+                // Update local reminder reference with authoritative status to prevent re-fetching if terminal
+                try {
+                  const updatedRef = {
+                    ...parsed,
+                    status: data.reservation.status,
+                    reservation_date: data.reservation.reservation_date,
+                    reservation_time: data.reservation.reservation_time,
+                    guest_count: data.reservation.guest_count,
+                  };
+                  localStorage.setItem("elgzar_active_reservation", JSON.stringify(updatedRef));
+                } catch {
+                  // ignore
+                }
+              }
+            }
+          } catch {
+            // Ignore background sync error, keep local reminder
+          }
+        }
+      } catch (err) {
+        console.warn("Active reservation check failed", err);
+      }
+    };
+
+    checkActiveOrder();
+    checkActiveReservation();
+
+    const onOpenReservation = (e: Event) => {
+      const customEvent = e as CustomEvent<{ mode?: "create" | "inquiry" }>;
+      if (customEvent.detail?.mode) {
+        setReservationModalMode(customEvent.detail.mode);
+      } else {
+        setReservationModalMode("create");
+      }
+      setIsReservationOpen(true);
+    };
     const onOpenFeedback = () => setIsFeedbackOpen(true);
     const onSwitchMenuType = (e: Event) => {
       const customEvent = e as CustomEvent<"paper" | "interactive">;
@@ -154,16 +273,22 @@ export default function MenuPage() {
         setMenuType(customEvent.detail);
       }
     };
+    const onActiveReservationUpdated = (e: Event) => {
+      const customEvent = e as CustomEvent<any>;
+      setActiveReservation(customEvent.detail || null);
+    };
 
     window.addEventListener("open-reservation-modal", onOpenReservation);
     window.addEventListener("open-feedback-modal", onOpenFeedback);
     window.addEventListener("switch-menu-type", onSwitchMenuType);
+    window.addEventListener("active-reservation-updated", onActiveReservationUpdated);
     window.addEventListener("popstate", checkModalParams);
 
     return () => {
       window.removeEventListener("open-reservation-modal", onOpenReservation);
       window.removeEventListener("open-feedback-modal", onOpenFeedback);
       window.removeEventListener("switch-menu-type", onSwitchMenuType);
+      window.removeEventListener("active-reservation-updated", onActiveReservationUpdated);
       window.removeEventListener("popstate", checkModalParams);
     };
   }, []);
@@ -185,12 +310,14 @@ export default function MenuPage() {
     const differenceX = touchStartX - touchCurrentX;
     const minSwipeDistance = 50;
 
+    if (paperImages.length === 0) return;
+
     if (differenceX > minSwipeDistance) {
       setSwipeDirection("left");
-      setLightboxIndex((prev) => (prev === null ? null : prev === 0 ? 1 : 0));
+      setLightboxIndex((prev) => (prev === null ? null : (prev + 1) % paperImages.length));
     } else if (differenceX < -minSwipeDistance) {
       setSwipeDirection("right");
-      setLightboxIndex((prev) => (prev === null ? null : prev === 0 ? 1 : 0));
+      setLightboxIndex((prev) => (prev === null ? null : (prev - 1 + paperImages.length) % paperImages.length));
     }
 
     setTouchStartX(null);
@@ -198,10 +325,15 @@ export default function MenuPage() {
   };
 
   const navigateLightbox = (direction: "next" | "prev") => {
+    if (paperImages.length === 0) return;
     setSwipeDirection(direction === "next" ? "left" : "right");
     setLightboxIndex((prev) => {
       if (prev === null) return null;
-      return prev === 0 ? 1 : 0;
+      if (direction === "next") {
+        return (prev + 1) % paperImages.length;
+      } else {
+        return (prev - 1 + paperImages.length) % paperImages.length;
+      }
     });
   };
 
@@ -359,7 +491,7 @@ export default function MenuPage() {
         {/* Dynamic Views Rendering */}
         <AnimatePresence mode="wait">
           {menuType === "paper" ? (
-            /* PAPER SCANNED MENU VIEW */
+            /* PAPER SCANNED MENU VIEW (SUPABASE SOURCE OF TRUTH) */
             <motion.div
               key="paper-view"
               initial={{ opacity: 0, y: 15 }}
@@ -368,67 +500,111 @@ export default function MenuPage() {
               transition={{ duration: 0.4 }}
               className="space-y-8"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                {/* Page 1 Card */}
-                <div
-                  className="glass-card p-4 flex flex-col items-center gap-4 group cursor-zoom-in rounded-3xl"
-                  onClick={() => setLightboxIndex(0)}
-                >
-                  <div className="relative w-full rounded-2xl overflow-hidden border border-stone-200 dark:border-white/5 bg-stone-950 shadow-md">
-                    <img
-                      src="/images/menu1.jpg"
-                      alt="منيو مطعم الجزار - الصفحة الأولى"
-                      className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-[1.02]"
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-sm">
-                      <ZoomIn className="w-5 h-5 text-primary-500" />
-                      <span>اضغط لتكبير الصفحة</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between w-full px-2">
-                    <span className="text-lg font-bold text-stone-900 dark:text-white">الصفحة الأولى</span>
-                    <a
-                      href="/images/menu1.jpg"
-                      download="mostafa-elgzar-menu-1.jpg"
-                      onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-1.5 text-xs text-primary-600 dark:text-primary-400 hover:underline font-semibold"
+              {isPaperLoading ? (
+                /* Loading Skeletons */
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                  {[1, 2].map((n) => (
+                    <div
+                      key={n}
+                      className="glass-card p-4 flex flex-col items-center gap-4 rounded-3xl animate-pulse"
                     >
-                      <Download className="w-4 h-4" />
-                      <span>تحميل</span>
-                    </a>
-                  </div>
+                      <div className="w-full h-[380px] rounded-2xl bg-stone-900/80 border border-stone-800 flex items-center justify-center text-stone-700">
+                        <BookOpen className="w-12 h-12 opacity-30 animate-pulse" />
+                      </div>
+                      <div className="w-full flex items-center justify-between px-2">
+                        <div className="h-4 w-28 bg-stone-800 rounded-md"></div>
+                        <div className="h-4 w-16 bg-stone-800 rounded-md"></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              ) : paperError || paperImages.length === 0 ? (
+                /* Error / Empty State */
+                <div className="glass-card p-8 rounded-3xl max-w-xl mx-auto text-center space-y-4 border border-rose-500/20 bg-rose-500/5">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto text-xl">
+                    ⚠️
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-stone-900 dark:text-white">
+                      تعذر عرض المنيو الورقي
+                    </h3>
+                    <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
+                      {paperError || "لم يتم تعيين روابط صور المنيو الورقي في قاعدة البيانات."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={loadPaperMenu}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-500 text-white font-bold text-xs transition-all shadow-sm"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>إعادة المحاولة</span>
+                  </button>
+                </div>
+              ) : (
+                /* Dynamic Supabase Images Grid with Emergency Fallback Banner */
+                <div className="space-y-6">
+                  {/* Emergency Fallback Warning Banner */}
+                  {isFallbackActive && (
+                    <div className="p-3.5 sm:p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-start sm:items-center gap-3 text-amber-300 text-xs font-semibold max-w-5xl mx-auto shadow-xs animate-fade-in">
+                      <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5 sm:mt-0" />
+                      <span className="leading-relaxed">
+                        تنبيه: يتم عرض النسخة الحالية المحفوظة احتياطيًا، وقد تكون غير محدثة بسبب تعذر تحميل أحدث نسخة من الخادم.
+                      </span>
+                    </div>
+                  )}
 
-                {/* Page 2 Card */}
-                <div
-                  className="glass-card p-4 flex flex-col items-center gap-4 group cursor-zoom-in rounded-3xl"
-                  onClick={() => setLightboxIndex(1)}
-                >
-                  <div className="relative w-full rounded-2xl overflow-hidden border border-stone-200 dark:border-white/5 bg-stone-950 shadow-md">
-                    <img
-                      src="/images/menu2.jpg"
-                      alt="منيو مطعم الجزار - الصفحة الثانية"
-                      className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-[1.02]"
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-sm">
-                      <ZoomIn className="w-5 h-5 text-primary-500" />
-                      <span>اضغط لتكبير الصفحة</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between w-full px-2">
-                    <span className="text-lg font-bold text-stone-900 dark:text-white">الصفحة الثانية</span>
-                    <a
-                      href="/images/menu2.jpg"
-                      download="mostafa-elgzar-menu-2.jpg"
-                      onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-1.5 text-xs text-primary-600 dark:text-primary-400 hover:underline font-semibold"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>تحميل</span>
-                    </a>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    {paperImages.map((imageUrl, idx) => (
+                      <div
+                        key={imageUrl || idx}
+                        className="glass-card p-4 flex flex-col items-center gap-4 group cursor-zoom-in rounded-3xl"
+                        onClick={() => setLightboxIndex(idx)}
+                      >
+                        <div className="relative w-full rounded-2xl overflow-hidden border border-stone-200 dark:border-white/5 bg-stone-950 shadow-md min-h-[300px] flex items-center justify-center">
+                          <img
+                            src={imageUrl}
+                            alt={`منيو مطعم الجزار - الصفحة ${idx === 0 ? "الأولى" : idx === 1 ? "الثانية" : idx + 1}`}
+                            className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+                            loading="lazy"
+                            onError={() => {
+                              // Granular per-image fallback: If an individual image fails to load, fallback to local backup
+                              if (imageUrl !== EMERGENCY_PAPER_IMAGES[idx] && EMERGENCY_PAPER_IMAGES[idx]) {
+                                setPaperImages((prev) => {
+                                  const next = [...prev];
+                                  next[idx] = EMERGENCY_PAPER_IMAGES[idx];
+                                  return next;
+                                });
+                                setIsFallbackActive(true);
+                              }
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-bold text-sm">
+                            <ZoomIn className="w-5 h-5 text-primary-500" />
+                            <span>اضغط لتكبير الصفحة</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between w-full px-2">
+                          <span className="text-lg font-bold text-stone-900 dark:text-white">
+                            الصفحة {idx === 0 ? "الأولى" : idx === 1 ? "الثانية" : idx + 1}
+                          </span>
+                          <a
+                            href={imageUrl}
+                            download={`mostafa-elgzar-menu-page-${idx + 1}.jpg`}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 text-xs text-primary-600 dark:text-primary-400 hover:underline font-semibold"
+                          >
+                            <Download className="w-4 h-4" />
+                            <span>تحميل</span>
+                          </a>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </motion.div>
           ) : (
             /* INTERACTIVE DIGITAL MENU VIEW */
@@ -444,68 +620,136 @@ export default function MenuPage() {
                 <SearchBar value={searchQuery} onChange={setSearchQuery} />
               </div>
 
-              {/* Direct Telephone Quick Order Bar & Active Order Live Tracker */}
-              {activeOrder ? (
-                <div className="mb-8 p-4 bg-gradient-to-r from-amber-500/15 via-gold-500/10 to-primary-600/15 border border-amber-500/30 dark:border-amber-500/40 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-right max-w-4xl mx-auto shadow-md shadow-amber-500/5 animate-fade-in">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl shrink-0">
-                      {activeOrder.status ? STATUS_UI_CONFIG[activeOrder.status]?.icon || '🛵' : '🛵'}
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-                        <span className="text-xs sm:text-sm font-black text-stone-900 dark:text-white">
-                          لديك طلب جاري: طلب #{activeOrder.order_number}
-                        </span>
-                        {activeOrder.status && (
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${
-                              STATUS_UI_CONFIG[activeOrder.status]?.bgColor || 'bg-amber-500/10'
-                            } ${
-                              STATUS_UI_CONFIG[activeOrder.status]?.borderColor || 'border-amber-500/20'
-                            } ${
-                              STATUS_UI_CONFIG[activeOrder.status]?.color || 'text-amber-400'
-                            }`}
-                          >
-                            {STATUS_UI_CONFIG[activeOrder.status]?.label || activeOrder.status}
-                          </span>
-                        )}
+              {/* Active Reminders Container (Order & Reservation Reminders) */}
+              {activeOrder || activeReservation ? (
+                <div className="mb-6 space-y-3 max-w-4xl mx-auto">
+                  {/* Active Order Live Tracker */}
+                  {activeOrder && (
+                    <div className="p-4 bg-gradient-to-r from-amber-500/15 via-gold-500/10 to-primary-600/15 border border-amber-500/30 dark:border-amber-500/40 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-right shadow-md shadow-amber-500/5 animate-fade-in">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl shrink-0">
+                          {activeOrder.status ? STATUS_UI_CONFIG[activeOrder.status]?.icon || '🛵' : '🛵'}
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                            <span className="text-xs sm:text-sm font-black text-stone-900 dark:text-white">
+                              لديك طلب جاري: طلب #{activeOrder.order_number}
+                            </span>
+                            {activeOrder.status && (
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${
+                                  STATUS_UI_CONFIG[activeOrder.status]?.bgColor || 'bg-amber-500/10'
+                                } ${
+                                  STATUS_UI_CONFIG[activeOrder.status]?.borderColor || 'border-amber-500/20'
+                                } ${
+                                  STATUS_UI_CONFIG[activeOrder.status]?.color || 'text-amber-400'
+                                }`}
+                              >
+                                {STATUS_UI_CONFIG[activeOrder.status]?.label || activeOrder.status}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-stone-600 dark:text-gray-400 mt-0.5">
+                            يمكنك متابعة حالة إعداد طلبك والتوصيل خطوة بخطوة في أي وقت.
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-[11px] text-stone-600 dark:text-gray-400 mt-0.5">
-                        يمكنك متابعة حالة إعداد طلبك والتوصيل خطوة بخطوة في أي وقت.
-                      </p>
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                        <Link
+                          href={
+                            activeOrder.tracking_token
+                              ? `/order/${activeOrder.order_id}?token=${activeOrder.tracking_token}`
+                              : `/order/${activeOrder.order_id}`
+                          }
+                          className="inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-amber-500 to-primary-600 hover:from-amber-400 hover:to-primary-500 text-stone-950 font-black px-4 py-2 rounded-xl text-xs shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer whitespace-nowrap"
+                        >
+                          <span>تتبع طلبك الآن 📍</span>
+                          <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm('هل تريد إخفاء تنبيه التتبع من القائمة؟ (لن يتم إلغاء الطلب)')) {
+                              localStorage.removeItem('elgzar_active_order');
+                              setActiveOrder(null);
+                            }
+                          }}
+                          className="p-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 rounded-lg hover:bg-stone-200/50 dark:hover:bg-white/10 transition-colors"
+                          title="إخفاء التنبيه"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
-                    <Link
-                      href={
-                        activeOrder.tracking_token
-                          ? `/order/${activeOrder.order_id}?token=${activeOrder.tracking_token}`
-                          : `/order/${activeOrder.order_id}`
-                      }
-                      className="inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-amber-500 to-primary-600 hover:from-amber-400 hover:to-primary-500 text-stone-950 font-black px-4 py-2 rounded-xl text-xs shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer whitespace-nowrap"
-                    >
-                      <span>تتبع طلبك الآن 📍</span>
-                      <ArrowRight className="w-3.5 h-3.5 rotate-180" />
-                    </Link>
+                  {/* Active Table Reservation Reminder (Authoritative Live Status Reference) */}
+                  {activeReservation && (
+                    <div className="p-4 bg-gradient-to-r from-emerald-500/15 via-gold-500/10 to-amber-500/15 border border-emerald-500/30 dark:border-emerald-500/40 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-right shadow-md shadow-emerald-500/5 animate-fade-in">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xl shrink-0">
+                          {activeReservation.status && RESERVATION_STATUS_CONFIG[activeReservation.status]?.icon
+                            ? RESERVATION_STATUS_CONFIG[activeReservation.status].icon
+                            : '📅'}
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                            <span className="text-xs sm:text-sm font-black text-stone-900 dark:text-white">
+                              طلب حجز طاولة: حجز #{activeReservation.reservation_number}
+                            </span>
+                            {(() => {
+                              const statusKey = activeReservation.status || 'pending';
+                              const cfg = RESERVATION_STATUS_CONFIG[statusKey] || RESERVATION_STATUS_CONFIG.pending;
+                              return (
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${cfg.bgColor} ${cfg.borderColor} ${cfg.color}`}
+                                >
+                                  {cfg.label}
+                                </span>
+                              );
+                            })()}
+                          </div>
+                          <p className="text-[11px] text-stone-600 dark:text-gray-400 mt-0.5">
+                            التاريخ: <span className="font-bold text-stone-800 dark:text-stone-200">{activeReservation.reservation_date}</span> • الموعد: <span className="font-bold text-stone-800 dark:text-stone-200">{activeReservation.reservation_time}</span> • <span className="font-bold text-stone-800 dark:text-stone-200">{activeReservation.guest_count} أفراد</span>
+                          </p>
+                        </div>
+                      </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (window.confirm('هل تريد إخفاء تنبيه التتبع من القائمة؟ (لن يتم إلغاء الطلب)')) {
-                          localStorage.removeItem('elgzar_active_order');
-                          setActiveOrder(null);
-                        }
-                      }}
-                      className="p-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 rounded-lg hover:bg-stone-200/50 dark:hover:bg-white/10 transition-colors"
-                      title="إخفاء التنبيه"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReservationModalMode('inquiry');
+                            setIsReservationOpen(true);
+                          }}
+                          className="inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow-xs transition-all active:scale-[0.98] cursor-pointer whitespace-nowrap"
+                        >
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>تفاصيل الحجز</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm('هل تريد إخفاء تنبيه الحجز من القائمة؟ (لن يتم إلغاء الحجز المسجل)')) {
+                              localStorage.removeItem('elgzar_active_reservation');
+                              setActiveReservation(null);
+                            }
+                          }}
+                          className="p-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 rounded-lg hover:bg-stone-200/50 dark:hover:bg-white/10 transition-colors"
+                          title="إخفاء التنبيه"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="mb-8 p-4 bg-gradient-to-r from-primary-600/10 via-gold-500/10 to-primary-600/10 border border-primary-500/20 dark:border-primary-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-right max-w-4xl mx-auto">
+                /* Default Telephone Hotline Quick Bar */
+                <div className="mb-6 p-4 bg-gradient-to-r from-primary-600/10 via-gold-500/10 to-primary-600/10 border border-primary-500/20 dark:border-primary-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-right max-w-4xl mx-auto">
                   <div className="text-xs sm:text-sm text-stone-700 dark:text-gray-300 font-medium">
                     🚀 <strong className="text-stone-900 dark:text-white">أصل الأكل الحرش بالمطرية:</strong> أضف وجباتك للسلة واطلب أو اتصل بنا مباشرة:
                   </div>
@@ -610,7 +854,7 @@ export default function MenuPage() {
 
       {/* Scanned Paper Lightbox View */}
       <AnimatePresence>
-        {lightboxIndex !== null && (
+        {lightboxIndex !== null && paperImages[lightboxIndex] && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -691,6 +935,7 @@ export default function MenuPage() {
       <TableReservationModal
         isOpen={isReservationOpen}
         onClose={() => setIsReservationOpen(false)}
+        initialMode={reservationModalMode}
       />
       <CustomerFeedbackModal
         isOpen={isFeedbackOpen}
