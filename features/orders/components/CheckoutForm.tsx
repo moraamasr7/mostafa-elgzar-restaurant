@@ -444,7 +444,7 @@ export default function CheckoutForm({
                   onClick={() => handleOrderTypeChange('delivery')}
                   className={`py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm border transition-all flex flex-col items-center justify-center gap-1.5 min-h-[56px] ${
                     orderType === 'delivery'
-                      ? 'border-primary-600 bg-primary-600/10 text-primary-650 dark:text-primary-400 shadow-sm'
+                      ? 'border-primary-600 bg-primary-600/10 text-primary-600 dark:text-primary-400 shadow-sm'
                       : 'border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 text-stone-600 dark:text-gray-400'
                   }`}
                 >
@@ -457,7 +457,7 @@ export default function CheckoutForm({
                   onClick={() => handleOrderTypeChange('takeaway')}
                   className={`py-3 px-3 rounded-2xl font-bold text-xs sm:text-sm border transition-all flex flex-col items-center justify-center gap-1.5 min-h-[56px] ${
                     orderType === 'takeaway'
-                      ? 'border-primary-600 bg-primary-600/10 text-primary-650 dark:text-primary-400 shadow-sm'
+                      ? 'border-primary-600 bg-primary-600/10 text-primary-600 dark:text-primary-400 shadow-sm'
                       : 'border-stone-200 dark:border-white/10 bg-stone-50 dark:bg-white/5 text-stone-600 dark:text-gray-400'
                   }`}
                 >

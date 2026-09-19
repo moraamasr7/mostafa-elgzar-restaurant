@@ -58,7 +58,7 @@ export default function InfoSection() {
                 className="glass-card p-6 flex items-start gap-4 hover:bg-stone-50/50 dark:hover:bg-white/10 transition-colors"
               >
                 <div className="w-12 h-12 bg-primary-600/10 dark:bg-primary-600/20 rounded-xl flex items-center justify-center shrink-0">
-                  <feature.icon className="w-6 h-6 text-primary-650 dark:text-primary-400" />
+                  <feature.icon className="w-6 h-6 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-stone-900 dark:text-white mb-1">{feature.title}</h3>
@@ -82,7 +82,7 @@ export default function InfoSection() {
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-primary-600/10 dark:bg-primary-600/20 rounded-xl flex items-center justify-center shrink-0">
-                    <MapPin className="w-6 h-6 text-primary-650 dark:text-primary-400" />
+                    <MapPin className="w-6 h-6 text-primary-600 dark:text-primary-400" />
                   </div>
                   <div>
                     <h4 className="text-stone-900 dark:text-white font-semibold mb-1">العنوان</h4>
@@ -94,7 +94,7 @@ export default function InfoSection() {
 
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-gold-500/10 dark:bg-gold-500/20 rounded-xl flex items-center justify-center shrink-0">
-                    <Phone className="w-6 h-6 text-gold-600 dark:text-gold-450" />
+                    <Phone className="w-6 h-6 text-gold-600 dark:text-gold-400" />
                   </div>
                   <div>
                     <h4 className="text-stone-900 dark:text-white font-semibold mb-1">أرقام التليفون</h4>
@@ -111,7 +111,7 @@ export default function InfoSection() {
 
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-primary-600/10 dark:bg-primary-600/20 rounded-xl flex items-center justify-center shrink-0">
-                    <Clock className="w-6 h-6 text-primary-650 dark:text-primary-400" />
+                    <Clock className="w-6 h-6 text-primary-600 dark:text-primary-400" />
                   </div>
                   <div>
                     <h4 className="text-stone-900 dark:text-white font-semibold mb-1">مواعيد العمل</h4>

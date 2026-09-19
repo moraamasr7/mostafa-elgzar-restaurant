@@ -12,8 +12,8 @@ const contactMethods = [
     title: "اتصل بنا",
     description: "اتصل بنا مباشرة على أي من الأرقام التالية",
     items: [
-      { label: "الرئيسي", value: "01122 339 739", href: "tel:01122339739" },
-      { label: "بديل 1", value: "01020 058 231", href: "tel:01020058231" },
+      { label: "الرئيسي", value: siteConfig.phone, href: siteConfig.telUrl },
+      { label: "بديل 1", value: siteConfig.phoneSecondary, href: siteConfig.telUrlSecondary },
     ],
     color: "primary",
   },
@@ -22,7 +22,7 @@ const contactMethods = [
     title: "العنوان",
     description: "زورنا في المطرية",
     items: [
-      { label: "", value: "5 شارع عمر المختار، متفرع من شارع الحرية، الرشاح، المطرية، القاهرة", href: "https://maps.app.goo.gl/D5ENYuQWe8EdeyjS6" },
+      { label: "", value: siteConfig.location, href: siteConfig.locationMapUrl },
     ],
     color: "gold",
   },
@@ -40,7 +40,7 @@ const contactMethods = [
 const deliveryPlatforms = [
   {
     name: "طلبات (Talabat)",
-    url: "https://www.talabat.com/ar/egypt/restaurant/781448/mostafa-algazaar-restaurant-matareya?aid=7828",
+    url: siteConfig.talabatUrl,
     description: "اطلب ونوصل لباب بيتك",
   },
   {
@@ -83,7 +83,7 @@ export default function ContactPage() {
               <div>
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${method.color === "primary" ? "bg-primary-600/10 dark:bg-primary-600/20" : "bg-gold-500/10 dark:bg-gold-500/20"
                   }`}>
-                  <method.icon className={`w-7 h-7 ${method.color === "primary" ? "text-primary-650 dark:text-primary-400" : "text-gold-650 dark:text-gold-400"
+                  <method.icon className={`w-7 h-7 ${method.color === "primary" ? "text-primary-600 dark:text-primary-400" : "text-gold-600 dark:text-gold-400"
                     }`} />
                 </div>
                 <h3 className="text-xl font-bold text-stone-900 dark:text-white mb-2">{method.title}</h3>
@@ -98,7 +98,7 @@ export default function ContactPage() {
                         href={item.href}
                         target={item.href.startsWith("http") ? "_blank" : undefined}
                         rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                        className={`font-semibold text-sm hover:underline break-all text-right ${method.color === "primary" ? "text-primary-650 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300" : "text-gold-650 dark:text-gold-400 hover:text-gold-700 dark:hover:text-gold-300"
+                        className={`font-semibold text-sm hover:underline break-all text-right ${method.color === "primary" ? "text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300" : "text-gold-600 dark:text-gold-400 hover:text-gold-700 dark:hover:text-gold-300"
                           }`}
                         dir={item.href.startsWith("tel") ? "ltr" : undefined}
                       >
@@ -114,7 +114,7 @@ export default function ContactPage() {
           ))}
         </div>
 
-        {/* Delivery Platforms */}
+        {/* Delivery Platforms & Direct Ordering */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -122,11 +122,13 @@ export default function ContactPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center gap-2 bg-gold-500/10 border border-gold-500/20 rounded-full px-4 py-2 mb-4">
-            <Truck className="w-4 h-4 text-gold-600 dark:text-gold-450" />
-            <span className="text-gold-800 dark:text-gold-300 text-sm font-medium">أطلب أونلاين (قريبآ)</span>
+          <div className="inline-flex items-center gap-2 bg-primary-500/10 border border-primary-500/20 rounded-full px-4 py-2 mb-4">
+            <Truck className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+            <Link href="/menu" className="text-primary-700 dark:text-primary-300 text-sm font-bold hover:underline">
+              اطلب أونلاين الآن مباشرة من المنيو الإلكتروني
+            </Link>
           </div>
-          <h2 className="text-3xl font-bold text-stone-900 dark:text-white mb-4">اطلب من Talabat & Elmenus</h2>
+          <h2 className="text-3xl font-bold text-stone-900 dark:text-white mb-4">منصات التوصيل المعتمدة</h2>
           <p className="text-stone-500 dark:text-gray-400">نوصل لباب بيتك بسرعة وأمان</p>
         </motion.div>
 
@@ -169,9 +171,9 @@ export default function ContactPage() {
             <div className="relative z-10 text-center px-4">
               <MapPin className="w-12 h-12 text-primary-500 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-stone-900 dark:text-white mb-2">موقعنا على الخريطة</h3>
-              <p className="text-stone-600 dark:text-gray-450 text-sm mb-4">5 شارع عمر المختار، المطرية، القاهرة</p>
+              <p className="text-stone-600 dark:text-gray-400 text-sm mb-4">{siteConfig.location}</p>
               <a
-                href="https://maps.app.goo.gl/D5ENYuQWe8EdeyjS6"
+                href={siteConfig.locationMapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary inline-flex items-center gap-2"
@@ -187,7 +189,7 @@ export default function ContactPage() {
         <div className="text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-primary-650 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors font-medium"
+            className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors font-medium"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>الرجوع للرئيسية</span>

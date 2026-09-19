@@ -32,6 +32,7 @@ export default function Footer() {
                 href="https://www.facebook.com/mostafa.elgazar.res"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="فيسبوك - مطعم مصطفى الجزار"
                 className="w-10 h-10 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white rounded-xl flex items-center justify-center text-stone-700 dark:text-white transition-colors shadow-sm dark:shadow-none"
               >
                 <Facebook className="w-5 h-5" />
@@ -40,7 +41,8 @@ export default function Footer() {
                 href="https://www.tiktok.com/@m.elgzar"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 hover:bg-primary-650 dark:hover:bg-primary-650 hover:text-white rounded-xl flex items-center justify-center text-stone-700 dark:text-white transition-colors shadow-sm dark:shadow-none"
+                aria-label="تيك توك - مطعم مصطفى الجزار"
+                className="w-10 h-10 bg-white dark:bg-white/5 border border-stone-200 dark:border-white/10 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white rounded-xl flex items-center justify-center text-stone-700 dark:text-white transition-colors shadow-sm dark:shadow-none"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.88-2.89 2.89 2.89 0 0 1 2.88-2.89c.3 0 .6.05.88.13v-3.5a6.36 6.36 0 0 0-.88-.06A6.34 6.34 0 0 0 3.25 15.8a6.34 6.34 0 0 0 6.33 6.34 6.34 6.34 0 0 0 6.33-6.34V9.91a8.16 8.16 0 0 0 4.78 1.54V7.91a4.83 4.83 0 0 1-1.1-.22z" />
@@ -54,32 +56,32 @@ export default function Footer() {
             <h4 className="text-lg font-bold text-stone-900 dark:text-white">روابط سريعة</h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
+                <Link href="/" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
                   الصفحة الرئيسية
                 </Link>
               </li>
               <li>
-                <Link href="/menu" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
+                <Link href="/menu" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
                   المنيو الكامل
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
+                <Link href="/about" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
                   عن المطعم
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
+                <Link href="/contact" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
                   تواصل معنا
                 </Link>
               </li>
               <li>
-                <Link href="/menu?reserve=true" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
+                <Link href="/menu?reserve=true" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
                   حجز طاولة بالمطعم
                 </Link>
               </li>
               <li>
-                <Link href="/menu?feedback=true" className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm">
+                <Link href="/menu?feedback=true" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
                   الشكاوى والمقترحات
                 </Link>
               </li>
@@ -96,20 +98,20 @@ export default function Footer() {
                   href={siteConfig.locationMapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-stone-600 dark:text-gray-400 text-sm hover:underline hover:text-primary-650 dark:hover:text-primary-400 transition-colors"
+                  className="text-stone-600 dark:text-gray-400 text-sm hover:underline hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                 >
                   {siteConfig.location}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary-500 shrink-0" />
-                <a href={siteConfig.telUrl} className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm font-semibold">
+                <a href={siteConfig.telUrl} className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm font-semibold">
                   {siteConfig.phone}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary-500 shrink-0" />
-                <a href={siteConfig.telUrlSecondary} className="text-stone-600 dark:text-gray-400 hover:text-primary-650 dark:hover:text-primary-400 transition-colors text-sm font-semibold">
+                <a href={siteConfig.telUrlSecondary} className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm font-semibold">
                   {siteConfig.phoneSecondary}
                 </a>
               </li>

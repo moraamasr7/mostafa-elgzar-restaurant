@@ -43,7 +43,7 @@ export default function QRCodePage() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 print:hidden">
           <Link
             href="/"
-            className="flex items-center gap-2 text-primary-650 dark:text-primary-400 hover:text-primary-700 font-semibold transition-colors"
+            className="flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 font-semibold transition-colors"
           >
             <ArrowRight className="w-5 h-5" />
             <span>الرجوع للرئيسية</span>

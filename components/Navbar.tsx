@@ -17,6 +17,15 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { siteConfig } from "@/lib/config";
+import LiveStoreBadge from "@/features/menu/components/LiveStoreBadge";
+
+const desktopNavLinks = [
+  { href: "/", label: "الرئيسية" },
+  { href: "/menu", label: "المنيو" },
+  { href: "/menu?reserve=true", label: "حجز طاولة" },
+  { href: "/about", label: "عن المطعم" },
+  { href: "/contact", label: "تواصل معنا" },
+];
 
 const navLinks = [
   { href: "/", label: "الرئيسية", icon: Home },
@@ -109,13 +118,13 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => (
+          <div className="hidden lg:flex items-center gap-1 xl:gap-2">
+            {desktopNavLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => handleNavClick(link.href)}
-                className={`px-2.5 xl:px-3.5 py-2 rounded-xl text-xs xl:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
+                className={`px-3 py-2 rounded-xl text-xs xl:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
                   pathname === link.href
                     ? "bg-primary-600/10 text-primary-600 dark:text-primary-400 font-bold"
                     : "text-stone-600 hover:text-stone-900 dark:text-gray-300 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-white/5"
@@ -126,8 +135,9 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* CTA Button */}
+          {/* Desktop Right: Live Status + CTA Button */}
           <div className="hidden lg:flex items-center gap-3">
+            <LiveStoreBadge />
             <Link
               href="/menu"
               className="flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg shadow-primary-900/30 whitespace-nowrap shrink-0 inline-flex justify-center select-none cursor-pointer"
@@ -137,8 +147,9 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile Menu Button - min 44x44 */}
+          {/* Mobile Right: Live Status + Menu Button */}
           <div className="flex items-center gap-2 lg:hidden">
+            <LiveStoreBadge />
             <button
               type="button"
               onClick={() => setIsOpen(!isOpen)}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useOrderRealtime } from '../hooks/useOrderRealtime';
 import { STATUS_UI_CONFIG, OrderStatus } from '@/types/orders';
+import { siteConfig } from '@/lib/config';
 
 const STEP_SEQUENCE: OrderStatus[] = ['pending', 'processing', 'ready', 'out_for_delivery', 'delivered'];
 
@@ -49,10 +50,10 @@ export function OrderTrackingView({ orderId }: { orderId: string }) {
               الرجوع لقائمة الطعام
             </Link>
             <a
-              href="tel:01026131499"
+              href={siteConfig.telUrl}
               className="w-full py-3 px-6 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs transition-colors"
             >
-              اتصل بخدمة العملاء: 01026131499
+              اتصل بخدمة العملاء: {siteConfig.phone}
             </a>
           </div>
         </div>
@@ -215,6 +216,16 @@ export function OrderTrackingView({ orderId }: { orderId: string }) {
         >
           <span>← العودة لقائمة الطعام الرئيسية</span>
         </Link>
+        <div className="text-stone-500 text-[11px] pt-1">
+          تحتاج مساعدة بشأن طلبك؟{" "}
+          <a
+            href={siteConfig.telUrl}
+            className="text-stone-400 hover:text-amber-400 underline font-bold transition-colors"
+            dir="ltr"
+          >
+            {siteConfig.phone}
+          </a>
+        </div>
       </div>
     </div>
   );

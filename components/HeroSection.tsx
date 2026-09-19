@@ -32,15 +32,19 @@ export default function HeroSection() {
           transition={{ duration: 0.8 }}
           className="space-y-8"
         >
-          {/* Badge */}
+          {/* Brand & Live Badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="inline-flex items-center gap-2 bg-primary-600/10 border border-primary-500/20 dark:bg-primary-600/20 dark:border-primary-500/30 rounded-full px-4 py-2 animate-pulse"
+            className="flex flex-wrap items-center justify-center gap-2.5"
           >
-            <Flame className="w-4 h-4 text-primary-605 dark:text-primary-400" />
-            <span className="text-primary-700 dark:text-primary-300 text-sm font-medium">مصطفى الجزار - Mostafa Elgzar</span>
+            <div className="inline-flex items-center gap-2 bg-primary-600/10 border border-primary-500/20 dark:bg-primary-600/20 dark:border-primary-500/30 rounded-full px-4 py-1.5 shadow-xs">
+              <Flame className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+              <span className="text-primary-700 dark:text-primary-300 text-xs sm:text-sm font-bold">
+                مطعم مصطفى الجزار
+              </span>
+            </div>
           </motion.div>
 
           {/* Main Title */}
@@ -48,7 +52,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight"
+            className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight tracking-tight"
           >
             <span className="text-stone-900 dark:text-white">أصل الأكل</span>{" "}
             <span className="text-gradient">الحرش</span>
@@ -59,9 +63,9 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-xl md:text-2xl text-stone-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed font-semibold"
+            className="text-base sm:text-lg md:text-xl text-stone-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed font-medium"
           >
-            تصفح قائمة طعامنا المميزة واكتشف أجمد الأكلات المطبوخة يومياً بعناية.
+            أشهى الكبدة، الكفتة، السجق البلدي، والممبار من قلب المطرية لباب بيتك. طازة ومتحضرة يومياً بعناية.
           </motion.p>
 
           {/* Stats Badges */}
@@ -69,69 +73,59 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="flex flex-wrap items-center justify-center gap-4 md:gap-6"
+            className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4"
           >
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
-              <Star className="w-5 h-5 text-gold-550 fill-gold-550 dark:text-gold-400 dark:fill-gold-400" />
-              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">أفضل الأكلات الحرشة</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-xs backdrop-blur-sm text-xs sm:text-sm font-medium text-stone-700 dark:text-gray-300">
+              <Star className="w-4 h-4 text-gold-500 fill-gold-500" />
+              <span>لحوم بلدي 100%</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
-              <MapPin className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">المطرية - القاهرة</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-xs backdrop-blur-sm text-xs sm:text-sm font-medium text-stone-700 dark:text-gray-300">
+              <MapPin className="w-4 h-4 text-primary-500" />
+              <span>المطرية - القاهرة</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-sm backdrop-blur-sm">
-              <Clock className="w-5 h-5 text-gold-550 dark:text-gold-400" />
-              <span className="text-stone-700 dark:text-gray-300 text-sm font-medium">{siteConfig.workingHours}</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-white/5 border border-stone-200 dark:border-white/10 shadow-xs backdrop-blur-sm text-xs sm:text-sm font-medium text-stone-700 dark:text-gray-300">
+              <Clock className="w-4 h-4 text-gold-500" />
+              <span>{siteConfig.workingHours}</span>
             </div>
           </motion.div>
 
-          {/* CTA Buttons */}
+          {/* Primary CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.8 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 max-w-md mx-auto sm:max-w-none"
           >
             <Link
               href="/menu"
-              className="btn-primary text-lg px-8 py-4 flex items-center gap-2 shadow-lg shadow-primary-500/20 w-full sm:w-auto justify-center whitespace-nowrap inline-flex"
+              className="btn-primary text-base sm:text-lg px-8 py-3.5 sm:py-4 flex items-center justify-center gap-2.5 shadow-xl shadow-primary-600/25 w-full sm:w-auto font-black active:scale-98 min-h-[48px]"
             >
-              <span>المنيــو</span>
-              <ChevronDown className="w-5 h-5 animate-bounce" />
+              <span>تصفح المنيو واطلب الآن</span>
+              <ChevronDown className="w-5 h-5 -rotate-90 sm:rotate-0 animate-pulse" />
             </Link>
-            <a
-              href={siteConfig.locationMapUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-gold text-lg px-8 py-4 flex items-center gap-2 shadow-lg shadow-gold-500/20 w-full sm:w-auto justify-center whitespace-nowrap inline-flex"
+            <Link
+              href="/menu?reserve=true"
+              className="btn-gold text-base sm:text-lg px-8 py-3.5 sm:py-4 flex items-center justify-center gap-2 shadow-xl shadow-gold-600/20 w-full sm:w-auto font-bold active:scale-98 min-h-[48px]"
             >
-              <MapPin className="w-5 h-5 text-white" />
-              <span>موقعنا</span>
-            </a>
+              <span>احجز طاولتك</span>
+            </Link>
           </motion.div>
 
-          {/* Phone Numbers Display */}
+          {/* Quick Hotline Phone */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.9, duration: 0.8 }}
-            className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8"
+            className="pt-2 flex items-center justify-center gap-2 text-stone-600 dark:text-gray-400 text-xs sm:text-sm"
           >
+            <span>أو اطلب عبر التليفون مباشرة:</span>
             <a
               href={siteConfig.telUrl}
-              className="inline-flex items-center gap-2 text-xl md:text-2xl font-bold text-stone-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              className="inline-flex items-center gap-1 font-bold text-stone-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors underline underline-offset-4"
               dir="ltr"
             >
-              <Phone className="w-5 h-5 text-primary-500" />
+              <Phone className="w-3.5 h-3.5 text-primary-500" />
               <span>{siteConfig.phone}</span>
-            </a>
-            <a
-              href={siteConfig.telUrlSecondary}
-              className="inline-flex items-center gap-2 text-xl md:text-2xl font-bold text-stone-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-              dir="ltr"
-            >
-              <Phone className="w-5 h-5 text-primary-500" />
-              <span>{siteConfig.phoneSecondary}</span>
             </a>
           </motion.div>
         </motion.div>
@@ -149,7 +143,7 @@ export default function HeroSection() {
           transition={{ repeat: Infinity, duration: 2 }}
           className="w-6 h-10 border-2 border-stone-300 dark:border-white/20 rounded-full flex flex-col items-center justify-center p-2"
         >
-          <ChevronDown className="w-4 h-4 text-primary-650 dark:text-primary-500" />
+          <ChevronDown className="w-4 h-4 text-primary-600 dark:text-primary-500" />
         </motion.div>
       </motion.div>
     </section>

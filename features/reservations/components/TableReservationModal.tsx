@@ -50,13 +50,9 @@ export function TableReservationModal({
 }: TableReservationModalProps) {
   const [activeTab, setActiveTab] = useState<'create' | 'inquiry'>(initialMode);
 
-  // --- Create Mode State ---
+  // --- Create Mode State (Same-Day Only) ---
   const todayStr = new Date().toISOString().split('T')[0];
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().split('T')[0];
-
-  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  const [selectedDate] = useState<string>(todayStr);
   const [selectedSlot, setSelectedSlot] = useState<string>('');
   const [guestCount, setGuestCount] = useState<number>(4);
   const [customerName, setCustomerName] = useState<string>('');
@@ -682,33 +678,20 @@ export function TableReservationModal({
                   </div>
                 )}
 
-                {/* Date Selection */}
-                <div>
-                  <label className="font-bold text-stone-300 block mb-1.5">تاريخ الحجز:</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedDate(todayStr)}
-                      className={`py-2.5 px-3 rounded-xl font-bold transition-all min-h-[44px] flex items-center justify-center ${
-                        selectedDate === todayStr
-                          ? 'bg-amber-500 text-stone-950 font-black shadow-md shadow-amber-500/10'
-                          : 'bg-stone-950 border border-stone-800 text-stone-400 hover:text-stone-200'
-                      }`}
-                    >
-                      اليوم ({new Date().toLocaleDateString('ar-EG', { weekday: 'short', month: 'numeric', day: 'numeric' })})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedDate(tomorrowStr)}
-                      className={`py-2.5 px-3 rounded-xl font-bold transition-all min-h-[44px] flex items-center justify-center ${
-                        selectedDate === tomorrowStr
-                          ? 'bg-amber-500 text-stone-950 font-black shadow-md shadow-amber-500/10'
-                          : 'bg-stone-950 border border-stone-800 text-stone-400 hover:text-stone-200'
-                      }`}
-                    >
-                      الغد ({tomorrow.toLocaleDateString('ar-EG', { weekday: 'short', month: 'numeric', day: 'numeric' })})
-                    </button>
+                {/* Date Display (Authoritative Same-Day Only) */}
+                <div className="flex items-center justify-between p-3.5 bg-stone-950 border border-stone-800 rounded-2xl">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base">📅</span>
+                    <div>
+                      <span className="text-[10px] text-stone-400 font-bold block">تاريخ الحجز (اليوم فقط):</span>
+                      <span className="font-bold text-stone-200 text-xs sm:text-sm">
+                        {new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                      </span>
+                    </div>
                   </div>
+                  <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">
+                    متاح اليوم فقط
+                  </span>
                 </div>
 
                 {/* Available Time Slots Grid */}

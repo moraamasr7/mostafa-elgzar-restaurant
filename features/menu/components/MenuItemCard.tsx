@@ -215,7 +215,7 @@ export default function MenuItemCard({
                   <button
                     type="button"
                     onClick={handleOpenSheet}
-                    className="p-2 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+                    className="p-2 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer"
                     title="تخصيص الملاحظات والكمية"
                     aria-label={`تخصيص طلب ${item.name}`}
                   >
@@ -227,7 +227,7 @@ export default function MenuItemCard({
                 <button
                   type="button"
                   onClick={handleDirectAdd}
-                  className={`btn-primary py-2 px-3.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all min-h-[42px] cursor-pointer ${
+                  className={`btn-primary py-2 px-3.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all min-h-[44px] cursor-pointer ${
                     justAdded ? 'bg-emerald-600 border-emerald-600' : ''
                   }`}
                   aria-label={

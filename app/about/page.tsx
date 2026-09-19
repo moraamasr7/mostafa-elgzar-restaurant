@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Award, Heart, Users, TrendingUp, Star, MapPin } from "lucide-react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { siteConfig } from "@/lib/config";
 
 const stats = [
   { icon: Users, value: "+500", label: "عميل لدينا" },
@@ -74,9 +75,9 @@ export default function AboutPage() {
                 كل صنف في المنيو هو قطعة من التراث المصري.
               </p>
             </div>
-            <div className="flex items-center gap-2 text-gold-600 dark:text-gold-450 font-medium">
-              <MapPin className="w-5 h-5 text-primary-500" />
-              <span>5 شارع عمر المختار، المطرية، القاهرة</span>
+            <div className="flex items-center gap-2 text-gold-600 dark:text-gold-400 font-medium">
+              <MapPin className="w-5 h-5 text-primary-500 shrink-0" />
+              <span>{siteConfig.location}</span>
             </div>
           </motion.div>
 
@@ -103,7 +104,7 @@ export default function AboutPage() {
                   className="text-center p-4"
                 >
                   <div className="w-12 h-12 bg-primary-600/10 dark:bg-primary-600/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <stat.icon className="w-6 h-6 text-primary-650 dark:text-primary-400" />
+                    <stat.icon className="w-6 h-6 text-primary-600 dark:text-primary-400" />
                   </div>
                   <div className="text-2xl font-bold text-stone-900 dark:text-white mb-1">{stat.value}</div>
                   <div className="text-sm text-stone-500 dark:text-gray-400">{stat.label}</div>
@@ -136,7 +137,7 @@ export default function AboutPage() {
               className="glass-card p-8 text-center hover-lift"
             >
               <div className="w-16 h-16 bg-primary-600/10 dark:bg-primary-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <value.icon className="w-8 h-8 text-primary-650 dark:text-primary-400" />
+                <value.icon className="w-8 h-8 text-primary-600 dark:text-primary-400" />
               </div>
               <h3 className="text-xl font-bold text-stone-900 dark:text-white mb-3">{value.title}</h3>
               <p className="text-stone-500 dark:text-gray-400 text-sm leading-relaxed">{value.description}</p>
@@ -148,7 +149,7 @@ export default function AboutPage() {
         <div className="text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-primary-650 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors font-medium"
+            className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors font-medium"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>الرجوع للرئيسية</span>

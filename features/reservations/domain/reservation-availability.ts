@@ -41,17 +41,15 @@ export async function getReservationAvailability(dateStr: string): Promise<DayAv
     return { isOpen: false, reason: 'تاريخ غير صالح', slots: [] };
   }
 
-  // 1. Check Date Range (Today or Tomorrow only - max 48 hours to prevent phantom bookings)
+  // 1. Check Date Range (Today only)
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const maxBookingDate = new Date(today);
-  maxBookingDate.setDate(today.getDate() + 2); // 2 days ahead
 
-  if (targetDate < today) {
-    return { isOpen: false, reason: 'لا يمكن اختيار تاريخ في الماضي', slots: [] };
-  }
-  if (targetDate > maxBookingDate) {
-    return { isOpen: false, reason: 'الحجز متاح لليوم الحالي أو الغد فقط لضمان دقة مواعيد الصالة', slots: [] };
+  if (targetDate.getTime() !== today.getTime()) {
+    if (targetDate < today) {
+      return { isOpen: false, reason: 'لا يمكن اختيار تاريخ في الماضي', slots: [] };
+    }
+    return { isOpen: false, reason: 'الحجز متاح لليوم الحالي فقط لضمان دقة وتأكيد مواعيد الصالة', slots: [] };
   }
 
   // 2. Check Special Closures

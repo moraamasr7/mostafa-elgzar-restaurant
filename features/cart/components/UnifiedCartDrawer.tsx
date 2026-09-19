@@ -28,9 +28,11 @@ import {
   Check,
   FileText,
   Navigation,
+  Clock,
 } from 'lucide-react';
 import { useScrollLock } from '@/lib/hooks/useScrollLock';
 import CountdownTimer from '@/features/orders/components/CountdownTimer';
+import { isRestaurantOpen, OperatingHoursResult } from '@/lib/schedule';
 
 const CUSTOMER_DRAFT_KEY = 'elgzar_customer_draft';
 
@@ -110,6 +112,24 @@ export default function UnifiedCartDrawer() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [storeStatus, setStoreStatus] = useState<OperatingHoursResult | null>(null);
+
+  // Check store operating status
+  useEffect(() => {
+    let isMounted = true;
+    async function checkStore() {
+      try {
+        const res = await isRestaurantOpen();
+        if (isMounted) setStoreStatus(res);
+      } catch {
+        // Non-blocking
+      }
+    }
+    if (isDrawerOpen) checkStore();
+    return () => {
+      isMounted = false;
+    };
+  }, [isDrawerOpen]);
 
   // Fetch Delivery Zones from Supabase Source of Truth
   useEffect(() => {
@@ -538,6 +558,17 @@ export default function UnifiedCartDrawer() {
             >
               <span>3. التأكيد</span>
             </button>
+          </div>
+        )}
+
+        {/* Proactive Store Closed Warning Banner */}
+        {storeStatus && !storeStatus.isOpen && (
+          <div className="mx-4 sm:mx-5 mt-3 p-3 bg-amber-500/10 border border-amber-500/25 rounded-2xl flex items-start gap-2.5 text-xs text-amber-200 shrink-0">
+            <Clock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold block">تنبيه: المطعم مغلق حالياً ({storeStatus.reason})</span>
+              <span className="text-[11px] text-amber-300/80">يمكنك استعراض وتجهيز السلة ولكن قد يتأخر تنفيذ الطلب حتى بدء مواعيد العمل الرسمية.</span>
+            </div>
           </div>
         )}
 
