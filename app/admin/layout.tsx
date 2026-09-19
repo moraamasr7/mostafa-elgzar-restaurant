@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import ShiftBar from '@/features/shifts/components/ShiftBar';
 
 export const metadata = {
   title: 'لوحة التحكم والعمليات | مطعم مصطفى الجزار',
@@ -72,6 +73,9 @@ export default function AdminLayout({
           </Link>
         </div>
       </header>
+
+      {/* Persistent Daily Shift Bar */}
+      <ShiftBar />
 
       {/* Main Admin Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
