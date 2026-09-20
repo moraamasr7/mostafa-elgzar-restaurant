@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MapPin, Phone, Clock, Truck, Award, ChefHat, ShoppingBag } from "lucide-react";
+import { MapPin, Phone, Clock, Truck, Award, ChefHat, ShoppingBag, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { siteConfig } from "@/lib/config";
 
@@ -122,7 +122,7 @@ export default function InfoSection() {
                 </div>
               </div>
 
-              {/* Order Buttons */}
+              {/* Order & Contact Action Buttons */}
               <div className="pt-4 space-y-3">
                 <Link
                   href="/menu"
@@ -131,15 +131,24 @@ export default function InfoSection() {
                   <ShoppingBag className="w-5 h-5" />
                   <span>طلب أونلاين (استلام / توصيل)</span>
                 </Link>
-                <a
-                  href={siteConfig.talabatUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-gold w-full flex items-center justify-center gap-2 text-center"
-                >
-                  <Truck className="w-5 h-5" />
-                  <span>اطلب عبر طلبات</span>
-                </a>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <a
+                    href={siteConfig.talabatUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-gold w-full flex items-center justify-center gap-2 text-center text-xs sm:text-sm"
+                  >
+                    <Truck className="w-4 h-4" />
+                    <span>اطلب عبر طلبات</span>
+                  </a>
+                  <Link
+                    href="/contact?feedback=true"
+                    className="w-full flex items-center justify-center gap-2 bg-stone-100 hover:bg-stone-200 dark:bg-white/10 dark:hover:bg-white/20 text-stone-900 dark:text-white px-4 py-3 rounded-xl text-xs sm:text-sm font-bold border border-stone-200 dark:border-white/10 transition-colors cursor-pointer text-center"
+                  >
+                    <MessageSquare className="w-4 h-4 text-primary-500" />
+                    <span>الشكاوى والمقترحات</span>
+                  </Link>
+                </div>
               </div>
             </div>
           </motion.div>

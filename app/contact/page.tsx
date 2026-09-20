@@ -1,10 +1,12 @@
 "use client";
 
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Phone, MapPin, Clock, Truck, ExternalLink } from "lucide-react";
+import { Phone, MapPin, Clock, Truck, ExternalLink, MessageSquare, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { siteConfig } from "@/lib/config";
+import { CustomerFeedbackModal } from "@/features/feedback/components/CustomerFeedbackModal";
 
 const contactMethods = [
   {
@@ -50,7 +52,22 @@ const deliveryPlatforms = [
   },
 ];
 
-export default function ContactPage() {
+function ContactPageContent() {
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("feedback") === "true") {
+      setIsFeedbackOpen(true);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const handleOpenFeedback = () => setIsFeedbackOpen(true);
+    window.addEventListener("open-feedback-modal", handleOpenFeedback);
+    return () => window.removeEventListener("open-feedback-modal", handleOpenFeedback);
+  }, []);
+
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-dark-950 pt-24 pb-16 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -113,6 +130,38 @@ export default function ContactPage() {
             </motion.div>
           ))}
         </div>
+
+        {/* Feedback & Suggestions Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="glass-card p-8 md:p-10 mb-16 border-2 border-primary-500/20 dark:border-primary-500/30 bg-gradient-to-br from-primary-950/20 via-stone-900/40 to-stone-900/80 text-center relative overflow-hidden"
+        >
+          <div className="max-w-2xl mx-auto space-y-4">
+            <div className="w-16 h-16 bg-primary-600/20 rounded-2xl flex items-center justify-center mx-auto mb-2 text-primary-500 border border-primary-500/30 shadow-lg">
+              <MessageSquare className="w-8 h-8" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-stone-900 dark:text-white">
+              قسم الشكاوى والمقترحات
+            </h2>
+            <p className="text-stone-600 dark:text-gray-300 text-sm md:text-base leading-relaxed">
+              حرصاً منا على تقديم أعلى مستوى من الجودة والخدمة، رأيك يهمنا دائماً. شاركنا أي ملاحظة أو اقتراح لمتابعتها والعمل عليها فوراً.
+            </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setIsFeedbackOpen(true)}
+                className="inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold px-8 py-3.5 rounded-2xl shadow-xl shadow-primary-900/40 min-h-[48px] active:scale-[0.98] transition-all cursor-pointer text-base"
+                aria-label="تقديم شكوى أو مقترح"
+              >
+                <MessageSquare className="w-5 h-5" />
+                <span>تقديم شكوى أو مقترح</span>
+              </button>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Delivery Platforms & Direct Ordering */}
         <motion.div
@@ -196,6 +245,20 @@ export default function ContactPage() {
           </Link>
         </div>
       </div>
+
+      {/* Customer Feedback Modal */}
+      <CustomerFeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+      />
     </div>
+  );
+}
+
+export default function ContactPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-stone-50 dark:bg-dark-950 pt-24 pb-16 text-center text-stone-400 font-bold">جاري تحميل صفحة التواصل...</div>}>
+      <ContactPageContent />
+    </Suspense>
   );
 }
