@@ -1,33 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GroupedMenuItem } from '@/types/menu';
 import { CartLine } from '@/types/orders';
 import { Plus, Check, ZoomIn, X, SlidersHorizontal, Sparkles } from 'lucide-react';
 import ProductOptionsSheet from './ProductOptionsSheet';
+import { normalizeImageUrl, DEFAULT_FALLBACK_IMAGE } from '@/lib/image-utils';
+import { useScrollLock } from '@/lib/hooks/useScrollLock';
 
 interface MenuItemCardProps {
   item: GroupedMenuItem;
   onAddToCart?: (line: CartLine) => void;
   onOpenOptions?: (item: GroupedMenuItem) => void;
-}
-
-const DEFAULT_FALLBACK_IMAGE = '/images/hero.png';
-
-function normalizeImageUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-
-  // Google Drive Regex conversion (supports /file/d/ID, uc?id=ID, open?id=ID)
-  const driveRegex = /(?:drive\.google\.com\/(?:file\/d\/|uc\?.*id=|open\?.*id=)|lh3\.googleusercontent\.com\/d\/)([a-zA-Z0-9_-]+)/i;
-  const match = trimmed.match(driveRegex);
-  if (match && match[1]) {
-    // Return direct high-res Google Drive thumbnail that bypasses CORS & referrer restrictions
-    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
-  }
-
-  return trimmed;
 }
 
 export default function MenuItemCard({
@@ -53,9 +37,24 @@ export default function MenuItemCard({
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
+  useScrollLock(isZoomOpen);
+
   const rawImageUrl = item.image_url || item.image || null;
-  const imageUrl = normalizeImageUrl(rawImageUrl);
-  const displayImageUrl = imageUrl && !imageError ? imageUrl : DEFAULT_FALLBACK_IMAGE;
+  const normalizedUrl = normalizeImageUrl(rawImageUrl);
+  const displayImageUrl = normalizedUrl && !imageError ? normalizedUrl : DEFAULT_FALLBACK_IMAGE;
+
+  // Reset state if item prop changes
+  useEffect(() => {
+    setImageError(false);
+    setIsImageLoaded(false);
+  }, [item.id, rawImageUrl]);
+
+  const handleImageError = () => {
+    if (!imageError) {
+      setImageError(true);
+      setIsImageLoaded(true); // reveal fallback image immediately without staying opacity-0
+    }
+  };
 
   // Simple direct 1-tap add handler
   const handleDirectAdd = (e: React.MouseEvent) => {
@@ -120,7 +119,7 @@ export default function MenuItemCard({
             loading="lazy"
             referrerPolicy="no-referrer"
             onLoad={() => setIsImageLoaded(true)}
-            onError={() => setImageError(true)}
+            onError={handleImageError}
             className={`w-full h-full object-cover transition-all duration-500 group-hover/img:scale-105 cursor-pointer select-none ${
               isImageLoaded ? 'opacity-100' : 'opacity-0'
             }`}

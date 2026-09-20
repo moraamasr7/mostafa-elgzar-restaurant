@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Phone, MapPin, Clock, Flame, Star, ChevronDown, BookOpen } from "lucide-react";
+import { Phone, MapPin, Clock, Flame, Star, ChevronDown, BookOpen, Calendar } from "lucide-react";
 import Link from "next/link";
 import { siteConfig } from "@/lib/config";
-import PaperMenuModal from "@/features/menu/components/PaperMenuModal";
+import { usePaperMenu } from "@/features/menu/context/PaperMenuContext";
+import { useReservation } from "@/features/reservations/context/ReservationContext";
 
 export default function HeroSection() {
-  const [isPaperMenuOpen, setIsPaperMenuOpen] = useState(false);
+  const { openPaperMenu } = usePaperMenu();
+  const { openReservationModal } = useReservation();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Pattern */}
@@ -92,13 +94,14 @@ export default function HeroSection() {
             </div>
           </motion.div>
 
-          {/* Primary CTA Buttons */}
+          {/* Primary CTA Buttons with Clear Separation of Flows */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.8 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 max-w-md mx-auto sm:max-w-none flex-wrap"
           >
+            {/* 1. Order Flow -> /menu Interactive Menu */}
             <Link
               href="/menu"
               className="btn-primary text-base sm:text-lg px-8 py-3.5 sm:py-4 flex items-center justify-center gap-2.5 shadow-xl shadow-primary-600/25 w-full sm:w-auto font-black active:scale-98 min-h-[48px]"
@@ -107,21 +110,25 @@ export default function HeroSection() {
               <ChevronDown className="w-5 h-5 -rotate-90 sm:rotate-0 animate-pulse" />
             </Link>
 
+            {/* 2. Paper Menu Flow -> Direct Lightbox Modal */}
             <button
               type="button"
-              onClick={() => setIsPaperMenuOpen(true)}
+              onClick={openPaperMenu}
               className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer bg-primary-600 text-white shadow-md shadow-primary-500/15 hover:bg-primary-500 active:scale-95 min-h-[44px]"
             >
               <BookOpen className="w-3.5 h-3.5" />
               <span>المنيو الورقي المصور</span>
             </button>
 
-            <Link
-              href="/menu?reserve=true"
-              className="btn-gold text-base sm:text-lg px-8 py-3.5 sm:py-4 flex items-center justify-center gap-2 shadow-xl shadow-gold-600/20 w-full sm:w-auto font-bold active:scale-98 min-h-[48px]"
+            {/* 3. Reservation Flow -> Direct Independent Reservation Modal */}
+            <button
+              type="button"
+              onClick={() => openReservationModal('create')}
+              className="btn-gold text-base sm:text-lg px-8 py-3.5 sm:py-4 flex items-center justify-center gap-2 shadow-xl shadow-gold-600/20 w-full sm:w-auto font-bold active:scale-98 min-h-[48px] cursor-pointer"
             >
+              <Calendar className="w-4 h-4" />
               <span>احجز طاولتك</span>
-            </Link>
+            </button>
           </motion.div>
 
           {/* Quick Hotline Phone */}
@@ -143,12 +150,6 @@ export default function HeroSection() {
           </motion.div>
         </motion.div>
       </div>
-
-      {/* Interactive Paper Menu Modal */}
-      <PaperMenuModal
-        isOpen={isPaperMenuOpen}
-        onClose={() => setIsPaperMenuOpen(false)}
-      />
     </section>
   );
 }

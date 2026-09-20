@@ -10,6 +10,8 @@ import { CartProvider } from "@/features/cart/context/CartContext";
 import CartBar from "@/features/cart/components/CartBar";
 import CartModal from "@/features/cart/components/CartModal";
 import GlobalCheckout from "@/features/orders/components/GlobalCheckout";
+import { ReservationProvider } from "@/features/reservations/context/ReservationContext";
+import { PaperMenuProvider } from "@/features/menu/context/PaperMenuContext";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.siteUrl),
@@ -152,13 +154,17 @@ export default function RootLayout({
         <ThemeProvider>
           <CartProvider>
             <OrderModalProvider>
-              <Navbar />
-              <main>{children}</main>
-              <Footer />
-              <FloatingActions />
-              <CartBar />
-              <CartModal />
-              <GlobalCheckout />
+              <ReservationProvider>
+                <PaperMenuProvider>
+                  <Navbar />
+                  <main>{children}</main>
+                  <Footer />
+                  <FloatingActions />
+                  <CartBar />
+                  <CartModal />
+                  <GlobalCheckout />
+                </PaperMenuProvider>
+              </ReservationProvider>
             </OrderModalProvider>
           </CartProvider>
         </ThemeProvider>

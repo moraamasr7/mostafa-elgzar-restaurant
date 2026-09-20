@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { Phone, MapPin, ExternalLink, Facebook } from "lucide-react";
 import { siteConfig } from "@/lib/config";
+import { useReservation } from "@/features/reservations/context/ReservationContext";
+import { usePaperMenu } from "@/features/menu/context/PaperMenuContext";
 
 export default function Footer() {
+  const { openReservationModal } = useReservation();
+  const { openPaperMenu } = usePaperMenu();
   return (
     <footer className="bg-stone-100 dark:bg-dark-950 border-t border-stone-200 dark:border-white/5 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-28 sm:pb-16">
@@ -62,8 +66,26 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/menu" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
-                  المنيو الكامل
+                  المنيو الإلكتروني (اطلب أونلاين)
                 </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={openPaperMenu}
+                  className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm cursor-pointer text-right"
+                >
+                  المنيو الورقي المصور
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => openReservationModal("create")}
+                  className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm cursor-pointer text-right"
+                >
+                  حجز طاولة بالمطعم
+                </button>
               </li>
               <li>
                 <Link href="/about" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
@@ -76,12 +98,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/menu?reserve=true" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
-                  حجز طاولة بالمطعم
-                </Link>
-              </li>
-              <li>
-                <Link href="/menu?feedback=true" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
+                <Link href="/contact?feedback=true" className="text-stone-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors text-sm">
                   الشكاوى والمقترحات
                 </Link>
               </li>

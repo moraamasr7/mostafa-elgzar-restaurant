@@ -18,44 +18,15 @@ import {
 } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 import LiveStoreBadge from "@/features/menu/components/LiveStoreBadge";
-
-const desktopNavLinks = [
-  { href: "/", label: "الرئيسية" },
-  { href: "/menu", label: "المنيو" },
-  { href: "/menu?reserve=true", label: "حجز طاولة" },
-  { href: "/about", label: "عن المطعم" },
-  { href: "/contact", label: "تواصل معنا" },
-];
-
-const navLinks = [
-  { href: "/", label: "الرئيسية", icon: Home },
-  { href: "/menu", label: "المنيو الإلكتروني", icon: Sparkles },
-  {
-    href: "/menu?type=paper",
-    label: "المنيو الورقي",
-    icon: BookOpen,
-    badge: "مصور",
-  },
-  {
-    href: "/menu?reserve=true",
-    label: "حجز طاولة",
-    icon: Calendar,
-    badge: "حجز سريع",
-  },
-  {
-    href: "/menu?feedback=true",
-    label: "الشكاوى والمقترحات",
-    icon: MessageSquare,
-    badge: "صوتك يهمنا",
-  },
-  { href: "/about", label: "عن المطعم", icon: Info },
-  { href: "/contact", label: "تواصل معنا", icon: Phone },
-];
+import { usePaperMenu } from "@/features/menu/context/PaperMenuContext";
+import { useReservation } from "@/features/reservations/context/ReservationContext";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const { openPaperMenu } = usePaperMenu();
+  const { openReservationModal } = useReservation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -69,23 +40,6 @@ export default function Navbar() {
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
-
-  const handleNavClick = (href: string) => {
-    setIsOpen(false);
-    if (pathname === "/menu" && typeof window !== "undefined") {
-      if (href.includes("type=paper")) {
-        window.dispatchEvent(new CustomEvent("switch-menu-type", { detail: "paper" }));
-      } else if (href.includes("type=interactive") || href === "/menu") {
-        window.dispatchEvent(new CustomEvent("switch-menu-type", { detail: "interactive" }));
-      }
-
-      if (href.includes("reserve=true")) {
-        window.dispatchEvent(new CustomEvent("open-reservation-modal"));
-      } else if (href.includes("feedback=true")) {
-        window.dispatchEvent(new CustomEvent("open-feedback-modal"));
-      }
-    }
-  };
 
   // Do not render public customer navigation on admin operational routes
   if (pathname.startsWith('/admin')) {
@@ -119,23 +73,59 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1 xl:gap-2">
-            {desktopNavLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => handleNavClick(link.href)}
-                className={`px-3 py-2 rounded-xl text-xs xl:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
-                  pathname === link.href
-                    ? "bg-primary-600/10 text-primary-600 dark:text-primary-400 font-bold"
-                    : "text-stone-600 hover:text-stone-900 dark:text-gray-300 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-white/5"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            <Link
+              href="/"
+              className={`px-3 py-2 rounded-xl text-xs xl:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
+                pathname === "/"
+                  ? "bg-primary-600/10 text-primary-600 dark:text-primary-400 font-bold"
+                  : "text-stone-600 hover:text-stone-900 dark:text-gray-300 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-white/5"
+              }`}
+            >
+              الرئيسية
+            </Link>
+
+            {/* Paper Menu Trigger for "المنيو" Link in Header */}
+            <button
+              type="button"
+              onClick={openPaperMenu}
+              className="px-3 py-2 rounded-xl text-xs xl:text-sm font-bold transition-all duration-200 whitespace-nowrap text-stone-600 hover:text-stone-900 dark:text-gray-300 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-white/5 cursor-pointer"
+            >
+              المنيو
+            </button>
+
+            {/* Direct Reservation Flow */}
+            <button
+              type="button"
+              onClick={() => openReservationModal('create')}
+              className="px-3 py-2 rounded-xl text-xs xl:text-sm font-bold transition-all duration-200 whitespace-nowrap text-stone-600 hover:text-stone-900 dark:text-gray-300 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-white/5 cursor-pointer"
+            >
+              حجز طاولة
+            </button>
+
+            <Link
+              href="/about"
+              className={`px-3 py-2 rounded-xl text-xs xl:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
+                pathname === "/about"
+                  ? "bg-primary-600/10 text-primary-600 dark:text-primary-400 font-bold"
+                  : "text-stone-600 hover:text-stone-900 dark:text-gray-300 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-white/5"
+              }`}
+            >
+              عن المطعم
+            </Link>
+
+            <Link
+              href="/contact"
+              className={`px-3 py-2 rounded-xl text-xs xl:text-sm font-bold transition-all duration-200 whitespace-nowrap ${
+                pathname === "/contact"
+                  ? "bg-primary-600/10 text-primary-600 dark:text-primary-400 font-bold"
+                  : "text-stone-600 hover:text-stone-900 dark:text-gray-300 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-white/5"
+              }`}
+            >
+              تواصل معنا
+            </Link>
           </div>
 
-          {/* Desktop Right: Live Status + CTA Button */}
+          {/* Desktop Right: Live Status + Order Now CTA Button (Points directly to /menu) */}
           <div className="hidden lg:flex items-center gap-3">
             <LiveStoreBadge />
             <Link
@@ -163,52 +153,148 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer Navigation - Optimized for Smartphones */}
+      {/* Mobile Drawer Navigation - Clear Separation of Concerns */}
       <div
         className={`lg:hidden transition-all duration-300 overflow-hidden ${
           isOpen ? "max-h-[calc(100dvh-5rem)] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="bg-white/98 dark:bg-dark-950/98 backdrop-blur-xl border-t border-stone-200/80 dark:border-white/10 px-4 py-4 space-y-1.5 overflow-y-auto max-h-[calc(100dvh-5rem)] pb-8 shadow-2xl">
-          {navLinks.map((link) => {
-            const Icon = link.icon;
-            const isCurrent = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => handleNavClick(link.href)}
-                className={`flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold transition-all min-h-[48px] ${
-                  isCurrent
-                    ? "bg-primary-600/15 text-primary-600 dark:text-primary-400 shadow-xs border border-primary-500/20"
-                    : "text-stone-700 hover:text-stone-950 dark:text-gray-200 dark:hover:text-white hover:bg-stone-100/80 dark:hover:bg-white/5"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                      isCurrent
-                        ? "bg-primary-600 text-white"
-                        : "bg-stone-100 dark:bg-white/10 text-stone-600 dark:text-gray-300"
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <span>{link.label}</span>
-                </div>
+          {/* 1. Homepage */}
+          <Link
+            href="/"
+            onClick={() => setIsOpen(false)}
+            className={`flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold transition-all min-h-[48px] ${
+              pathname === "/"
+                ? "bg-primary-600/15 text-primary-600 dark:text-primary-400 shadow-xs border border-primary-500/20"
+                : "text-stone-700 hover:text-stone-950 dark:text-gray-200 dark:hover:text-white hover:bg-stone-100/80 dark:hover:bg-white/5"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-stone-100 dark:bg-white/10 text-stone-600 dark:text-gray-300">
+                <Home className="w-4 h-4" />
+              </div>
+              <span>الرئيسية</span>
+            </div>
+            <ChevronLeft className="w-4 h-4 text-stone-400" />
+          </Link>
 
-                <div className="flex items-center gap-2">
-                  {link.badge && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gold-500/15 text-gold-600 dark:text-gold-400 border border-gold-500/30">
-                      {link.badge}
-                    </span>
-                  )}
-                  <ChevronLeft className="w-4 h-4 text-stone-400" />
-                </div>
-              </Link>
-            );
-          })}
+          {/* 2. Interactive Menu (Direct Ordering) */}
+          <Link
+            href="/menu"
+            onClick={() => setIsOpen(false)}
+            className={`flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold transition-all min-h-[48px] ${
+              pathname === "/menu"
+                ? "bg-primary-600/15 text-primary-600 dark:text-primary-400 shadow-xs border border-primary-500/20"
+                : "text-stone-700 hover:text-stone-950 dark:text-gray-200 dark:hover:text-white hover:bg-stone-100/80 dark:hover:bg-white/5"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-primary-600 text-white">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <span>المنيو الإلكتروني (اطلب أونلاين)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary-500/15 text-primary-600 dark:text-primary-400 border border-primary-500/30">
+                طلب وتوصيل
+              </span>
+              <ChevronLeft className="w-4 h-4 text-stone-400" />
+            </div>
+          </Link>
 
+          {/* 3. Paper Menu Viewer Trigger */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+              openPaperMenu();
+            }}
+            className="w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold transition-all min-h-[48px] text-stone-700 hover:text-stone-950 dark:text-gray-200 dark:hover:text-white hover:bg-stone-100/80 dark:hover:bg-white/5 cursor-pointer text-right"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-gold-500/15 text-gold-600 dark:text-gold-400">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <span>المنيو الورقي المصور</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gold-500/15 text-gold-600 dark:text-gold-400 border border-gold-500/30">
+                مصور بالأسعار
+              </span>
+              <ChevronLeft className="w-4 h-4 text-stone-400" />
+            </div>
+          </button>
+
+          {/* 4. Table Reservation Trigger */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+              openReservationModal('create');
+            }}
+            className="w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold transition-all min-h-[48px] text-stone-700 hover:text-stone-950 dark:text-gray-200 dark:hover:text-white hover:bg-stone-100/80 dark:hover:bg-white/5 cursor-pointer text-right"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                <Calendar className="w-4 h-4" />
+              </div>
+              <span>حجز طاولة بالمطعم</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                حجز فوري
+              </span>
+              <ChevronLeft className="w-4 h-4 text-stone-400" />
+            </div>
+          </button>
+
+          {/* 5. Feedback */}
+          <Link
+            href="/contact?feedback=true"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold transition-all min-h-[48px] text-stone-700 hover:text-stone-950 dark:text-gray-200 dark:hover:text-white hover:bg-stone-100/80 dark:hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-stone-100 dark:bg-white/10 text-stone-600 dark:text-gray-300">
+                <MessageSquare className="w-4 h-4" />
+              </div>
+              <span>الشكاوى والمقترحات</span>
+            </div>
+            <ChevronLeft className="w-4 h-4 text-stone-400" />
+          </Link>
+
+          {/* 6. About */}
+          <Link
+            href="/about"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold transition-all min-h-[48px] text-stone-700 hover:text-stone-950 dark:text-gray-200 dark:hover:text-white hover:bg-stone-100/80 dark:hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-stone-100 dark:bg-white/10 text-stone-600 dark:text-gray-300">
+                <Info className="w-4 h-4" />
+              </div>
+              <span>عن المطعم</span>
+            </div>
+            <ChevronLeft className="w-4 h-4 text-stone-400" />
+          </Link>
+
+          {/* 7. Contact */}
+          <Link
+            href="/contact"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-bold transition-all min-h-[48px] text-stone-700 hover:text-stone-950 dark:text-gray-200 dark:hover:text-white hover:bg-stone-100/80 dark:hover:bg-white/5"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-stone-100 dark:bg-white/10 text-stone-600 dark:text-gray-300">
+                <Phone className="w-4 h-4" />
+              </div>
+              <span>تواصل معنا</span>
+            </div>
+            <ChevronLeft className="w-4 h-4 text-stone-400" />
+          </Link>
+
+          {/* Mobile Bottom Quick Order CTA */}
           <div className="pt-2">
             <Link
               href="/menu"
@@ -216,7 +302,7 @@ export default function Navbar() {
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white px-4 py-3.5 rounded-2xl text-sm font-bold shadow-lg shadow-primary-900/30 min-h-[52px] active:scale-[0.98] transition-transform cursor-pointer"
             >
               <ShoppingBag className="w-5 h-5" />
-              <span>اطلب الآن</span>
+              <span>تصفح المنيو واطلب الآن</span>
             </Link>
           </div>
         </div>

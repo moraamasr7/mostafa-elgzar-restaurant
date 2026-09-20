@@ -1,31 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { GroupedMenuItem, MenuItemVariant } from '@/types/menu';
 import { CartLine } from '@/types/orders';
 import { X, ShoppingBag, Check, Plus, Minus, Flame } from 'lucide-react';
 import { useScrollLock } from '@/lib/hooks/useScrollLock';
+import { normalizeImageUrl, DEFAULT_FALLBACK_IMAGE } from '@/lib/image-utils';
 
 interface ProductOptionsSheetProps {
   isOpen: boolean;
   item: GroupedMenuItem | null;
   onClose: () => void;
   onAddToCart: (line: CartLine) => void;
-}
-
-function normalizeImageUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-
-  const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i;
-  const match = trimmed.match(driveRegex);
-  if (match && match[1]) {
-    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
-  }
-
-  return trimmed;
 }
 
 export default function ProductOptionsSheet({
@@ -79,8 +65,8 @@ export default function ProductOptionsSheet({
   const isFullyUnavailable = !item.available || availableVariants.length === 0;
 
   const rawImageUrl = item.image_url || item.image || null;
-  const imageUrl = normalizeImageUrl(rawImageUrl);
-  const hasValidImage = Boolean(imageUrl && !imageError);
+  const normalizedUrl = normalizeImageUrl(rawImageUrl);
+  const displayImageUrl = normalizedUrl && !imageError ? normalizedUrl : DEFAULT_FALLBACK_IMAGE;
 
   const handleAdd = () => {
     if (!selectedVariant || isFullyUnavailable || isAdding) return;
@@ -117,70 +103,43 @@ export default function ProductOptionsSheet({
         aria-modal="true"
         aria-labelledby="options-sheet-title"
       >
-        {/* Header with image or title */}
+        {/* Header with image */}
         <div className="relative shrink-0">
-          {hasValidImage ? (
-            <div className="relative w-full h-44 sm:h-52 bg-stone-950 overflow-hidden">
-              <Image
-                src={imageUrl!}
-                alt={item.name}
-                fill
-                sizes="(max-width: 640px) 100vw, 500px"
-                className="object-cover"
-                onError={() => setImageError(true)}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-stone-900/40 to-transparent" />
-              <button
-                type="button"
-                onClick={onClose}
-                className="absolute top-3 left-3 w-10 h-10 rounded-full bg-stone-950/70 hover:bg-stone-900 text-stone-300 hover:text-white flex items-center justify-center backdrop-blur-md transition-colors border border-white/10 cursor-pointer min-w-[40px] min-h-[40px]"
-                aria-label="إغلاق"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-stone-800">
-              <div className="flex items-center gap-2">
-                <Flame className="w-5 h-5 text-primary-500" />
-                <h3 id="options-sheet-title" className="font-bold text-lg text-white">
-                  {item.name}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-10 h-10 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white flex items-center justify-center transition-colors min-w-[40px] min-h-[40px]"
-                aria-label="إغلاق"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          )}
+          <div className="relative w-full h-44 sm:h-52 bg-stone-950 overflow-hidden">
+            <img
+              src={displayImageUrl}
+              alt={item.name}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover"
+              onError={() => setImageError(true)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-900 via-stone-900/40 to-transparent" />
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute top-3 left-3 w-10 h-10 rounded-full bg-stone-950/70 hover:bg-stone-900 text-stone-300 hover:text-white flex items-center justify-center backdrop-blur-md transition-colors border border-white/10 cursor-pointer min-w-[40px] min-h-[40px] z-10"
+              aria-label="إغلاق"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-          {/* Title overlay when image is present */}
-          {hasValidImage && (
-            <div className="p-4 sm:p-5 pt-0">
-              <h3 id="options-sheet-title" className="font-bold text-xl text-white">
-                {item.name}
-              </h3>
-              {item.description && (
-                <p className="text-stone-300 text-xs sm:text-sm mt-1 leading-relaxed">
-                  {item.description}
-                </p>
-              )}
-            </div>
-          )}
+          {/* Title overlay */}
+          <div className="p-4 sm:p-5 pt-3">
+            <h3 id="options-sheet-title" className="font-bold text-xl text-white">
+              {item.name}
+            </h3>
+            {item.description && (
+              <p className="text-stone-300 text-xs sm:text-sm mt-1 leading-relaxed">
+                {item.description}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Scrollable Content Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
-          {!hasValidImage && item.description && (
-            <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
-              {item.description}
-            </p>
-          )}
-
           {/* Variants Selection */}
           {availableVariants.length > 1 && (
             <div className="space-y-2.5">

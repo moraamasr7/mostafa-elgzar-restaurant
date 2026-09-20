@@ -39,7 +39,7 @@ import LiveStoreBadge from "@/features/menu/components/LiveStoreBadge";
 import { useScrollLock } from "@/lib/hooks/useScrollLock";
 
 export default function MenuPage() {
-  const [menuType, setMenuType] = useState<"paper" | "interactive">("paper");
+  const [menuType, setMenuType] = useState<"paper" | "interactive">("interactive");
   const [activeCategoryId, setActiveCategoryId] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
