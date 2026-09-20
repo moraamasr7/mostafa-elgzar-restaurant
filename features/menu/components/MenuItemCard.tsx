@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { GroupedMenuItem } from '@/types/menu';
 import { CartLine } from '@/types/orders';
 import { Plus, Check, ZoomIn, X, SlidersHorizontal, Sparkles } from 'lucide-react';
@@ -13,15 +12,19 @@ interface MenuItemCardProps {
   onOpenOptions?: (item: GroupedMenuItem) => void;
 }
 
+const DEFAULT_FALLBACK_IMAGE = '/images/hero.png';
+
 function normalizeImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   const trimmed = url.trim();
   if (!trimmed) return null;
 
-  const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i;
+  // Google Drive Regex conversion (supports /file/d/ID, uc?id=ID, open?id=ID)
+  const driveRegex = /(?:drive\.google\.com\/(?:file\/d\/|uc\?.*id=|open\?.*id=)|lh3\.googleusercontent\.com\/d\/)([a-zA-Z0-9_-]+)/i;
   const match = trimmed.match(driveRegex);
   if (match && match[1]) {
-    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+    // Return direct high-res Google Drive thumbnail that bypasses CORS & referrer restrictions
+    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
   }
 
   return trimmed;
@@ -52,7 +55,7 @@ export default function MenuItemCard({
 
   const rawImageUrl = item.image_url || item.image || null;
   const imageUrl = normalizeImageUrl(rawImageUrl);
-  const hasValidImage = Boolean(imageUrl && !imageError);
+  const displayImageUrl = imageUrl && !imageError ? imageUrl : DEFAULT_FALLBACK_IMAGE;
 
   // Simple direct 1-tap add handler
   const handleDirectAdd = (e: React.MouseEvent) => {
@@ -103,54 +106,51 @@ export default function MenuItemCard({
         }`}
       >
         {/* Item Image Section */}
-        {hasValidImage ? (
-          <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] bg-stone-950 overflow-hidden group/img">
-            {/* Skeleton Shimmer while loading */}
-            {!isImageLoaded && (
-              <div className="absolute inset-0 bg-stone-850 animate-pulse flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full bg-stone-800 animate-ping opacity-25" />
-              </div>
-            )}
+        <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] bg-stone-950 overflow-hidden group/img">
+          {/* Skeleton Shimmer while loading */}
+          {!isImageLoaded && (
+            <div className="absolute inset-0 bg-stone-850 animate-pulse flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-stone-800 animate-ping opacity-25" />
+            </div>
+          )}
 
-            <Image
-              src={imageUrl!}
-              alt={item.name}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              loading="lazy"
-              onLoad={() => setIsImageLoaded(true)}
-              onError={() => setImageError(true)}
-              className={`object-cover transition-all duration-500 group-hover/img:scale-105 cursor-pointer select-none ${
-                isImageLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
-              onClick={() => setIsZoomOpen(true)}
-            />
-            {/* Dark gradient overlay at the bottom of the image for contrast */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+          <img
+            src={displayImageUrl}
+            alt={item.name}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onLoad={() => setIsImageLoaded(true)}
+            onError={() => setImageError(true)}
+            className={`w-full h-full object-cover transition-all duration-500 group-hover/img:scale-105 cursor-pointer select-none ${
+              isImageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onClick={() => setIsZoomOpen(true)}
+          />
+          {/* Dark gradient overlay at the bottom of the image for contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 pointer-events-none" />
 
-            {/* Quick Mobile Zoom Tap Badge */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsZoomOpen(true);
-              }}
-              className="absolute bottom-2 left-2 px-2 py-1 bg-stone-950/75 hover:bg-stone-900 text-white rounded-lg backdrop-blur-md text-[10px] font-bold flex items-center gap-1 transition-all opacity-80 hover:opacity-100 shadow-sm cursor-pointer"
-              title="تكبير الصورة"
-              aria-label={`تكبير صورة ${item.name}`}
-            >
-              <ZoomIn className="w-3 h-3 text-gold-400" />
-              <span>تكبير</span>
-            </button>
+          {/* Quick Mobile Zoom Tap Badge */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsZoomOpen(true);
+            }}
+            className="absolute bottom-2 left-2 px-2 py-1 bg-stone-950/75 hover:bg-stone-900 text-white rounded-lg backdrop-blur-md text-[10px] font-bold flex items-center gap-1 transition-all opacity-80 hover:opacity-100 shadow-sm cursor-pointer z-10"
+            title="تكبير الصورة"
+            aria-label={`تكبير صورة ${item.name}`}
+          >
+            <ZoomIn className="w-3 h-3 text-gold-400" />
+            <span>تكبير</span>
+          </button>
 
-            {/* Multiple sizes badge on top corner */}
-            {hasPriceRange && !isFullyUnavailable && (
-              <div className="absolute top-2.5 right-2.5 bg-stone-900/85 backdrop-blur-md text-gold-400 border border-gold-500/30 px-2 py-0.5 rounded-lg text-[10px] font-bold shadow-sm">
-                <span>أحجام متعددة</span>
-              </div>
-            )}
-          </div>
-        ) : null}
+          {/* Multiple sizes badge on top corner */}
+          {hasPriceRange && !isFullyUnavailable && (
+            <div className="absolute top-2.5 right-2.5 bg-stone-900/85 backdrop-blur-md text-gold-400 border border-gold-500/30 px-2 py-0.5 rounded-lg text-[10px] font-bold shadow-sm z-10">
+              <span>أحجام متعددة</span>
+            </div>
+          )}
+        </div>
 
         {/* Card Body */}
         <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between">
@@ -280,7 +280,7 @@ export default function MenuItemCard({
       />
 
       {/* Lightbox Zoom Modal */}
-      {isZoomOpen && hasValidImage && (
+      {isZoomOpen && (
         <div
           className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-fade-in select-none"
           onClick={() => setIsZoomOpen(false)}
@@ -308,16 +308,14 @@ export default function MenuItemCard({
           </div>
 
           <div
-            className="relative w-full max-w-2xl aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden shadow-2xl border border-white/10"
+            className="relative w-full max-w-2xl aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden shadow-2xl border border-white/10 flex items-center justify-center bg-stone-950"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
-              src={imageUrl!}
+            <img
+              src={displayImageUrl}
               alt={item.name}
-              fill
-              sizes="(max-width: 768px) 100vw, 700px"
-              priority
-              className="object-contain bg-stone-950"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-contain"
             />
           </div>
           <p className="text-xs text-stone-400 mt-3 text-center">
