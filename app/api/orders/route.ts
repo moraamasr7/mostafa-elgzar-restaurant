@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
 import { CreateOrderPayload, OrderItemInput } from '@/types/orders';
 import { notificationService } from '@/features/notifications/notification.service';
+import { isRestaurantOpen } from '@/lib/schedule';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,15 @@ const recentOrdersMap = new Map<string, number>();
 
 export async function POST(request: NextRequest) {
   try {
+    // Authoritative Operating Hours Check
+    const storeStatus = await isRestaurantOpen();
+    if (!storeStatus.isOpen) {
+      return NextResponse.json(
+        { error: `المطعم مغلق حالياً (${storeStatus.reason}). لا يمكن قبول طلبات جديدة خارج مواعيد العمل الرسمية.` },
+        { status: 400 }
+      );
+    }
+
     const body: CreateOrderPayload = await request.json();
     const {
       customer_name,

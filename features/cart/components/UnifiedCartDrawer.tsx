@@ -268,6 +268,7 @@ export default function UnifiedCartDrawer() {
   if (!isDrawerOpen) return null;
 
   // Validation Helpers
+  const isStoreClosed = Boolean(storeStatus && !storeStatus.isOpen);
   const cleanedPhone = cleanEgyptianPhone(phone);
   const isPhoneValid = /^01[0125][0-9]{8}$/.test(cleanedPhone);
   const isNameValid = name.trim().length >= 2;
@@ -278,8 +279,8 @@ export default function UnifiedCartDrawer() {
   const isReceiptValid = !isReceiptRequired || paymentReceipt.trim().length >= 3;
   const isTurnstileValid = !turnstileSiteKey || turnstileToken.length > 0;
 
-  const isStep2Valid = isNameValid && isPhoneValid && isAddressValid;
-  const isStep3Valid = isReceiptValid && isTurnstileValid && !isUploadingReceipt && cart.length > 0;
+  const isStep2Valid = !isStoreClosed && isNameValid && isPhoneValid && isAddressValid;
+  const isStep3Valid = !isStoreClosed && isReceiptValid && isTurnstileValid && !isUploadingReceipt && cart.length > 0;
 
   const selectedZoneObj = deliveryZones.find((z) => z.id === selectedZoneId);
 
@@ -347,6 +348,10 @@ export default function UnifiedCartDrawer() {
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isStoreClosed) {
+      setSubmitError(`المطعم مغلق حالياً (${storeStatus?.reason || 'خارج مواعيد العمل'}). لا يمكن إتمام الطلب الآن.`);
+      return;
+    }
     if (!isStep2Valid || !isStep3Valid || isSubmitting) return;
 
     setIsSubmitting(true);
@@ -562,12 +567,14 @@ export default function UnifiedCartDrawer() {
         )}
 
         {/* Proactive Store Closed Warning Banner */}
-        {storeStatus && !storeStatus.isOpen && (
-          <div className="mx-4 sm:mx-5 mt-3 p-3 bg-amber-500/10 border border-amber-500/25 rounded-2xl flex items-start gap-2.5 text-xs text-amber-200 shrink-0">
-            <Clock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        {isStoreClosed && (
+          <div className="mx-4 sm:mx-5 mt-3 p-3.5 bg-red-500/15 border border-red-500/35 rounded-2xl flex items-start gap-2.5 text-xs text-red-200 shrink-0">
+            <Clock className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold block">تنبيه: المطعم مغلق حالياً ({storeStatus.reason})</span>
-              <span className="text-[11px] text-amber-300/80">يمكنك استعراض وتجهيز السلة ولكن قد يتأخر تنفيذ الطلب حتى بدء مواعيد العمل الرسمية.</span>
+              <span className="font-bold block text-red-300">⚠️ المطعم غير متاح للطلبات الآن ({storeStatus?.reason})</span>
+              <span className="text-[11px] text-red-200/90 leading-relaxed block mt-0.5">
+                لا يمكن إتمام أو استقبال أي طلبات جديدة خارج مواعيد العمل الرسمية للمطعم. يسعدنا استقبال طلباتكم فور إعادة الفتح.
+              </span>
             </div>
           </div>
         )}
@@ -1127,11 +1134,18 @@ export default function UnifiedCartDrawer() {
             {currentStep === 1 && (
               <button
                 type="button"
-                onClick={() => setCurrentStep(2)}
-                className="w-full btn-primary py-3.5 rounded-2xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary-600/30 active:scale-[0.98] min-h-[48px] cursor-pointer"
+                onClick={() => {
+                  if (!isStoreClosed) setCurrentStep(2);
+                }}
+                disabled={isStoreClosed}
+                className={`w-full py-3.5 rounded-2xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 shadow-lg transition-all min-h-[48px] ${
+                  isStoreClosed
+                    ? 'bg-stone-800 text-stone-500 border border-stone-700 cursor-not-allowed shadow-none'
+                    : 'btn-primary shadow-primary-600/30 active:scale-[0.98] cursor-pointer'
+                }`}
               >
-                <span>متابعة إدخال البيانات</span>
-                <ArrowLeft className="w-4 h-4" />
+                <span>{isStoreClosed ? 'المطعم مغلق حالياً' : 'متابعة إدخال البيانات'}</span>
+                {!isStoreClosed && <ArrowLeft className="w-4 h-4" />}
               </button>
             )}
 
@@ -1148,13 +1162,13 @@ export default function UnifiedCartDrawer() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (isStep2Valid) setCurrentStep(3);
+                    if (isStep2Valid && !isStoreClosed) setCurrentStep(3);
                   }}
-                  disabled={!isStep2Valid}
+                  disabled={!isStep2Valid || isStoreClosed}
                   className="flex-1 btn-primary py-3.5 rounded-2xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary-600/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] cursor-pointer"
                 >
-                  <span>متابعة للدفع والتأكيد</span>
-                  <ArrowLeft className="w-4 h-4" />
+                  <span>{isStoreClosed ? 'المطعم مغلق حالياً' : 'متابعة للدفع والتأكيد'}</span>
+                  {!isStoreClosed && <ArrowLeft className="w-4 h-4" />}
                 </button>
               </div>
             )}
@@ -1173,7 +1187,7 @@ export default function UnifiedCartDrawer() {
                 <button
                   type="button"
                   onClick={handleSubmitOrder}
-                  disabled={!isStep3Valid || isSubmitting}
+                  disabled={!isStep3Valid || isSubmitting || isStoreClosed}
                   className="flex-1 btn-primary py-3.5 rounded-2xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary-600/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] cursor-pointer"
                 >
                   {isSubmitting ? (
@@ -1181,6 +1195,8 @@ export default function UnifiedCartDrawer() {
                       <RefreshCw className="w-4 h-4 animate-spin" />
                       <span>جاري تأكيد طلبك...</span>
                     </span>
+                  ) : isStoreClosed ? (
+                    <span>المطعم مغلق حالياً</span>
                   ) : (
                     <span>
                       تأكيد الطلب · {totalPrice.toFixed(0)} ج.م

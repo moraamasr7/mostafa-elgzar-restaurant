@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Phone, MapPin, Clock, Flame, Star, ChevronDown } from "lucide-react";
+import { Phone, MapPin, Clock, Flame, Star, ChevronDown, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { siteConfig } from "@/lib/config";
+import PaperMenuModal from "@/features/menu/components/PaperMenuModal";
 
 export default function HeroSection() {
+  const [isPaperMenuOpen, setIsPaperMenuOpen] = useState(false);
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Pattern */}
@@ -94,7 +97,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.8 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 max-w-md mx-auto sm:max-w-none"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 max-w-md mx-auto sm:max-w-none flex-wrap"
           >
             <Link
               href="/menu"
@@ -103,6 +106,16 @@ export default function HeroSection() {
               <span>تصفح المنيو واطلب الآن</span>
               <ChevronDown className="w-5 h-5 -rotate-90 sm:rotate-0 animate-pulse" />
             </Link>
+
+            <button
+              type="button"
+              onClick={() => setIsPaperMenuOpen(true)}
+              className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer bg-primary-600 text-white shadow-md shadow-primary-500/15 hover:bg-primary-500 active:scale-95 min-h-[44px]"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>المنيو الورقي المصور</span>
+            </button>
+
             <Link
               href="/menu?reserve=true"
               className="btn-gold text-base sm:text-lg px-8 py-3.5 sm:py-4 flex items-center justify-center gap-2 shadow-xl shadow-gold-600/20 w-full sm:w-auto font-bold active:scale-98 min-h-[48px]"
@@ -131,6 +144,11 @@ export default function HeroSection() {
         </motion.div>
       </div>
 
+      {/* Interactive Paper Menu Modal */}
+      <PaperMenuModal
+        isOpen={isPaperMenuOpen}
+        onClose={() => setIsPaperMenuOpen(false)}
+      />
     </section>
   );
 }

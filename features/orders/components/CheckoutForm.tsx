@@ -6,9 +6,10 @@ import { Turnstile } from '@marsidev/react-turnstile';
 import { OrderType, PaymentMethod } from '@/types/orders';
 import { supabase } from '@/lib/supabase/client';
 import { useCart } from '@/features/cart/context/CartContext';
-import { X, Bike, Store, Upload, CheckCircle2, AlertTriangle, MapPin, ExternalLink, RefreshCw, AlertCircle } from 'lucide-react';
+import { X, Bike, Store, Upload, CheckCircle2, AlertTriangle, MapPin, ExternalLink, RefreshCw, AlertCircle, Clock } from 'lucide-react';
 import { siteConfig } from '@/lib/config';
 import { useScrollLock } from '@/lib/hooks/useScrollLock';
+import { isRestaurantOpen, OperatingHoursResult } from '@/lib/schedule';
 import ProgressSteps from './ProgressSteps';
 import CountdownTimer from './CountdownTimer';
 
@@ -72,6 +73,23 @@ export default function CheckoutForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [storeStatus, setStoreStatus] = useState<OperatingHoursResult | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function checkStore() {
+      try {
+        const res = await isRestaurantOpen();
+        if (isMounted) setStoreStatus(res);
+      } catch {
+        // Non-blocking
+      }
+    }
+    if (isOpen) checkStore();
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
 
   // Geolocation & Map Delivery States
   const [customerLocation, setCustomerLocation] = useState<{
@@ -264,7 +282,10 @@ export default function CheckoutForm({
 
   const isTurnstileValid = !turnstileSiteKey || turnstileToken.length > 0;
 
+  const isStoreClosed = Boolean(storeStatus && !storeStatus.isOpen);
+
   const isFormValid =
+    !isStoreClosed &&
     name.trim().length > 0 &&
     /^01\d{9}$/.test(phone.replace(/\s/g, '')) &&
     isAddressValid &&
@@ -275,6 +296,10 @@ export default function CheckoutForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isStoreClosed) {
+      setSubmitError(`المطعم مغلق حالياً (${storeStatus?.reason || 'خارج مواعيد العمل'}). لا يمكن إتمام الطلب الآن.`);
+      return;
+    }
     if (!validatePhone(phone)) return;
     if (!isFormValid || isSubmitting) return;
 
@@ -432,6 +457,19 @@ export default function CheckoutForm({
           {/* Scrollable Form Body */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 min-h-0">
             <ProgressSteps currentStep={name.trim() && phone.trim() ? 3 : 2} />
+
+            {/* Store Closed Banner */}
+            {isStoreClosed && (
+              <div className="p-3.5 bg-red-500/15 border border-red-500/35 rounded-2xl flex items-start gap-2.5 text-xs text-red-600 dark:text-red-200">
+                <Clock className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold block text-red-700 dark:text-red-300">⚠️ المطعم مغلق حالياً ({storeStatus?.reason})</span>
+                  <span className="text-[11px] text-stone-600 dark:text-red-200/90 leading-relaxed block mt-0.5">
+                    لا يمكن إتمام الطلبات خارج مواعيد العمل الرسمية للمطعم.
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Order Type Toggle */}
             <div>
@@ -894,14 +932,20 @@ export default function CheckoutForm({
           {/* Primary Confirm Order Button */}
           <button
             type="submit"
-            disabled={!isFormValid || isSubmitting}
-            className="w-full btn-primary py-3.5 rounded-2xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary-600/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer min-h-[50px]"
+            disabled={!isFormValid || isSubmitting || isStoreClosed}
+            className={`w-full py-3.5 rounded-2xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 shadow-lg transition-all min-h-[50px] ${
+              isStoreClosed
+                ? 'bg-stone-800 text-stone-500 border border-stone-700 cursor-not-allowed shadow-none'
+                : 'btn-primary shadow-primary-600/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer'
+            }`}
           >
             {isSubmitting ? (
               <span className="flex items-center gap-2">
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 <span>جاري تسجيل وإرسال طلبك...</span>
               </span>
+            ) : isStoreClosed ? (
+              <span>المطعم مغلق حالياً</span>
             ) : (
               <span>
                 تأكيد طلب {orderType === 'delivery' ? 'الدليفري 🛵' : 'الاستلام من الفرع 🏪'} · {totalPrice.toFixed(0)} ج
