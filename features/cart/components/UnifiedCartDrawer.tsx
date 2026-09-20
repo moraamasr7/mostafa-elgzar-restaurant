@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { OrderType, PaymentMethod } from '@/types/orders';
@@ -29,6 +29,7 @@ import {
   FileText,
   Navigation,
   Clock,
+  ChevronDown,
 } from 'lucide-react';
 import { useScrollLock } from '@/lib/hooks/useScrollLock';
 import CountdownTimer from '@/features/orders/components/CountdownTimer';
@@ -36,23 +37,15 @@ import { isRestaurantOpen, OperatingHoursResult } from '@/lib/schedule';
 
 const CUSTOMER_DRAFT_KEY = 'elgzar_customer_draft';
 
-interface DeliveryZone {
+export interface DeliveryPolicyZone {
   id: string;
   name: string;
-  fee: number;
-  distance_km?: number;
+  areas: string[];
+  min_fee: number;
+  max_fee: number;
+  is_active: boolean;
+  sort_order: number;
 }
-
-const DEFAULT_DELIVERY_ZONES: DeliveryZone[] = [
-  { id: 'matariya-station', name: 'المطرية - المحطة والميدان الرئيسي', fee: 15, distance_km: 1.5 },
-  { id: 'matariya-trolley', name: 'المطرية - شارع التروللي والبلسم', fee: 15, distance_km: 2 },
-  { id: 'matariya-naaam', name: 'المطرية - مساكن النعام وميدان النعام', fee: 15, distance_km: 2.8 },
-  { id: 'matariya-shagaret-maryam', name: 'المطرية - مزار شجرة مريم ومسلة سيزوستريس', fee: 15, distance_km: 2.2 },
-  { id: 'matariya-arbaeen', name: 'المطرية - الأربعين ومصر والسودان', fee: 20, distance_km: 3.2 },
-  { id: 'matariya-cables', name: 'المطرية - شارع الكابلات والترعة التوفيقية', fee: 20, distance_km: 3 },
-  { id: 'helmeyat-elzaytoun', name: 'حلمية الزيتون وشارع ابن الحكم', fee: 25, distance_km: 3.8 },
-  { id: 'ain-shams-gharbiya', name: 'عين شمس الغربية ومحطة عين شمس', fee: 25, distance_km: 4 },
-];
 
 function cleanEgyptianPhone(input: string): string {
   return input
@@ -93,9 +86,13 @@ export default function UnifiedCartDrawer() {
   const [uploadError, setUploadError] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Geolocation & Delivery Zones State
-  const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>(DEFAULT_DELIVERY_ZONES);
+  // Geolocation & Delivery Zones State (Dynamic from Supabase)
+  const [deliveryZones, setDeliveryZones] = useState<DeliveryPolicyZone[]>([]);
+  const [isLoadingZones, setIsLoadingZones] = useState<boolean>(true);
   const [selectedZoneId, setSelectedZoneId] = useState<string>('');
+  const [selectedArea, setSelectedArea] = useState<string>('');
+  const [isManualAreaOpen, setIsManualAreaOpen] = useState<boolean>(false);
+
   const [customerLat, setCustomerLat] = useState<number | null>(null);
   const [customerLng, setCustomerLng] = useState<number | null>(null);
   const [isLocating, setIsLocating] = useState<boolean>(false);
@@ -131,10 +128,11 @@ export default function UnifiedCartDrawer() {
     };
   }, [isDrawerOpen]);
 
-  // Fetch Delivery Zones from Supabase Source of Truth
+  // Fetch Delivery Zones from Supabase Source of Truth (Dynamic & Reactive)
   useEffect(() => {
     let isMounted = true;
     async function loadDeliveryZones() {
+      setIsLoadingZones(true);
       try {
         const { data, error } = await supabase
           .from('restaurant_policies')
@@ -143,10 +141,17 @@ export default function UnifiedCartDrawer() {
           .single();
 
         if (isMounted && data?.value && !error && Array.isArray(data.value)) {
-          setDeliveryZones(data.value as DeliveryZone[]);
+          // Filter only active zones and sort by sort_order ascending
+          const activeZones = (data.value as DeliveryPolicyZone[])
+            .filter((z) => z.is_active !== false)
+            .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+          setDeliveryZones(activeZones);
         }
       } catch (err) {
         console.warn('Failed to load delivery zones from Supabase:', err);
+      } finally {
+        if (isMounted) setIsLoadingZones(false);
       }
     }
     loadDeliveryZones();
@@ -175,6 +180,8 @@ export default function UnifiedCartDrawer() {
           if (parsed.orderType) setOrderType(parsed.orderType);
           if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
           if (parsed.selectedZoneId) setSelectedZoneId(parsed.selectedZoneId);
+          if (parsed.selectedArea) setSelectedArea(parsed.selectedArea);
+          if (parsed.isManualAreaOpen !== undefined) setIsManualAreaOpen(Boolean(parsed.isManualAreaOpen));
         }
       }
     } catch {
@@ -192,12 +199,27 @@ export default function UnifiedCartDrawer() {
         orderType,
         paymentMethod,
         selectedZoneId,
+        selectedArea,
+        isManualAreaOpen,
       };
       localStorage.setItem(CUSTOMER_DRAFT_KEY, JSON.stringify(draftData));
     } catch {
       // Ignore storage write error
     }
-  }, [name, phone, deliveryAddress, orderType, paymentMethod, selectedZoneId]);
+  }, [name, phone, deliveryAddress, orderType, paymentMethod, selectedZoneId, selectedArea, isManualAreaOpen]);
+
+  const selectedZone = useMemo(() => {
+    return deliveryZones.find((z) => z.id === selectedZoneId) || null;
+  }, [deliveryZones, selectedZoneId]);
+
+  const availableAreas = useMemo(() => {
+    return selectedZone?.areas || [];
+  }, [selectedZone]);
+
+  const handleZoneChange = (zoneId: string) => {
+    setSelectedZoneId(zoneId);
+    setSelectedArea(''); // RESET Area immediately when Zone changes to prevent cross-zone mismatches
+  };
 
   const handleClose = () => {
     if (isSubmitting) return;
@@ -234,7 +256,8 @@ export default function UnifiedCartDrawer() {
 
   const handleGetLocation = () => {
     if (typeof window === 'undefined' || !navigator.geolocation) {
-      setLocationError('خاصية تحديد الموقع الجغرافي غير مدعومة في متصفحك. يرجى اختيار منطقتك من القائمة أدناه.');
+      setLocationError('خاصية تحديد الموقع التلقائي غير مدعومة في متصفحك. يرجى اختيار منطقتك يدويًا من القائمة أدناه.');
+      setIsManualAreaOpen(true);
       return;
     }
 
@@ -248,17 +271,19 @@ export default function UnifiedCartDrawer() {
         setLocationSuccess(true);
         setIsLocating(false);
         setLocationError(null);
+        setIsManualAreaOpen(false);
       },
       (err) => {
         console.warn('Geolocation error:', err);
         setIsLocating(false);
         setLocationSuccess(false);
+        setIsManualAreaOpen(true);
         if (err.code === 1) {
-          setLocationError('تم رفض إذن الوصول للموقع. يمكنك اختيار منطقتك بالمطرية من القائمة أدناه.');
+          setLocationError('لم نتمكن من الوصول للموقع لعدم منح الإذن. يمكنك اختيار منطقتك يدويًا من القائمة أدناه.');
         } else if (err.code === 3) {
-          setLocationError('استغرق تحديد الموقع وقتاً طويلاً. يرجى اختيار منطقتك من القائمة أدناه.');
+          setLocationError('استغرق تحديد الموقع وقتاً طويلاً. يرجى اختيار منطقتك يدويًا من القائمة أدناه.');
         } else {
-          setLocationError('تعذر تحديد الموقع تلقائياً. يرجى اختيار منطقتك من القائمة أدناه.');
+          setLocationError('لم نتمكن من تحديد موقعك على الخريطة. يمكنك اختيار منطقتك يدويًا من القوائم أدناه.');
         }
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
@@ -272,7 +297,7 @@ export default function UnifiedCartDrawer() {
   const cleanedPhone = cleanEgyptianPhone(phone);
   const isPhoneValid = /^01[0125][0-9]{8}$/.test(cleanedPhone);
   const isNameValid = name.trim().length >= 2;
-  const isLocationProvided = locationSuccess || Boolean(selectedZoneId);
+  const isLocationProvided = (locationSuccess && customerLat !== null && customerLng !== null) || (Boolean(selectedZoneId) && Boolean(selectedArea));
   const isAddressValid = orderType === 'takeaway' || (isLocationProvided && deliveryAddress.trim().length >= 5);
 
   const isReceiptRequired = orderType === 'takeaway' || paymentMethod !== 'cash';
@@ -281,8 +306,6 @@ export default function UnifiedCartDrawer() {
 
   const isStep2Valid = !isStoreClosed && isNameValid && isPhoneValid && isAddressValid;
   const isStep3Valid = !isStoreClosed && isReceiptValid && isTurnstileValid && !isUploadingReceipt && cart.length > 0;
-
-  const selectedZoneObj = deliveryZones.find((z) => z.id === selectedZoneId);
 
   const handleReceiptFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -364,7 +387,13 @@ export default function UnifiedCartDrawer() {
         item_notes: line.item_notes,
       }));
 
-      const zonePrefix = selectedZoneObj ? `[منطقة: ${selectedZoneObj.name}] ` : '';
+      const isMapsOrder = Boolean(locationSuccess && customerLat !== null && customerLng !== null);
+      const zonePrefix = !isMapsOrder && selectedZone && selectedArea
+        ? `[نطاق: ${selectedZone.name} - ${selectedArea}] `
+        : !isMapsOrder && selectedZone
+        ? `[نطاق: ${selectedZone.name}] `
+        : '';
+
       const formattedAddress =
         orderType === 'delivery'
           ? `${zonePrefix}${deliveryAddress.trim()}`
@@ -378,9 +407,9 @@ export default function UnifiedCartDrawer() {
         delivery_address: formattedAddress,
         payment_method: paymentMethod,
         payment_receipt_url: paymentReceipt.trim() || undefined,
-        customer_lat: customerLat !== null ? customerLat : undefined,
-        customer_lng: customerLng !== null ? customerLng : undefined,
-        delivery_zone_id: selectedZoneId || undefined,
+        customer_lat: isMapsOrder && customerLat !== null ? customerLat : undefined,
+        customer_lng: isMapsOrder && customerLng !== null ? customerLng : undefined,
+        delivery_zone_id: !isMapsOrder && selectedZoneId ? selectedZoneId : undefined,
         items: orderItemsPayload,
         turnstile_token: turnstileToken,
       };
@@ -764,7 +793,7 @@ export default function UnifiedCartDrawer() {
               {/* DELIVERY GEOLOCATION & ADDRESS SECTION */}
               {orderType === 'delivery' && (
                 <div className="space-y-3 pt-1 animate-fade-in text-right">
-                  {/* Location Selector (GPS / Zone) */}
+                  {/* Location Selector (Maps Primary + Dynamic Zone/Area Fallback) */}
                   <div className="p-3.5 bg-stone-950 border border-stone-800 rounded-2xl space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-stone-300 flex items-center gap-1.5">
@@ -774,18 +803,22 @@ export default function UnifiedCartDrawer() {
                       {isLocationProvided && (
                         <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
                           <Check className="w-3 h-3" />
-                          <span>تم تحديد الموقع</span>
+                          <span>
+                            {locationSuccess && customerLat && customerLng
+                              ? 'تم التحديد بالخريطة'
+                              : `${selectedZone?.name || ''} - ${selectedArea}`}
+                          </span>
                         </span>
                       )}
                     </div>
 
-                    {/* GPS Button */}
+                    {/* GPS / Maps Primary Button */}
                     <button
                       type="button"
                       onClick={handleGetLocation}
                       disabled={isLocating}
-                      className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 min-h-[44px] ${
-                        locationSuccess
+                      className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 min-h-[44px] cursor-pointer ${
+                        locationSuccess && customerLat && customerLng
                           ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
                           : 'bg-primary-600/20 hover:bg-primary-600/30 border border-primary-500/30 text-primary-300'
                       }`}
@@ -798,42 +831,106 @@ export default function UnifiedCartDrawer() {
                       ) : locationSuccess && customerLat && customerLng ? (
                         <>
                           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                          <span>تم تحديد موقعك بدقة بنجاح ✓ (اضغط لإعادة التحديد)</span>
+                          <span>📍 تم تحديد موقعك على الخريطة بنجاح ✓ (اضغط لإعادة التحديد)</span>
                         </>
                       ) : (
                         <>
                           <Navigation className="w-4 h-4 text-primary-400" />
-                          <span>📍 تحديد موقعي الحالي تلقائياً (GPS)</span>
+                          <span>📍 تحديد موقعي على الخريطة تلقائياً (GPS)</span>
                         </>
                       )}
                     </button>
 
-                    {/* Location Error Banner */}
+                    {/* Location Error Alert */}
                     {locationError && (
                       <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[11px] leading-relaxed flex items-start gap-2">
                         <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                        <span>{locationError}</span>
+                        <div>
+                          <p className="font-bold">{locationError}</p>
+                        </div>
                       </div>
                     )}
 
-                    {/* Fallback / Approved Matariya Zones Selector */}
-                    <div className="space-y-1.5 pt-1 border-t border-stone-800">
-                      <label className="block text-[11px] font-bold text-stone-400">
-                        أو اختر منطقتك بالمطرية وضواحيها:
-                      </label>
-                      <select
-                        value={selectedZoneId}
-                        onChange={(e) => setSelectedZoneId(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-stone-900 border border-stone-800 rounded-xl text-xs text-white focus:outline-none focus:border-primary-500 min-h-[42px]"
-                      >
-                        <option value="">-- اختر المنطقة من القائمة المعتمدة --</option>
-                        {deliveryZones.map((zone) => (
-                          <option key={zone.id} value={zone.id}>
-                            {zone.name} (توصيل: {zone.fee} ج.م)
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {/* Toggle Button for Manual Selection if GPS was successful or idle */}
+                    {locationSuccess && customerLat && customerLng && !isManualAreaOpen && (
+                      <div className="text-center pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsManualAreaOpen(true)}
+                          className="text-[11px] text-stone-400 hover:text-primary-400 transition-colors underline cursor-pointer"
+                        >
+                          أو اختر منطقتك يدويًا بدلاً من الخريطة
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Fallback Dynamic Zone -> Area Selector */}
+                    {(!locationSuccess || !customerLat || !customerLng || isManualAreaOpen) && (
+                      <div className="space-y-2.5 pt-2 border-t border-stone-800 animate-fade-in">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-[11px] font-bold text-stone-300">
+                            اختر منطقتك الجغرافية المعتمدة:
+                          </label>
+                          {locationSuccess && (
+                            <button
+                              type="button"
+                              onClick={() => setIsManualAreaOpen(false)}
+                              className="text-[10px] text-stone-500 hover:text-stone-300"
+                            >
+                              إلغاء التحديد اليدوي ✕
+                            </button>
+                          )}
+                        </div>
+
+                        {/* 1. Zone Dropdown */}
+                        <div className="space-y-1">
+                          <label className="block text-[10px] text-stone-400">
+                            1. المنطقة الرئيسية:
+                          </label>
+                          <select
+                            value={selectedZoneId}
+                            onChange={(e) => handleZoneChange(e.target.value)}
+                            disabled={isLoadingZones}
+                            className="w-full px-3 py-2.5 bg-stone-900 border border-stone-800 rounded-xl text-xs text-white focus:outline-none focus:border-primary-500 min-h-[42px] cursor-pointer"
+                          >
+                            <option value="">
+                              {isLoadingZones ? '-- جاري تحميل المناطق المعتمدة... --' : '-- اختر المنطقة الرئيسية --'}
+                            </option>
+                            {deliveryZones.map((zone) => (
+                              <option key={zone.id} value={zone.id}>
+                                {zone.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* 2. Sub-Area Dropdown */}
+                        {selectedZoneId && (
+                          <div className="space-y-1 animate-fade-in">
+                            <label className="block text-[10px] text-stone-400">
+                              2. المنطقة الفرعية / الحي:
+                            </label>
+                            <select
+                              value={selectedArea}
+                              onChange={(e) => setSelectedArea(e.target.value)}
+                              className="w-full px-3 py-2.5 bg-stone-900 border border-stone-800 rounded-xl text-xs text-white focus:outline-none focus:border-primary-500 min-h-[42px] cursor-pointer"
+                            >
+                              <option value="">-- اختر المنطقة الفرعية / الشارع الرئيسي --</option>
+                              {availableAreas.map((area) => (
+                                <option key={area} value={area}>
+                                  {area}
+                                </option>
+                              ))}
+                            </select>
+                            {availableAreas.length === 0 && (
+                              <p className="text-[10px] text-amber-400">
+                                لا توجد أحياء فرعية مسجلة لهذه المنطقة حالياً، يمكنك كتابة تفاصيل عنوانك أدناه.
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Detailed Delivery Address */}
@@ -1053,17 +1150,28 @@ export default function UnifiedCartDrawer() {
                   </div>
                   {orderType === 'delivery' && (
                     <>
-                      {selectedZoneObj && (
+                      {locationSuccess && customerLat && customerLng ? (
                         <div className="flex justify-between">
-                          <span className="text-stone-400">المنطقة:</span>
-                          <span className="font-bold text-white">{selectedZoneObj.name}</span>
+                          <span className="text-stone-400">موقع التوصيل:</span>
+                          <span className="font-bold text-emerald-400">محدد بالخريطة (GPS) ✓</span>
                         </div>
-                      )}
+                      ) : selectedZone ? (
+                        <div className="flex justify-between">
+                          <span className="text-stone-400">المنطقة والحي:</span>
+                          <span className="font-bold text-white">
+                            {selectedZone.name} {selectedArea ? `(${selectedArea})` : ''}
+                          </span>
+                        </div>
+                      ) : null}
                       <div className="flex justify-between">
                         <span className="text-stone-400">العنوان:</span>
                         <span className="font-bold text-white truncate max-w-[200px]">
                           {deliveryAddress}
                         </span>
+                      </div>
+                      <div className="flex justify-between text-[10px] text-amber-300/90 pt-0.5">
+                        <span>رسوم التوصيل:</span>
+                        <span>تُحسب تلقائياً وتؤكد بمعرفة المطعم</span>
                       </div>
                     </>
                   )}
