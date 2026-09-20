@@ -18,13 +18,14 @@ export function groupMenu(rows: MenuVariantRow[]): GroupedCategory[] {
     let menuItem = category.items.find((item) => item.id === row.item_id);
 
     if (!menuItem) {
+      const resolvedImg = row.item_image_url || (row as any).image_url || (row as any).image || null;
       menuItem = {
         id: row.item_id,
         name: row.item_name,
         description: row.item_description,
         available: row.item_available,
-        image_url: row.item_image_url || null,
-        image: row.item_image_url || undefined,
+        image_url: resolvedImg,
+        image: resolvedImg || undefined,
         category_id: row.category_id,
         variants: [],
       };

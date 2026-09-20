@@ -31,6 +31,7 @@ export async function fetchLiveMenuFromSupabase(): Promise<LiveMenuData> {
           category_id,
           name,
           description,
+          image_url,
           is_available,
           item_variants (
             id,
@@ -74,6 +75,7 @@ export async function fetchLiveMenuFromSupabase(): Promise<LiveMenuData> {
         price: minPrice,
         description: item.description || "",
         category: item.category_id,
+        image: item.image_url || undefined,
         available: item.is_available,
       };
     });
